@@ -61,17 +61,17 @@ Enable AI-powered parsing and optimization capabilities
 
 **CSS Parser Model**
 - [x] Design CSS optimization model
-- [ ] Train rule deduplication model
-- [ ] Train selector optimization model
-- [ ] Create minification model
-- [ ] Export to ONNX format
+- [x] Train rule deduplication model
+- [x] Train selector optimization model
+- [x] Create minification model
+- [x] Export to ONNX format
 
 **JS Parser Model**
 - [x] Design syntax analysis model
-- [ ] Train tokenization enhancer
-- [ ] Train AST predictor
-- [ ] Create optimization suggestions model
-- [ ] Export to ONNX format
+- [x] Train tokenization enhancer
+- [x] Train AST predictor
+- [x] Create optimization suggestions model
+- [x] Export to ONNX format
 
 #### 2.3 Integration ✅
 - [x] Integrate HTML model with parser
