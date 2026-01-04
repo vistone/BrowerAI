@@ -16,6 +16,7 @@ This document outlines the development roadmap for BrowerAI, an AI-powered brows
 - ✅ Comprehensive test suite (16 tests)
 - ✅ Documentation and guides
 - ✅ Example usage code
+- ✅ Initial model training pipeline
 
 ### Architecture
 ```

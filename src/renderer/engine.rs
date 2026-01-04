@@ -28,7 +28,7 @@ impl RenderEngine {
     }
 
     /// Render HTML DOM with CSS rules
-    pub fn render(&self, dom: &RcDom, styles: &[CssRule]) -> Result<RenderTree> {
+    pub fn render(&self, _dom: &RcDom, _styles: &[CssRule]) -> Result<RenderTree> {
         log::info!("Starting render process");
 
         // Basic render tree construction
