@@ -85,7 +85,7 @@ let parser = JsParser::new();
 let js = "function hello() { return 'world'; }";
 let ast = parser.parse(js)?;
 let is_valid = parser.validate(js)?;
-println!("Valid JS: {}, Tokens: {}", is_valid, ast.tokens.len());
+println!("Valid JS: {}, Statements: {}", is_valid, ast.statement_count);
 ```
 
 ### 4. AI Integration (ONNX Runtime)

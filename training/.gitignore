@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Training artifacts
+data/html/*.json
+data/css/*.json
+data/js/*.json
+models/*.pth
+models/*.onnx
+!models/.gitkeep
+!data/.gitkeep
+
+# Logs
+*.log
+runs/
+checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

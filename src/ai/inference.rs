@@ -26,7 +26,7 @@ impl InferenceEngine {
                 environment: Arc::new(environment),
             })
         }
-        
+
         #[cfg(not(feature = "ai"))]
         {
             log::warn!("AI feature not enabled. Inference engine will run in stub mode.");
@@ -39,7 +39,10 @@ impl InferenceEngine {
     #[cfg(feature = "ai")]
     pub fn load_model(&self, model_path: &Path) -> Result<Session> {
         if !model_path.exists() {
-            return Err(anyhow::anyhow!("Model file does not exist: {:?}", model_path));
+            return Err(anyhow::anyhow!(
+                "Model file does not exist: {:?}",
+                model_path
+            ));
         }
 
         let session = SessionBuilder::new(&self.environment)
@@ -53,19 +56,29 @@ impl InferenceEngine {
 
     /// Load an ONNX model from the specified path (stub version)
     #[cfg(not(feature = "ai"))]
+    #[allow(dead_code)]
     pub fn load_model(&self, _model_path: &Path) -> Result<()> {
-        Err(anyhow::anyhow!("AI feature not enabled. Cannot load models."))
+        Err(anyhow::anyhow!(
+            "AI feature not enabled. Cannot load models."
+        ))
     }
 
     /// Run inference on the model with input data
     #[cfg(feature = "ai")]
-    pub fn infer(&self, session: &Session, input_name: &str, input_data: Vec<f32>, shape: Vec<i64>) -> Result<Vec<f32>> {
+    pub fn infer(
+        &self,
+        session: &Session,
+        input_name: &str,
+        input_data: Vec<f32>,
+        shape: Vec<i64>,
+    ) -> Result<Vec<f32>> {
         // Create input tensor
         let input_tensor = Value::from_array(session.allocator(), &shape, &input_data)
             .map_err(|e| anyhow::anyhow!("Failed to create input tensor: {}", e))?;
 
         // Run inference
-        let outputs = session.run(vec![input_tensor])
+        let outputs = session
+            .run(vec![input_tensor])
             .map_err(|e| anyhow::anyhow!("Failed to run inference: {}", e))?;
 
         // Extract output data
@@ -74,19 +87,29 @@ impl InferenceEngine {
         }
 
         let output = &outputs[0];
-        let output_data = output.try_extract::<f32>()
+        let output_data = output
+            .try_extract::<f32>()
             .map_err(|e| anyhow::anyhow!("Failed to extract output data: {}", e))?;
 
         let result = output_data.view().iter().copied().collect();
-        
+
         log::debug!("Inference completed successfully");
         Ok(result)
     }
 
     /// Run inference on the model with input data (stub version)
     #[cfg(not(feature = "ai"))]
-    pub fn infer(&self, _session: &(), _input_name: &str, _input_data: Vec<f32>, _shape: Vec<i64>) -> Result<Vec<f32>> {
-        Err(anyhow::anyhow!("AI feature not enabled. Cannot run inference."))
+    #[allow(dead_code)]
+    pub fn infer(
+        &self,
+        _session: &(),
+        _input_name: &str,
+        _input_data: Vec<f32>,
+        _shape: Vec<i64>,
+    ) -> Result<Vec<f32>> {
+        Err(anyhow::anyhow!(
+            "AI feature not enabled. Cannot run inference."
+        ))
     }
 }
 

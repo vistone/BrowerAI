@@ -19,21 +19,21 @@ fn main() -> Result<()> {
 
     // Initialize AI components
     let model_dir = PathBuf::from("./models/local");
-    let mut model_manager = ModelManager::new(model_dir)?;
-    
+    let _model_manager = ModelManager::new(model_dir)?;
+
     log::info!("Model manager initialized");
 
     // Initialize inference engine
-    let inference_engine = InferenceEngine::new()?;
+    let _inference_engine = InferenceEngine::new()?;
     log::info!("Inference engine initialized");
 
     // Initialize parsers
     let html_parser = HtmlParser::new();
     let css_parser = CssParser::new();
     let js_parser = JsParser::new();
-    
+
     // Initialize render engine
-    let render_engine = RenderEngine::new();
+    let mut render_engine = RenderEngine::new();
 
     // Example: Parse HTML
     let sample_html = r#"
@@ -80,7 +80,7 @@ fn main() -> Result<()> {
 
     log::info!("Parsing JavaScript...");
     let js_ast = js_parser.parse(sample_js)?;
-    log::info!("Parsed JavaScript with {} tokens", js_ast.tokens.len());
+    log::info!("Parsed JavaScript with {} statements", js_ast.statement_count);
 
     // Example: Render
     log::info!("Rendering HTML with CSS...");
