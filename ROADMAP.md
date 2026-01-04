@@ -229,7 +229,7 @@ Enable continuous learning and autonomous improvement
 ### Open Source ✅
 - [x] Model zoo for sharing trained models
 - [x] Benchmark suite
-- [ ] Training data repository
+- [x] Training data repository
 - [x] Plugin system
 - [x] Extension API
 
