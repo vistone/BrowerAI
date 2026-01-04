@@ -108,14 +108,16 @@ class RealWorldTester:
             
             html_content = response.text
             
-            # Extract inline CSS
-            css_pattern = r'<style[^>]*>(.*?)</style>'
-            css_matches = re.findall(css_pattern, html_content, re.DOTALL)
+            # Extract inline CSS (handle case-insensitive and spaces in closing tags)
+            # Note: This is for testing purposes only, not security-critical parsing
+            css_pattern = r'<style[^>]*>(.*?)</style\s*>'
+            css_matches = re.findall(css_pattern, html_content, re.DOTALL | re.IGNORECASE)
             css_content = '\n'.join(css_matches)
             
-            # Extract inline JavaScript
-            js_pattern = r'<script[^>]*>(.*?)</script>'
-            js_matches = re.findall(js_pattern, html_content, re.DOTALL)
+            # Extract inline JavaScript (handle case-insensitive and spaces in closing tags)
+            # Note: This is for testing purposes only, not security-critical parsing
+            js_pattern = r'<script[^>]*>(.*?)</script\s*>'
+            js_matches = re.findall(js_pattern, html_content, re.DOTALL | re.IGNORECASE)
             js_content = '\n'.join([m for m in js_matches if m.strip()])
             
             return {
