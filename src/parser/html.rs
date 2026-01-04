@@ -38,7 +38,7 @@ impl HtmlParser {
             .read_from(&mut input.clone())?;
 
         log::info!("Successfully parsed HTML document");
-        
+
         // TODO: Apply AI-based optimizations and enhancements
         if self.enable_ai && self.inference_engine.is_some() {
             log::debug!("AI enhancement enabled for HTML parsing");
@@ -59,7 +59,7 @@ impl HtmlParser {
     /// Walk the DOM tree and collect text
     fn walk_tree(&self, handle: &Handle, text: &mut String) {
         let node = handle;
-        
+
         if let NodeData::Text { ref contents } = node.data {
             text.push_str(&contents.borrow());
         }

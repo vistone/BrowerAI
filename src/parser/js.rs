@@ -29,8 +29,11 @@ impl JsParser {
     pub fn parse(&self, js: &str) -> Result<JsAst> {
         // Basic tokenization for demonstration
         let tokens = self.tokenize(js)?;
-        
-        log::info!("Successfully parsed JavaScript with {} tokens", tokens.len());
+
+        log::info!(
+            "Successfully parsed JavaScript with {} tokens",
+            tokens.len()
+        );
 
         // TODO: Apply AI-based optimizations
         if self.enable_ai && self.inference_engine.is_some() {

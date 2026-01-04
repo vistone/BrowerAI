@@ -32,9 +32,8 @@ pub struct ModelManager {
 impl ModelManager {
     /// Create a new ModelManager with the specified model directory
     pub fn new(model_dir: PathBuf) -> Result<Self> {
-        std::fs::create_dir_all(&model_dir)
-            .context("Failed to create model directory")?;
-        
+        std::fs::create_dir_all(&model_dir).context("Failed to create model directory")?;
+
         Ok(Self {
             models: HashMap::new(),
             model_dir,
@@ -44,7 +43,7 @@ impl ModelManager {
     /// Register a model in the model library
     pub fn register_model(&mut self, config: ModelConfig) -> Result<()> {
         let model_path = self.model_dir.join(&config.path);
-        
+
         if !model_path.exists() {
             log::warn!("Model file does not exist yet: {:?}", model_path);
         }
@@ -67,18 +66,16 @@ impl ModelManager {
 
     /// Get the default model for a specific type (returns the first one)
     pub fn get_default_model(&self, model_type: &ModelType) -> Option<&ModelConfig> {
-        self.models
-            .get(model_type)
-            .and_then(|v| v.first())
+        self.models.get(model_type).and_then(|v| v.first())
     }
 
     /// Load model configuration from a TOML file
     pub fn load_config(&mut self, config_path: &Path) -> Result<()> {
-        let content = std::fs::read_to_string(config_path)
-            .context("Failed to read model config file")?;
-        
-        let configs: Vec<ModelConfig> = toml::from_str(&content)
-            .context("Failed to parse model config")?;
+        let content =
+            std::fs::read_to_string(config_path).context("Failed to read model config file")?;
+
+        let configs: Vec<ModelConfig> =
+            toml::from_str(&content).context("Failed to parse model config")?;
 
         for config in configs {
             self.register_model(config)?;
@@ -89,17 +86,12 @@ impl ModelManager {
 
     /// Save current model configurations to a TOML file
     pub fn save_config(&self, config_path: &Path) -> Result<()> {
-        let all_configs: Vec<ModelConfig> = self.models
-            .values()
-            .flatten()
-            .cloned()
-            .collect();
+        let all_configs: Vec<ModelConfig> = self.models.values().flatten().cloned().collect();
 
-        let content = toml::to_string_pretty(&all_configs)
-            .context("Failed to serialize model config")?;
+        let content =
+            toml::to_string_pretty(&all_configs).context("Failed to serialize model config")?;
 
-        std::fs::write(config_path, content)
-            .context("Failed to write model config file")?;
+        std::fs::write(config_path, content).context("Failed to write model config file")?;
 
         Ok(())
     }
