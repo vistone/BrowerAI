@@ -1,0 +1,40 @@
+[package]
+name = "browerai"
+version = "0.1.0"
+edition = "2021"
+authors = ["BrowerAI Contributors"]
+description = "AI-powered browser with autonomous HTML/CSS/JS parsing and rendering"
+license = "MIT"
+
+[features]
+default = []
+ai = ["ort"]
+
+[dependencies]
+# ONNX Runtime for AI inference (optional)
+ort = { version = "2.0.0-rc.10", optional = true }
+
+# HTML/CSS/JS parsing
+html5ever = "0.27"
+markup5ever_rcdom = "0.3"
+cssparser = "0.33"
+selectors = "0.25"
+
+# Serialization for model configs
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+
+# Logging
+log = "0.4"
+env_logger = "0.11"
+
+[dev-dependencies]
+tempfile = "3.8"
