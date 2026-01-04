@@ -1,9 +1,13 @@
 // DOM API implementation for JavaScript execution
 // Provides a Document Object Model interface for programmatic page manipulation
 
+pub mod events;
+
 use markup5ever_rcdom::{Handle, NodeData, RcDom};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
+
+pub use events::{Event, EventListener, EventListeners, EventPhase, EventType};
 
 /// Represents a DOM element with attributes and children
 #[derive(Debug, Clone)]
