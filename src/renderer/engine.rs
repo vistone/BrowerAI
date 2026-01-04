@@ -186,7 +186,7 @@ mod tests {
         assert!(result.is_ok());
 
         let render_tree = result.unwrap();
-        assert!(render_tree.nodes.len() > 0);
+        assert!(!render_tree.nodes.is_empty());
     }
 
     #[test]
@@ -213,7 +213,7 @@ mod tests {
         engine.render(&dom, &[]).unwrap();
 
         let commands = engine.get_paint_commands();
-        assert!(commands.len() > 0);
+        assert!(!commands.is_empty());
     }
 
     #[test]

@@ -118,7 +118,7 @@ mod tests {
         let css = "div { margin: 10px; }";
         let result = parser.validate(css);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), true);
+        assert!(result.unwrap());
     }
 
     #[test]

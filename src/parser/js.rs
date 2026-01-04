@@ -113,7 +113,7 @@ mod tests {
         let js = "if (true) { console.log('test'); }";
         let result = parser.validate(js);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), true);
+        assert!(result.unwrap());
     }
 
     #[test]
@@ -122,7 +122,7 @@ mod tests {
         let js = "if (true) { console.log('test');";
         let result = parser.validate(js);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), false);
+        assert!(!result.unwrap());
     }
 
     #[test]
@@ -130,7 +130,7 @@ mod tests {
         let parser = JsParser::new();
         let js = "var x = 10;";
         let ast = parser.parse(js).unwrap();
-        assert!(ast.tokens.len() > 0);
+        assert!(!ast.tokens.is_empty());
         assert!(ast.tokens.contains(&"var".to_string()));
     }
 }
