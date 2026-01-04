@@ -20,6 +20,12 @@ markup5ever_rcdom = "0.3"
 cssparser = "0.33"
 selectors = "0.25"
 
+# Native Rust JavaScript parser (instead of V8)
+# Using boa_parser - pure Rust ECMAScript parser from boa engine
+boa_parser = "0.20"
+boa_ast = "0.20"
+boa_interner = "0.20"
+
 # Serialization for model configs
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
