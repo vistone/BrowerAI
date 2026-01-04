@@ -255,6 +255,15 @@ Enable continuous learning and autonomous improvement
 - **Documentation**: 90%+ coverage
 - **Test Coverage**: 85%+ code coverage
 
+## Documentation
+
+For detailed implementation information, see:
+- **[Implementation Guide](IMPLEMENTATION_GUIDE.md)** - Complete reference for all implementations
+  - Phase 2: AI Enhancement (Sections 2.2, 2.4)
+  - Phase 3: Rendering Engine (Section 3.4)
+  - Phase 4: JavaScript Execution Runtime (Section 4.1)
+  - Training Data Repository
+
 ## Contributing to the Roadmap
 
 We welcome input on the roadmap! To suggest changes:
