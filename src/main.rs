@@ -33,7 +33,7 @@ fn main() -> Result<()> {
     let js_parser = JsParser::new();
 
     // Initialize render engine
-    let render_engine = RenderEngine::new();
+    let mut render_engine = RenderEngine::new();
 
     // Example: Parse HTML
     let sample_html = r#"

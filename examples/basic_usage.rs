@@ -75,7 +75,7 @@ fn main() -> Result<()> {
 
     // Example 5: Rendering
     println!("\n=== Rendering Example ===");
-    let render_engine = RenderEngine::new();
+    let mut render_engine = RenderEngine::new();
     let render_tree = render_engine.render(&dom, &rules)?;
     println!("Created render tree with {} nodes", render_tree.nodes.len());
 
