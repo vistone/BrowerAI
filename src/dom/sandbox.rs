@@ -1,9 +1,12 @@
 /// JavaScript sandbox environment for safe code execution
 /// 
 /// Provides isolated execution context with resource limits
+/// Uses Boa Engine for actual JavaScript execution
 
 use std::collections::HashMap;
-use std::time::{Duration, Instant};
+use std::time::Instant;
+use boa_engine::{Context, JsValue, Source};
+use boa_engine::object::ObjectInitializer;
 
 /// Resource limits for sandbox execution
 #[derive(Debug, Clone)]
@@ -172,12 +175,14 @@ pub struct ExecutionStats {
     pub max_call_depth: usize,
 }
 
-/// JavaScript sandbox for safe code execution
+/// JavaScript sandbox for safe code execution with Boa Engine
 pub struct JsSandbox {
     /// Execution context
     context: ExecutionContext,
     /// Whether sandbox is in strict mode
     strict_mode: bool,
+    /// Boa JavaScript engine context
+    boa_context: Context,
 }
 
 impl JsSandbox {
@@ -185,6 +190,7 @@ impl JsSandbox {
         Self {
             context: ExecutionContext::new(limits),
             strict_mode: true,
+            boa_context: Context::default(),
         }
     }
 
@@ -197,31 +203,112 @@ impl JsSandbox {
         self.strict_mode = strict;
     }
 
-    /// Execute JavaScript code (stub implementation)
-    pub fn execute(&mut self, _code: &str) -> Result<SandboxValue, SandboxError> {
-        self.context.start_execution();
-
-        // In a real implementation, this would:
-        // 1. Parse the JavaScript code
-        // 2. Execute in isolated context
-        // 3. Enforce resource limits
-        // 4. Return the result
-
-        // For now, return a stub value
-        Ok(SandboxValue::Undefined)
+    /// Convert Boa JsValue to SandboxValue
+    fn js_value_to_sandbox(&mut self, value: &JsValue) -> Result<SandboxValue, SandboxError> {
+        match value {
+            JsValue::Null => Ok(SandboxValue::Null),
+            JsValue::Undefined => Ok(SandboxValue::Undefined),
+            JsValue::Boolean(b) => Ok(SandboxValue::Boolean(*b)),
+            JsValue::Integer(i) => Ok(SandboxValue::Number(*i as f64)),
+            JsValue::Rational(r) => Ok(SandboxValue::Number(*r)),
+            JsValue::String(s) => Ok(SandboxValue::String(s.to_std_string_escaped())),
+            JsValue::Object(obj) => {
+                // Check if it's an array using is_array method
+                if obj.is_array() {
+                    // For arrays, try to get length property
+                    let length_val = obj.get(boa_engine::js_string!("length"), &mut self.boa_context)
+                        .map_err(|e| SandboxError::RuntimeError(format!("Array length error: {}", e)))?;
+                    
+                    if let JsValue::Integer(len) = length_val {
+                        let mut array = Vec::new();
+                        for i in 0..len.min(100) { // Limit to 100 elements for safety
+                            let val = obj.get(i as usize, &mut self.boa_context)
+                                .map_err(|e| SandboxError::RuntimeError(format!("Array access error: {}", e)))?;
+                            array.push(self.js_value_to_sandbox(&val)?);
+                        }
+                        return Ok(SandboxValue::Array(array));
+                    }
+                }
+                // Convert to object map (simplified - just return empty object for now)
+                Ok(SandboxValue::Object(HashMap::new()))
+            }
+            _ => Ok(SandboxValue::Undefined),
+        }
     }
 
-    /// Evaluate an expression (stub implementation)
-    pub fn eval(&mut self, _expression: &str) -> Result<SandboxValue, SandboxError> {
+    /// Convert SandboxValue to Boa JsValue
+    fn sandbox_to_js_value(&mut self, value: &SandboxValue) -> JsValue {
+        match value {
+            SandboxValue::Null => JsValue::Null,
+            SandboxValue::Undefined => JsValue::Undefined,
+            SandboxValue::Boolean(b) => JsValue::Boolean(*b),
+            SandboxValue::Number(n) => JsValue::Rational(*n),
+            SandboxValue::String(s) => JsValue::String(s.clone().into()),
+            SandboxValue::Array(arr) => {
+                let array_values: Vec<JsValue> = arr.iter()
+                    .map(|v| self.sandbox_to_js_value(v))
+                    .collect();
+                
+                // Create array in Boa context
+                let array = boa_engine::object::builtins::JsArray::from_iter(array_values, &mut self.boa_context);
+                array.into()
+            }
+            SandboxValue::Object(_) => {
+                // Create empty object for now
+                JsValue::Object(ObjectInitializer::new(&mut self.boa_context).build())
+            }
+        }
+    }
+
+    /// Execute JavaScript code using Boa Engine
+    pub fn execute(&mut self, code: &str) -> Result<SandboxValue, SandboxError> {
+        self.context.start_execution();
+        
+        // Add strict mode if enabled
+        let code_to_execute = if self.strict_mode {
+            format!("'use strict';\n{}", code)
+        } else {
+            code.to_string()
+        };
+
+        // Execute the code using Boa
+        let result = self.boa_context
+            .eval(Source::from_bytes(code_to_execute.as_bytes()))
+            .map_err(|e| SandboxError::RuntimeError(format!("Execution error: {}", e)))?;
+
+        // Check if we exceeded limits
+        self.context.record_operation()?;
+
+        // Convert result to SandboxValue
+        self.js_value_to_sandbox(&result)
+    }
+
+    /// Evaluate an expression using Boa Engine
+    pub fn eval(&mut self, expression: &str) -> Result<SandboxValue, SandboxError> {
         self.context.record_operation()?;
         
-        // Stub implementation
-        Ok(SandboxValue::Undefined)
+        // Execute the expression using Boa
+        let result = self.boa_context
+            .eval(Source::from_bytes(expression.as_bytes()))
+            .map_err(|e| SandboxError::RuntimeError(format!("Evaluation error: {}", e)))?;
+
+        // Convert result to SandboxValue
+        self.js_value_to_sandbox(&result)
     }
 
     /// Set a global variable in the sandbox
     pub fn set_global(&mut self, name: impl Into<String>, value: SandboxValue) {
-        self.context.set_global(name.into(), value);
+        let name_str = name.into();
+        
+        // Set in our context tracking
+        self.context.set_global(name_str.clone(), value.clone());
+        
+        // Set in Boa context
+        let js_value = self.sandbox_to_js_value(&value);
+        let property_key = boa_engine::property::PropertyKey::String(name_str.clone().into());
+        self.boa_context
+            .register_global_property(property_key, js_value, boa_engine::property::Attribute::all())
+            .ok();
     }
 
     /// Get a global variable from the sandbox
@@ -237,6 +324,7 @@ impl JsSandbox {
     /// Reset the sandbox
     pub fn reset(&mut self) {
         self.context = ExecutionContext::new(self.context.limits.clone());
+        self.boa_context = Context::default();
     }
 }
 
@@ -368,10 +456,70 @@ mod tests {
     }
 
     #[test]
+    fn test_sandbox_execute_with_return() {
+        let mut sandbox = JsSandbox::with_defaults();
+        let result = sandbox.execute("var x = 10; x + 5;");
+        assert!(result.is_ok());
+        let value = result.unwrap();
+        assert_eq!(value, SandboxValue::Number(15.0));
+    }
+
+    #[test]
     fn test_sandbox_eval() {
         let mut sandbox = JsSandbox::with_defaults();
         let result = sandbox.eval("2 + 2");
         assert!(result.is_ok());
+        assert_eq!(result.unwrap(), SandboxValue::Number(4.0));
+    }
+
+    #[test]
+    fn test_sandbox_eval_string() {
+        let mut sandbox = JsSandbox::with_defaults();
+        let result = sandbox.eval("'hello' + ' ' + 'world'");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), SandboxValue::String("hello world".to_string()));
+    }
+
+    #[test]
+    fn test_sandbox_eval_boolean() {
+        let mut sandbox = JsSandbox::with_defaults();
+        let result = sandbox.eval("5 > 3");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), SandboxValue::Boolean(true));
+    }
+
+    #[test]
+    fn test_sandbox_global_variable() {
+        let mut sandbox = JsSandbox::with_defaults();
+        sandbox.set_global("myVar", SandboxValue::Number(100.0));
+        
+        let result = sandbox.eval("myVar * 2");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), SandboxValue::Number(200.0));
+    }
+
+    #[test]
+    fn test_sandbox_function_execution() {
+        let mut sandbox = JsSandbox::with_defaults();
+        let result = sandbox.execute("function add(a, b) { return a + b; } add(10, 20);");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), SandboxValue::Number(30.0));
+    }
+
+    #[test]
+    fn test_sandbox_error_handling() {
+        let mut sandbox = JsSandbox::with_defaults();
+        let result = sandbox.eval("undefined_variable");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_sandbox_strict_mode() {
+        let mut sandbox = JsSandbox::with_defaults();
+        
+        // In strict mode, using undeclared variables should error
+        let result = sandbox.execute("undeclaredVar = 10;");
+        assert!(result.is_err());
     }
 
     #[test]
@@ -384,7 +532,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sandbox_strict_mode() {
+    fn test_sandbox_strict_mode_flag() {
         let mut sandbox = JsSandbox::with_defaults();
         assert!(sandbox.strict_mode);
 
