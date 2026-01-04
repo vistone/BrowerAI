@@ -32,9 +32,7 @@ impl RenderEngine {
         log::info!("Starting render process");
 
         // Basic render tree construction
-        let mut render_tree = RenderTree {
-            nodes: Vec::new(),
-        };
+        let mut render_tree = RenderTree { nodes: Vec::new() };
 
         // TODO: Apply AI-based rendering optimizations
         if self.enable_ai && self.inference_engine.is_some() {
@@ -110,7 +108,7 @@ mod tests {
         let parser = HtmlParser::new();
         let html = "<html><body><h1>Test</h1></body></html>";
         let dom = parser.parse(html).unwrap();
-        
+
         let engine = RenderEngine::new();
         let result = engine.render(&dom, &[]);
         assert!(result.is_ok());

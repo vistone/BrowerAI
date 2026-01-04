@@ -20,7 +20,7 @@ fn main() -> Result<()> {
     // Initialize AI components
     let model_dir = PathBuf::from("./models/local");
     let _model_manager = ModelManager::new(model_dir)?;
-    
+
     log::info!("Model manager initialized");
 
     // Initialize inference engine
@@ -31,7 +31,7 @@ fn main() -> Result<()> {
     let html_parser = HtmlParser::new();
     let css_parser = CssParser::new();
     let js_parser = JsParser::new();
-    
+
     // Initialize render engine
     let render_engine = RenderEngine::new();
 

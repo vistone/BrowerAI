@@ -58,7 +58,7 @@ impl CssParser {
     pub fn validate(&self, css: &str) -> Result<bool> {
         let mut input = ParserInput::new(css);
         let _parser = Parser::new(&mut input);
-        
+
         // Basic validation - if we can create a parser, it's valid enough
         Ok(true)
     }
