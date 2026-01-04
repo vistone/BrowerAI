@@ -37,7 +37,7 @@ fn test_ai_model_integration_fallback() {
         .unwrap();
 
     assert!(valid); // Should default to valid
-    assert!(complexity >= 0.0 && complexity <= 1.0);
+    assert!((0.0..=1.0).contains(&complexity));
 }
 
 #[test]

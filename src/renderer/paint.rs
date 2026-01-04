@@ -267,7 +267,7 @@ mod tests {
 
         let result = engine.paint_layout_tree(&layout_box);
         assert!(result.is_ok());
-        assert!(engine.operations().len() > 0);
+        assert!(!engine.operations().is_empty());
     }
 
     #[test]

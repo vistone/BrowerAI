@@ -210,7 +210,7 @@ impl JsModelIntegration {
     #[allow(dead_code)]
     pub fn analyze_patterns(&self, _js: &str) -> Result<Vec<String>> {
         // Placeholder: return basic patterns
-        let patterns = vec!["function_declaration", "variable_assignment"];
+        let patterns = ["function_declaration", "variable_assignment"];
 
         Ok(patterns.iter().map(|s| s.to_string()).collect())
     }
@@ -236,7 +236,7 @@ mod tests {
             .validate_structure("<html><body>Test</body></html>")
             .unwrap();
         assert!(valid); // Should fallback to valid
-        assert!(complexity >= 0.0 && complexity <= 1.0);
+        assert!((0.0..=1.0).contains(&complexity));
     }
 
     #[test]
