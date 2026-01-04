@@ -51,7 +51,7 @@ impl Feedback {
     pub fn new(feedback_type: FeedbackType, score: f32) -> Self {
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_else(|_| std::time::Duration::from_secs(0))
             .as_secs();
         
         Self {

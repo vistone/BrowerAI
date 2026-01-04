@@ -99,7 +99,7 @@ impl VersionedModel {
     pub fn new(name: impl Into<String>, version: ModelVersion, path: PathBuf) -> Self {
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_else(|_| std::time::Duration::from_secs(0))
             .as_secs();
 
         Self {
