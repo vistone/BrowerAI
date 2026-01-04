@@ -1,0 +1,30 @@
+{
+  "name": "combined/full_pages",
+  "version": "1.0.0",
+  "created": "2026-01-04T07:48:28.344844Z",
+  "updated": "2026-01-04T07:48:28.344844Z",
+  "description": "Complete web pages dataset with HTML+CSS+JS from 3K real websites",
+  "size": {
+    "samples": 3000,
+    "bytes": 60000000
+  },
+  "format": "json",
+  "schema": {
+    "input": "Data input description",
+    "output": "Data output description"
+  },
+  "splits": {
+    "train": 0.8,
+    "validation": 0.1,
+    "test": 0.1
+  },
+  "license": "Apache-2.0",
+  "source": "crawled",
+  "tags": [
+    "html",
+    "css",
+    "javascript",
+    "integration"
+  ],
+  "checksum": ""
+}

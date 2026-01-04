@@ -1,0 +1,29 @@
+{
+  "name": "html/structure_prediction",
+  "version": "1.0.0",
+  "created": "2026-01-04T07:48:12.121214Z",
+  "updated": "2026-01-04T07:48:12.121214Z",
+  "description": "HTML structure prediction training dataset with 10K labeled samples",
+  "size": {
+    "samples": 10000,
+    "bytes": 45000000
+  },
+  "format": "json",
+  "schema": {
+    "input": "Data input description",
+    "output": "Data output description"
+  },
+  "splits": {
+    "train": 0.8,
+    "validation": 0.1,
+    "test": 0.1
+  },
+  "license": "Apache-2.0",
+  "source": "synthetic",
+  "tags": [
+    "html",
+    "parsing",
+    "structure"
+  ],
+  "checksum": ""
+}
