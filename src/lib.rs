@@ -7,7 +7,7 @@ pub mod parser;
 pub mod renderer;
 pub mod testing;
 
-pub use ai::{InferenceEngine, ModelManager};
+pub use ai::{AdvancedPerformanceMonitor, HotReloadManager, InferenceEngine, ModelManager};
 pub use devtools::{DOMInspector, NetworkMonitor, PerformanceProfiler};
 pub use dom::{Document, DomElement, DomNode};
 pub use learning::{
@@ -16,5 +16,5 @@ pub use learning::{
 };
 pub use network::{HttpClient, ResourceCache};
 pub use parser::{CssParser, HtmlParser, JsParser};
-pub use renderer::RenderEngine;
+pub use renderer::{PredictiveRenderer, RenderEngine};
 pub use testing::{WebsiteTestResult, WebsiteTestSuite, WebsiteTester};
