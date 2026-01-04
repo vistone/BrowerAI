@@ -1,0 +1,29 @@
+{
+  "name": "html/malformed_fixer",
+  "version": "1.0.0",
+  "created": "2026-01-04T07:48:28.041949Z",
+  "updated": "2026-01-04T07:48:28.041949Z",
+  "description": "Malformed HTML fixer training dataset with 5K paired samples",
+  "size": {
+    "samples": 5000,
+    "bytes": 25000000
+  },
+  "format": "json",
+  "schema": {
+    "input": "Malformed HTML content",
+    "output": "Corrected well-formed HTML"
+  },
+  "splits": {
+    "train": 0.8,
+    "validation": 0.1,
+    "test": 0.1
+  },
+  "license": "Apache-2.0",
+  "source": "synthetic",
+  "tags": [
+    "html",
+    "parsing",
+    "fixing"
+  ],
+  "checksum": ""
+}

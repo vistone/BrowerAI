@@ -1,0 +1,29 @@
+{
+  "name": "css/selector_optimization",
+  "version": "1.0.0",
+  "created": "2026-01-04T07:48:28.128362Z",
+  "updated": "2026-01-04T07:48:28.128362Z",
+  "description": "CSS selector optimization training dataset with 8K paired samples",
+  "size": {
+    "samples": 8000,
+    "bytes": 35000000
+  },
+  "format": "json",
+  "schema": {
+    "input": "Original CSS selectors",
+    "output": "Optimized CSS selectors with improved performance"
+  },
+  "splits": {
+    "train": 0.8,
+    "validation": 0.1,
+    "test": 0.1
+  },
+  "license": "Apache-2.0",
+  "source": "synthetic",
+  "tags": [
+    "css",
+    "optimization",
+    "selectors"
+  ],
+  "checksum": ""
+}

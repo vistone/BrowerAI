@@ -207,6 +207,46 @@ model.eval()
 4. Create ensemble models for better accuracy
 5. Optimize models for inference speed
 
+## Additional Models (Roadmap 2.2 Implementation)
+
+BrowerAI now includes specialized models for advanced CSS and JavaScript optimization:
+
+### CSS Specialized Models
+
+```bash
+# Train CSS Rule Deduplication Model
+python scripts/train_css_deduplication.py --epochs 20
+
+# Train CSS Selector Optimizer
+python scripts/train_css_selector_optimizer.py --epochs 20
+
+# Train CSS Minifier
+python scripts/train_css_minifier.py --epochs 20
+```
+
+### JavaScript Specialized Models
+
+```bash
+# Train JS Tokenization Enhancer
+python scripts/train_js_tokenizer_enhancer.py --epochs 20
+
+# Train JS AST Predictor
+python scripts/train_js_ast_predictor.py --epochs 20
+
+# Train JS Optimization Suggestions
+python scripts/train_js_optimization_suggestions.py --epochs 20
+```
+
+These models provide more granular optimization capabilities:
+- **CSS Deduplication**: Finds and merges duplicate CSS rules
+- **CSS Selector Optimizer**: Simplifies complex selectors for better performance
+- **CSS Minifier**: Safe minification with minimal impact on functionality
+- **JS Tokenization Enhancer**: Improves tokenization accuracy and error handling
+- **JS AST Predictor**: Predicts AST structure for faster parsing
+- **JS Optimization Suggestions**: Specific code optimization recommendations
+
+All models export to ONNX format and can be used with BrowerAI's AI features.
+
 ## Resources
 
 - [PyTorch Tutorials](https://pytorch.org/tutorials/)

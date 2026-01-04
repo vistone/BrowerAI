@@ -1,0 +1,29 @@
+{
+  "name": "css/deduplication",
+  "version": "1.0.0",
+  "created": "2026-01-04T07:48:28.085179Z",
+  "updated": "2026-01-04T07:48:28.085179Z",
+  "description": "CSS rule deduplication training dataset with 5K labeled samples",
+  "size": {
+    "samples": 5000,
+    "bytes": 20000000
+  },
+  "format": "json",
+  "schema": {
+    "input": "CSS stylesheet content",
+    "output": "Deduplicated CSS with removed redundant rules"
+  },
+  "splits": {
+    "train": 0.8,
+    "validation": 0.1,
+    "test": 0.1
+  },
+  "license": "Apache-2.0",
+  "source": "synthetic",
+  "tags": [
+    "css",
+    "optimization",
+    "deduplication"
+  ],
+  "checksum": ""
+}
