@@ -51,7 +51,7 @@ impl ModelManager {
 
         self.models
             .entry(config.model_type.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(config);
 
         Ok(())

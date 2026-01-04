@@ -33,15 +33,12 @@ impl CssParser {
         let mut rules = Vec::new();
 
         while let Ok(token) = parser.next() {
-            match token {
-                Token::Ident(ref name) => {
-                    // Basic CSS rule extraction
-                    rules.push(CssRule {
-                        selector: name.to_string(),
-                        properties: Vec::new(),
-                    });
-                }
-                _ => {}
+            if let Token::Ident(ref name) = token {
+                // Basic CSS rule extraction
+                rules.push(CssRule {
+                    selector: name.to_string(),
+                    properties: Vec::new(),
+                });
             }
         }
 
