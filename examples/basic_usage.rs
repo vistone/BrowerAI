@@ -1,5 +1,5 @@
 use anyhow::Result;
-use browerai::parser::{HtmlParser, CssParser, JsParser};
+use browerai::parser::{CssParser, HtmlParser, JsParser};
 use browerai::renderer::RenderEngine;
 
 fn main() -> Result<()> {
@@ -24,7 +24,7 @@ fn main() -> Result<()> {
             </body>
         </html>
     "#;
-    
+
     let dom = html_parser.parse(html)?;
     let text = html_parser.extract_text(&dom);
     println!("Extracted text: {}", text);
@@ -46,7 +46,7 @@ fn main() -> Result<()> {
             font-size: 2em;
         }
     "#;
-    
+
     let rules = css_parser.parse(css)?;
     println!("Parsed {} CSS rules", rules.len());
 
@@ -61,10 +61,10 @@ fn main() -> Result<()> {
         const result = calculate(5, 3);
         console.log("Result:", result);
     "#;
-    
+
     let ast = js_parser.parse(js)?;
-    println!("Parsed {} tokens", ast.tokens.len());
-    println!("Sample tokens: {:?}", &ast.tokens[..ast.tokens.len().min(10)]);
+    println!("Parsed {} statements", ast.statement_count);
+    println!("JavaScript is valid: {}", ast.is_valid);
 
     // Example 4: Validate JavaScript
     let valid = js_parser.validate(js)?;
@@ -72,7 +72,7 @@ fn main() -> Result<()> {
 
     // Example 5: Rendering
     println!("\n=== Rendering Example ===");
-    let render_engine = RenderEngine::new();
+    let mut render_engine = RenderEngine::new();
     let render_tree = render_engine.render(&dom, &rules)?;
     println!("Created render tree with {} nodes", render_tree.nodes.len());
 
