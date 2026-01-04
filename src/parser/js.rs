@@ -18,6 +18,7 @@ impl JsParser {
     }
 
     /// Create a new JavaScript parser with AI capabilities
+    #[allow(dead_code)]
     pub fn with_ai(inference_engine: InferenceEngine) -> Self {
         Self {
             inference_engine: Some(inference_engine),
@@ -58,6 +59,7 @@ impl JsParser {
     }
 
     /// Validate JavaScript syntax (basic check)
+    #[allow(dead_code)]
     pub fn validate(&self, js: &str) -> Result<bool> {
         // Basic validation - check for balanced braces
         let open_braces = js.chars().filter(|c| *c == '{').count();
@@ -69,11 +71,13 @@ impl JsParser {
     }
 
     /// Enable or disable AI enhancement
+    #[allow(dead_code)]
     pub fn set_ai_enabled(&mut self, enabled: bool) {
         self.enable_ai = enabled && self.inference_engine.is_some();
     }
 
     /// Check if AI enhancement is enabled
+    #[allow(dead_code)]
     pub fn is_ai_enabled(&self) -> bool {
         self.enable_ai
     }

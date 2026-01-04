@@ -20,6 +20,7 @@ impl Color {
         Self::new(r, g, b, 255)
     }
 
+    #[allow(dead_code)]
     pub fn black() -> Self {
         Self::rgb(0, 0, 0)
     }
@@ -73,6 +74,7 @@ impl PaintEngine {
     }
 
     /// Set background color
+    #[allow(dead_code)]
     pub fn set_background_color(&mut self, color: Color) {
         self.background_color = color;
     }
@@ -145,6 +147,7 @@ impl PaintEngine {
     }
 
     /// Get all paint operations
+    #[allow(dead_code)]
     pub fn operations(&self) -> &[PaintOperation] {
         &self.operations
     }
@@ -155,6 +158,7 @@ impl PaintEngine {
     }
 
     /// Render to a simple text representation (for testing)
+    #[allow(dead_code)]
     pub fn render_to_text(&self) -> String {
         let mut output = String::new();
         output.push_str(&format!("Background: {:?}\n", self.background_color));
@@ -168,6 +172,7 @@ impl PaintEngine {
     }
 
     /// Generate paint commands optimized for rendering
+    #[allow(dead_code)]
     pub fn generate_commands(&self) -> Vec<String> {
         let mut commands = Vec::new();
 
@@ -201,14 +206,7 @@ impl PaintEngine {
                 } => {
                     commands.push(format!(
                         "DRAW_TEXT({}, {}) TEXT(\"{}\") COLOR({}, {}, {}, {}) SIZE({})",
-                        position.0,
-                        position.1,
-                        text,
-                        color.r,
-                        color.g,
-                        color.b,
-                        color.a,
-                        font_size
+                        position.0, position.1, text, color.r, color.g, color.b, color.a, font_size
                     ));
                 }
                 PaintOperation::Image { rect, url } => {

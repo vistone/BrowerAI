@@ -56,6 +56,7 @@ impl InferenceEngine {
 
     /// Load an ONNX model from the specified path (stub version)
     #[cfg(not(feature = "ai"))]
+    #[allow(dead_code)]
     pub fn load_model(&self, _model_path: &Path) -> Result<()> {
         Err(anyhow::anyhow!(
             "AI feature not enabled. Cannot load models."
@@ -98,6 +99,7 @@ impl InferenceEngine {
 
     /// Run inference on the model with input data (stub version)
     #[cfg(not(feature = "ai"))]
+    #[allow(dead_code)]
     pub fn infer(
         &self,
         _session: &(),

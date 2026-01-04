@@ -2,10 +2,10 @@ use anyhow::Result;
 use markup5ever_rcdom::RcDom;
 use std::collections::HashMap;
 
-use crate::ai::InferenceEngine;
-use crate::parser::css::CssRule;
 use super::layout::{LayoutBox, LayoutEngine};
 use super::paint::{Color, PaintEngine};
+use crate::ai::InferenceEngine;
+use crate::parser::css::CssRule;
 
 /// Rendering engine with AI-powered optimizations
 pub struct RenderEngine {
@@ -32,6 +32,7 @@ impl RenderEngine {
     }
 
     /// Create a new render engine with AI capabilities
+    #[allow(dead_code)]
     pub fn with_ai(inference_engine: InferenceEngine) -> Self {
         let mut engine = Self::new();
         engine.inference_engine = Some(inference_engine);
@@ -51,7 +52,8 @@ impl RenderEngine {
 
         // Calculate layout
         let viewport = self.layout_engine.viewport();
-        self.layout_engine.calculate_layout(&mut layout_tree, viewport);
+        self.layout_engine
+            .calculate_layout(&mut layout_tree, viewport);
 
         // Paint
         self.paint_engine.clear();
@@ -100,6 +102,7 @@ impl RenderEngine {
     }
 
     /// Optimize rendering with AI
+    #[allow(dead_code)]
     pub fn optimize_layout(&self, _render_tree: &mut RenderTree) -> Result<()> {
         if self.enable_ai && self.inference_engine.is_some() {
             log::info!("Applying AI-based layout optimization");
@@ -111,21 +114,25 @@ impl RenderEngine {
     }
 
     /// Set background color
+    #[allow(dead_code)]
     pub fn set_background_color(&mut self, color: Color) {
         self.paint_engine.set_background_color(color);
     }
 
     /// Get paint commands for rendering
+    #[allow(dead_code)]
     pub fn get_paint_commands(&self) -> Vec<String> {
         self.paint_engine.generate_commands()
     }
 
     /// Enable or disable AI enhancement
+    #[allow(dead_code)]
     pub fn set_ai_enabled(&mut self, enabled: bool) {
         self.enable_ai = enabled && self.inference_engine.is_some();
     }
 
     /// Check if AI enhancement is enabled
+    #[allow(dead_code)]
     pub fn is_ai_enabled(&self) -> bool {
         self.enable_ai
     }
@@ -138,6 +145,7 @@ impl Default for RenderEngine {
 }
 
 /// Represents a render tree node
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct RenderNode {
     pub element_type: String,
@@ -215,4 +223,3 @@ mod tests {
         // Background color is set - full test would require rendering
     }
 }
-

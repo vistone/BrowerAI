@@ -1,6 +1,7 @@
 //! AI-specific integration tests for BrowerAI Phase 2.4
 
-use browerai::ai::{HtmlModelIntegration, InferenceEngine};
+use browerai::ai::integration::HtmlModelIntegration;
+use browerai::ai::InferenceEngine;
 use browerai::parser::{CssParser, HtmlParser, JsParser};
 
 #[test]

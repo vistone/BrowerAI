@@ -115,9 +115,10 @@ impl ResourceCache {
             ttl: self.default_ttl,
         };
 
-        let mut cache = self.cache.write().map_err(|e| {
-            anyhow::anyhow!("Failed to acquire write lock on cache: {}", e)
-        })?;
+        let mut cache = self
+            .cache
+            .write()
+            .map_err(|e| anyhow::anyhow!("Failed to acquire write lock on cache: {}", e))?;
 
         // Check cache size and evict if necessary
         let current_size: usize = cache.values().map(|r| r.data.len()).sum();
@@ -133,10 +134,7 @@ impl ResourceCache {
 
     /// Evict the oldest entry from cache
     fn evict_oldest(&self, cache: &mut HashMap<String, CachedResource>) {
-        if let Some((oldest_url, _)) = cache
-            .iter()
-            .min_by_key(|(_, r)| r.cached_at)
-        {
+        if let Some((oldest_url, _)) = cache.iter().min_by_key(|(_, r)| r.cached_at) {
             let oldest_url = oldest_url.clone();
             cache.remove(&oldest_url);
             log::debug!("Evicted oldest entry: {}", oldest_url);
@@ -145,9 +143,10 @@ impl ResourceCache {
 
     /// Clear all cached resources
     pub fn clear(&self) -> Result<()> {
-        let mut cache = self.cache.write().map_err(|e| {
-            anyhow::anyhow!("Failed to acquire write lock on cache: {}", e)
-        })?;
+        let mut cache = self
+            .cache
+            .write()
+            .map_err(|e| anyhow::anyhow!("Failed to acquire write lock on cache: {}", e))?;
         cache.clear();
         log::info!("Cache cleared");
         Ok(())
@@ -258,18 +257,10 @@ mod tests {
         let cache = ResourceCache::new().with_strategy(CacheStrategy::CacheAll);
 
         cache
-            .put(
-                "url1".to_string(),
-                vec![0; 100],
-                "text/plain".to_string(),
-            )
+            .put("url1".to_string(), vec![0; 100], "text/plain".to_string())
             .unwrap();
         cache
-            .put(
-                "url2".to_string(),
-                vec![0; 200],
-                "text/plain".to_string(),
-            )
+            .put("url2".to_string(), vec![0; 200], "text/plain".to_string())
             .unwrap();
 
         let stats = cache.stats();

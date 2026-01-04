@@ -23,6 +23,7 @@ impl HtmlParser {
     }
 
     /// Create a new HTML parser with AI capabilities
+    #[allow(dead_code)]
     pub fn with_ai(inference_engine: InferenceEngine) -> Self {
         Self {
             inference_engine: Some(inference_engine),
@@ -70,11 +71,13 @@ impl HtmlParser {
     }
 
     /// Enable or disable AI enhancement
+    #[allow(dead_code)]
     pub fn set_ai_enabled(&mut self, enabled: bool) {
         self.enable_ai = enabled && self.inference_engine.is_some();
     }
 
     /// Check if AI enhancement is enabled
+    #[allow(dead_code)]
     pub fn is_ai_enabled(&self) -> bool {
         self.enable_ai
     }

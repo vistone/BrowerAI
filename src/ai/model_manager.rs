@@ -57,6 +57,7 @@ impl ModelManager {
     }
 
     /// Get all models of a specific type
+    #[allow(dead_code)]
     pub fn get_models(&self, model_type: &ModelType) -> Vec<&ModelConfig> {
         self.models
             .get(model_type)
@@ -65,11 +66,13 @@ impl ModelManager {
     }
 
     /// Get the default model for a specific type (returns the first one)
+    #[allow(dead_code)]
     pub fn get_default_model(&self, model_type: &ModelType) -> Option<&ModelConfig> {
         self.models.get(model_type).and_then(|v| v.first())
     }
 
     /// Load model configuration from a TOML file
+    #[allow(dead_code)]
     pub fn load_config(&mut self, config_path: &Path) -> Result<()> {
         let content =
             std::fs::read_to_string(config_path).context("Failed to read model config file")?;
@@ -85,6 +88,7 @@ impl ModelManager {
     }
 
     /// Save current model configurations to a TOML file
+    #[allow(dead_code)]
     pub fn save_config(&self, config_path: &Path) -> Result<()> {
         let all_configs: Vec<ModelConfig> = self.models.values().flatten().cloned().collect();
 
@@ -97,6 +101,7 @@ impl ModelManager {
     }
 
     /// Get the model directory path
+    #[allow(dead_code)]
     pub fn model_dir(&self) -> &Path {
         &self.model_dir
     }
