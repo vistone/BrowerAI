@@ -1,0 +1,32 @@
+# Rust
+/target
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+/dist
+/build
+
+# Logs
+*.log
+
+# Model files (can be large)
+models/local/*.onnx
+models/local/*.pb
+
+# Temporary files
+/tmp
+*.tmp
+
