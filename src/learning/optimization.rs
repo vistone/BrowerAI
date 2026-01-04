@@ -145,7 +145,8 @@ impl SelfOptimizer {
             .max_by(|a, b| {
                 let a_score = a.score(&self.config.strategy);
                 let b_score = b.score(&self.config.strategy);
-                a_score.partial_cmp(&b_score).unwrap()
+                // Use total_cmp to handle NaN values safely
+                a_score.total_cmp(&b_score)
             })
     }
 

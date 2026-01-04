@@ -137,7 +137,7 @@ impl PersonalizationEngine {
         if !self.users.contains_key(&user_id_str) {
             self.register_user(&user_id_str);
         }
-        self.users.get_mut(&user_id_str).unwrap()
+        self.users.get_mut(&user_id_str).expect("User should exist after registration")
     }
 
     /// Apply personalization to rendering config

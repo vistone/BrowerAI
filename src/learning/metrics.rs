@@ -45,7 +45,7 @@ impl Metric {
     pub fn new(metric_type: MetricType, value: f64) -> Self {
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_else(|_| std::time::Duration::from_secs(0))
             .as_secs();
 
         Self {
@@ -95,7 +95,7 @@ impl MetricStats {
 
         // Calculate median
         let mut sorted = values.to_vec();
-        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted.sort_by(|a, b| a.total_cmp(b)); // Use total_cmp to handle NaN safely
         let median = if count % 2 == 0 {
             (sorted[count / 2 - 1] + sorted[count / 2]) / 2.0
         } else {

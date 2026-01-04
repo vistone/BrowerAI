@@ -85,7 +85,7 @@ impl ABTest {
     pub fn new(id: impl Into<String>, name: impl Into<String>, description: impl Into<String>) -> Self {
         let start_time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_else(|_| std::time::Duration::from_secs(0))
             .as_secs();
 
         Self {
@@ -126,7 +126,7 @@ impl ABTest {
         self.end_time = Some(
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
-                .unwrap()
+                .unwrap_or_else(|_| std::time::Duration::from_secs(0))
                 .as_secs(),
         );
     }
@@ -157,7 +157,8 @@ impl ABTest {
             .max_by(|a, b| {
                 let a_val = a.get_metric_average(metric_name).unwrap_or(0.0);
                 let b_val = b.get_metric_average(metric_name).unwrap_or(0.0);
-                a_val.partial_cmp(&b_val).unwrap()
+                // Use total_cmp to handle NaN values safely
+                a_val.total_cmp(&b_val)
             })
     }
 }
