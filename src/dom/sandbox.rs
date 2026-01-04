@@ -8,6 +8,9 @@ use std::time::Instant;
 use boa_engine::{Context, JsValue, Source};
 use boa_engine::object::ObjectInitializer;
 
+/// Maximum number of array elements to convert (for safety and performance)
+const MAX_ARRAY_ELEMENTS: i32 = 100;
+
 /// Resource limits for sandbox execution
 #[derive(Debug, Clone)]
 pub struct ResourceLimits {
@@ -219,17 +222,23 @@ impl JsSandbox {
                     let length_val = obj.get(boa_engine::js_string!("length"), &mut self.boa_context)
                         .map_err(|e| SandboxError::RuntimeError(format!("Array length error: {}", e)))?;
                     
-                    if let JsValue::Integer(len) = length_val {
-                        let mut array = Vec::new();
-                        for i in 0..len.min(100) { // Limit to 100 elements for safety
-                            let val = obj.get(i as usize, &mut self.boa_context)
-                                .map_err(|e| SandboxError::RuntimeError(format!("Array access error: {}", e)))?;
-                            array.push(self.js_value_to_sandbox(&val)?);
-                        }
-                        return Ok(SandboxValue::Array(array));
+                    // Handle both integer and rational lengths
+                    let length = match length_val {
+                        JsValue::Integer(len) => len as i32,
+                        JsValue::Rational(len) => len as i32,
+                        _ => 0,
+                    };
+                    
+                    let mut array = Vec::new();
+                    for i in 0..length.min(MAX_ARRAY_ELEMENTS) { // Limit for safety
+                        let val = obj.get(i as usize, &mut self.boa_context)
+                            .map_err(|e| SandboxError::RuntimeError(format!("Array access error: {}", e)))?;
+                        array.push(self.js_value_to_sandbox(&val)?);
                     }
+                    return Ok(SandboxValue::Array(array));
                 }
-                // Convert to object map (simplified - just return empty object for now)
+                // Convert to object map (simplified - returns empty object)
+                // Note: Full object property enumeration not yet implemented
                 Ok(SandboxValue::Object(HashMap::new()))
             }
             _ => Ok(SandboxValue::Undefined),
@@ -305,7 +314,7 @@ impl JsSandbox {
         
         // Set in Boa context
         let js_value = self.sandbox_to_js_value(&value);
-        let property_key = boa_engine::property::PropertyKey::String(name_str.clone().into());
+        let property_key = boa_engine::property::PropertyKey::String(name_str.into());
         self.boa_context
             .register_global_property(property_key, js_value, boa_engine::property::Attribute::all())
             .ok();
