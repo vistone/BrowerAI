@@ -11,7 +11,7 @@ training/
 │   ├── css/           # CSS samples for training
 │   └── js/            # JavaScript samples for training
 ├── models/            # Trained model outputs
-├── scripts/           # Training scripts
+├── scripts/           # Training and testing scripts
 │   ├── prepare_data.py                       # Data preparation script
 │   ├── train_html_parser.py                  # HTML parser model training
 │   ├── train_html_parser_v2.py               # HTML parser v2 model training
@@ -31,6 +31,10 @@ training/
 │   ├── test_real_world_websites.py           # Real-world website testing (Phase 2.4)
 │   ├── measure_accuracy.py                   # Accuracy measurement (Phase 2.4)
 │   ├── profile_performance.py                # Performance profiling (Phase 2.4)
+│   ├── test_visual_regression.py             # Visual regression testing (Phase 3.4)
+│   ├── benchmark_rendering.py                # Rendering performance benchmarking (Phase 3.4)
+│   ├── compare_cross_browser.py              # Cross-browser comparison (Phase 3.4)
+│   ├── test_rendering_realworld.py           # Real-world rendering testing (Phase 3.4)
 │   └── collect_data.py                       # Data collection script
 ├── requirements.txt   # Python dependencies
 └── README.md         # This file
@@ -164,7 +168,55 @@ python scripts/benchmark_models.py --models-dir ../models --data-dir data
 
 Compares AI models against traditional parsing methods.
 
-### 6. Deploy to BrowerAI
+### 6. Rendering Engine Testing (Phase 3.4)
+
+After implementing the rendering engine, run comprehensive rendering tests:
+
+#### Visual Regression Testing
+```bash
+# Test for visual regressions in rendering
+python scripts/test_visual_regression.py
+
+# With custom directories
+python scripts/test_visual_regression.py --baseline-dir baselines --output-dir outputs
+```
+
+Creates baseline images and compares rendering output to detect visual changes.
+
+#### Rendering Performance Benchmarking
+```bash
+# Benchmark rendering performance
+python scripts/benchmark_rendering.py --iterations 100
+
+# Extended benchmarking
+python scripts/benchmark_rendering.py --iterations 1000
+```
+
+Measures layout calculation, paint operations, and overall rendering time.
+
+#### Cross-Browser Comparison
+```bash
+# Compare rendering with major browsers
+python scripts/compare_cross_browser.py
+
+# Compare with specific browsers
+python scripts/compare_cross_browser.py --browsers Chrome Firefox Safari
+```
+
+Validates rendering compatibility across different browser engines.
+
+#### Real-World Rendering Testing
+```bash
+# Test rendering on real websites
+python scripts/test_rendering_realworld.py --num-sites 10
+
+# Custom site count
+python scripts/test_rendering_realworld.py --num-sites 5
+```
+
+Tests the rendering engine on production websites to validate real-world performance.
+
+### 7. Deploy to BrowerAI
 
 Copy the ONNX models to the main models directory:
 
