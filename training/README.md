@@ -28,6 +28,9 @@ training/
 │   ├── train_layout_optimizer.py             # Layout optimizer model training
 │   ├── train_paint_optimizer.py              # Paint optimizer model training
 │   ├── benchmark_models.py                   # Model benchmarking
+│   ├── test_real_world_websites.py           # Real-world website testing (Phase 2.4)
+│   ├── measure_accuracy.py                   # Accuracy measurement (Phase 2.4)
+│   ├── profile_performance.py                # Performance profiling (Phase 2.4)
 │   └── collect_data.py                       # Data collection script
 ├── requirements.txt   # Python dependencies
 └── README.md         # This file
@@ -116,7 +119,52 @@ python scripts/train_paint_optimizer.py
 
 The training scripts automatically export trained models to ONNX format in the `models/` directory.
 
-### 5. Deploy to BrowerAI
+### 5. Testing & Validation (Phase 2.4)
+
+After training models, run comprehensive testing and validation:
+
+#### Test on Real-World Websites
+```bash
+# Test models on popular websites
+python scripts/test_real_world_websites.py --num-sites 10
+
+# Test with specific models directory
+python scripts/test_real_world_websites.py --num-sites 5 --models-dir ../models
+```
+
+Fetches content from real websites and tests model performance on production data.
+
+#### Measure Accuracy Improvements
+```bash
+# Measure accuracy vs traditional parsing
+python scripts/measure_accuracy.py
+
+# With custom paths
+python scripts/measure_accuracy.py --models-dir ../models --data-dir data
+```
+
+Calculates precision, recall, F1 score, and accuracy improvements over baseline.
+
+#### Profile Performance Impact
+```bash
+# Profile model inference performance
+python scripts/profile_performance.py --iterations 100
+
+# Extended profiling
+python scripts/profile_performance.py --iterations 1000
+```
+
+Measures inference time, memory usage, throughput, and identifies bottlenecks.
+
+#### Benchmark Models
+```bash
+# Comprehensive benchmarking suite
+python scripts/benchmark_models.py --models-dir ../models --data-dir data
+```
+
+Compares AI models against traditional parsing methods.
+
+### 6. Deploy to BrowerAI
 
 Copy the ONNX models to the main models directory:
 
