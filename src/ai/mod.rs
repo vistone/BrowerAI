@@ -2,6 +2,7 @@ pub mod inference;
 pub mod integration;
 pub mod model_loader;
 pub mod model_manager;
+pub mod performance_monitor;
 pub mod smart_features;
 
 pub use inference::InferenceEngine;
