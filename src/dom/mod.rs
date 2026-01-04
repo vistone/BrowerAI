@@ -49,9 +49,12 @@ impl Document {
     pub fn from_rcdom(rcdom: &RcDom) -> Self {
         let mut doc = Document::new();
         
-        // Build DOM tree from RcDom
+        // Convert the document and its children
+        // html5ever's document node has children that are the actual HTML elements
         let dom_node = Self::convert_handle_to_dom(&rcdom.document);
         doc.root = Arc::new(RwLock::new(dom_node));
+        
+        // Index all elements in the tree
         doc.index_elements();
         
         doc
@@ -91,7 +94,23 @@ impl Document {
             NodeData::Comment { contents } => {
                 DomNode::Comment(contents.to_string())
             }
-            NodeData::Document => DomNode::Document,
+            NodeData::Document => {
+                // For Document nodes, wrap children in a synthetic element
+                let children: Vec<Arc<RwLock<DomNode>>> = handle
+                    .children
+                    .borrow()
+                    .iter()
+                    .map(|child| Arc::new(RwLock::new(Self::convert_handle_to_dom(child))))
+                    .collect();
+                
+                // Return a document-like element node
+                DomNode::Element(DomElement {
+                    tag_name: "#document".to_string(),
+                    attributes: HashMap::new(),
+                    children,
+                    text_content: None,
+                })
+            }
             _ => DomNode::Document, // Other node types become Document
         }
     }
@@ -158,6 +177,105 @@ impl Document {
     /// Create a text node
     pub fn create_text_node(&self, text: &str) -> Arc<RwLock<DomNode>> {
         Arc::new(RwLock::new(DomNode::Text(text.to_string())))
+    }
+
+    /// Query selector - find the first element matching the CSS selector
+    pub fn query_selector(&self, selector: &str) -> Option<Arc<RwLock<DomNode>>> {
+        self.query_selector_all(selector).into_iter().next()
+    }
+
+    /// Query selector all - find all elements matching the CSS selector
+    pub fn query_selector_all(&self, selector: &str) -> Vec<Arc<RwLock<DomNode>>> {
+        // Simple selector matching - supports basic selectors like tag, .class, #id, [attr]
+        let mut results = Vec::new();
+        
+        // Parse the selector
+        if selector.starts_with('#') {
+            // ID selector
+            let id = &selector[1..];
+            if let Some(elem) = self.get_element_by_id(id) {
+                results.push(elem);
+            }
+        } else if selector.starts_with('.') {
+            // Class selector
+            let class_name = &selector[1..];
+            self.query_by_class_recursive(&self.root, class_name, &mut results);
+        } else if selector.contains('[') && selector.contains(']') {
+            // Attribute selector [attr] or [attr=value]
+            self.query_by_attribute_recursive(&self.root, selector, &mut results);
+        } else {
+            // Tag selector
+            results = self.get_elements_by_tag_name(selector);
+        }
+        
+        results
+    }
+
+    /// Recursively search for elements with a specific class
+    fn query_by_class_recursive(
+        &self,
+        node: &Arc<RwLock<DomNode>>,
+        class_name: &str,
+        results: &mut Vec<Arc<RwLock<DomNode>>>,
+    ) {
+        let node_read = node.read().unwrap();
+        
+        if let DomNode::Element(element) = &*node_read {
+            // Check if element has the class
+            if let Some(classes) = element.attributes.get("class") {
+                if classes.split_whitespace().any(|c| c == class_name) {
+                    results.push(node.clone());
+                }
+            }
+            
+            // Recurse into children
+            let children = element.children.clone();
+            drop(node_read);
+            for child in &children {
+                self.query_by_class_recursive(child, class_name, results);
+            }
+        }
+    }
+
+    /// Recursively search for elements with a specific attribute
+    fn query_by_attribute_recursive(
+        &self,
+        node: &Arc<RwLock<DomNode>>,
+        selector: &str,
+        results: &mut Vec<Arc<RwLock<DomNode>>>,
+    ) {
+        let node_read = node.read().unwrap();
+        
+        if let DomNode::Element(element) = &*node_read {
+            // Parse attribute selector: [attr] or [attr=value]
+            let attr_part = selector.trim_matches(|c| c == '[' || c == ']');
+            
+            let matches = if attr_part.contains('=') {
+                // [attr=value]
+                let parts: Vec<&str> = attr_part.splitn(2, '=').collect();
+                if parts.len() == 2 {
+                    let attr_name = parts[0].trim();
+                    let attr_value = parts[1].trim().trim_matches('"').trim_matches('\'');
+                    element.attributes.get(attr_name).map(|v| v == attr_value).unwrap_or(false)
+                } else {
+                    false
+                }
+            } else {
+                // [attr]
+                element.attributes.contains_key(attr_part.trim())
+            };
+            
+            if matches {
+                results.push(node.clone());
+            }
+            
+            // Recurse into children
+            let children = element.children.clone();
+            drop(node_read);
+            for child in &children {
+                self.query_by_attribute_recursive(child, selector, results);
+            }
+        }
     }
 }
 
@@ -322,5 +440,84 @@ mod tests {
         if let DomNode::Element(ref elem) = *parent_read {
             assert_eq!(elem.get_text_content(), "Test");
         }
+    }
+
+    #[test]
+    fn test_query_selector_by_id() {
+        let html = r#"<html><body><div id="main">Content</div><div id="sidebar">Side</div></body></html>"#;
+        let parser = HtmlParser::new();
+        let rcdom = parser.parse(html).unwrap();
+        let doc = Document::from_rcdom(&rcdom);
+        
+        // Query by ID
+        let result = doc.query_selector("#main");
+        assert!(result.is_some());
+        
+        if let Some(node) = result {
+            let node_read = node.read().unwrap();
+            if let DomNode::Element(elem) = &*node_read {
+                assert_eq!(elem.tag_name, "div");
+                assert_eq!(elem.get_attribute("id"), Some(&"main".to_string()));
+            }
+        }
+    }
+
+    #[test]
+    fn test_query_selector_by_class() {
+        let html = r#"<html><body><div class="active">One</div><div class="active">Two</div><div>Three</div></body></html>"#;
+        let parser = HtmlParser::new();
+        let rcdom = parser.parse(html).unwrap();
+        let doc = Document::from_rcdom(&rcdom);
+        
+        // Query by class
+        let results = doc.query_selector_all(".active");
+        assert_eq!(results.len(), 2);
+    }
+
+    #[test]
+    fn test_query_selector_by_tag() {
+        let html = r#"<html><body><div>One</div><div>Two</div><span>Three</span></body></html>"#;
+        let parser = HtmlParser::new();
+        let rcdom = parser.parse(html).unwrap();
+        let doc = Document::from_rcdom(&rcdom);
+        
+        // Query by tag name
+        let results = doc.query_selector_all("div");
+        assert_eq!(results.len(), 2);
+        
+        let span_results = doc.query_selector_all("span");
+        assert_eq!(span_results.len(), 1);
+    }
+
+    #[test]
+    fn test_query_selector_by_attribute() {
+        let html = r#"<html><body><div data-test="value">One</div><div>Two</div><div data-test="other">Three</div></body></html>"#;
+        let parser = HtmlParser::new();
+        let rcdom = parser.parse(html).unwrap();
+        let doc = Document::from_rcdom(&rcdom);
+        
+        // Query by attribute presence
+        let results = doc.query_selector_all("[data-test]");
+        assert_eq!(results.len(), 2);
+        
+        // Query by attribute value
+        let value_results = doc.query_selector_all("[data-test=value]");
+        assert_eq!(value_results.len(), 1);
+    }
+
+    #[test]
+    fn test_query_selector_single() {
+        let html = r#"<html><body><div class="item">One</div><div class="item">Two</div></body></html>"#;
+        let parser = HtmlParser::new();
+        let rcdom = parser.parse(html).unwrap();
+        let doc = Document::from_rcdom(&rcdom);
+        
+        // querySelector returns first match
+        let result = doc.query_selector(".item");
+        assert!(result.is_some());
+        
+        // querySelectorAll returns all matches
+        let all_results = doc.query_selector_all(".item");
+        assert_eq!(all_results.len(), 2);
     }
 }
