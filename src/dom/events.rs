@@ -154,7 +154,7 @@ impl Default for EventListeners {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dom::{DomNode, Document};
+    use crate::dom::Document;
     
     #[test]
     fn test_event_creation() {
