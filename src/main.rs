@@ -80,7 +80,7 @@ fn main() -> Result<()> {
 
     log::info!("Parsing JavaScript...");
     let js_ast = js_parser.parse(sample_js)?;
-    log::info!("Parsed JavaScript with {} tokens", js_ast.tokens.len());
+    log::info!("Parsed JavaScript with {} statements", js_ast.statement_count);
 
     // Example: Render
     log::info!("Rendering HTML with CSS...");

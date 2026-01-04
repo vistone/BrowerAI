@@ -63,11 +63,8 @@ fn main() -> Result<()> {
     "#;
 
     let ast = js_parser.parse(js)?;
-    println!("Parsed {} tokens", ast.tokens.len());
-    println!(
-        "Sample tokens: {:?}",
-        &ast.tokens[..ast.tokens.len().min(10)]
-    );
+    println!("Parsed {} statements", ast.statement_count);
+    println!("JavaScript is valid: {}", ast.is_valid);
 
     // Example 4: Validate JavaScript
     let valid = js_parser.validate(js)?;

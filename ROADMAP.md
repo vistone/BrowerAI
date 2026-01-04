@@ -143,12 +143,12 @@ Add advanced browser capabilities and intelligence
 
 ### Tasks
 
-#### 4.1 JavaScript Execution
-- [ ] Integrate JS engine (V8 or SpiderMonkey) - Deferred (complex)
+#### 4.1 JavaScript Parsing & Execution
+- [x] Integrate native Rust JS parser (Boa Parser) - **Using native Rust instead of V8**
 - [ ] Implement DOM API
 - [ ] Add event handling
 - [ ] Create sandbox environment
-- [ ] Add security features
+- [ ] Add JS execution runtime (boa_engine if needed)
 
 #### 4.2 Networking ✅
 - [x] HTTP/HTTPS client
