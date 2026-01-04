@@ -68,7 +68,10 @@ impl DOMInspector {
     }
 
     pub fn tree_view(&self) -> Result<String> {
-        let dom = self.dom.as_ref().ok_or_else(|| anyhow::anyhow!("No DOM loaded"))?;
+        let dom = self
+            .dom
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No DOM loaded"))?;
         let mut output = String::new();
         self.build_tree_view(&dom.document, 0, &mut output);
         Ok(output)
@@ -79,7 +82,12 @@ impl DOMInspector {
         let info = self.get_node_info(handle);
         match info.node_type.as_str() {
             "Element" => {
-                output.push_str(&format!("{}<{}> ({} children)\n", indent, info.tag_name.unwrap_or_default(), info.child_count));
+                output.push_str(&format!(
+                    "{}<{}> ({} children)\n",
+                    indent,
+                    info.tag_name.unwrap_or_default(),
+                    info.child_count
+                ));
             }
             "Text" => {
                 if let Some(text) = info.text_content {
@@ -163,7 +171,10 @@ impl NetworkMonitor {
         output.push_str("=== Network Monitor Report ===\n");
         output.push_str(&format!("Total Requests: {}\n", self.request_count()));
         output.push_str(&format!("Total Bytes: {} bytes\n", self.total_bytes()));
-        output.push_str(&format!("Average Duration: {:?}\n", self.average_duration()));
+        output.push_str(&format!(
+            "Average Duration: {:?}\n",
+            self.average_duration()
+        ));
         output
     }
 }

@@ -19,6 +19,7 @@ impl CssParser {
     }
 
     /// Create a new CSS parser with AI capabilities
+    #[allow(dead_code)]
     pub fn with_ai(inference_engine: InferenceEngine) -> Self {
         Self {
             inference_engine: Some(inference_engine),
@@ -55,6 +56,7 @@ impl CssParser {
     }
 
     /// Validate CSS syntax
+    #[allow(dead_code)]
     pub fn validate(&self, css: &str) -> Result<bool> {
         let mut input = ParserInput::new(css);
         let _parser = Parser::new(&mut input);
@@ -64,11 +66,13 @@ impl CssParser {
     }
 
     /// Enable or disable AI enhancement
+    #[allow(dead_code)]
     pub fn set_ai_enabled(&mut self, enabled: bool) {
         self.enable_ai = enabled && self.inference_engine.is_some();
     }
 
     /// Check if AI enhancement is enabled
+    #[allow(dead_code)]
     pub fn is_ai_enabled(&self) -> bool {
         self.enable_ai
     }
@@ -81,6 +85,7 @@ impl Default for CssParser {
 }
 
 /// Represents a CSS rule
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct CssRule {
     pub selector: String,
@@ -88,6 +93,7 @@ pub struct CssRule {
 }
 
 /// Represents a CSS property
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct CssProperty {
     pub name: String,

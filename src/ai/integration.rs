@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use std::path::Path;
 
 #[cfg(feature = "ai")]
@@ -15,7 +15,7 @@ pub struct HtmlModelIntegration {
 
 impl HtmlModelIntegration {
     /// Create a new HTML model integration
-    pub fn new(engine: &InferenceEngine, model_path: Option<&Path>) -> Result<Self> {
+    pub fn new(_engine: &InferenceEngine, _model_path: Option<&Path>) -> Result<Self> {
         #[cfg(feature = "ai")]
         {
             let session = if let Some(path) = model_path {
@@ -57,9 +57,8 @@ impl HtmlModelIntegration {
         let input_shape = vec![1, 512];
         let input_data: Vec<i64> = tokens.iter().map(|&x| x as i64).collect();
 
-        let input_tensor =
-            Value::from_array(session.allocator(), &input_data, &input_shape[..])
-                .context("Failed to create input tensor")?;
+        let input_tensor = Value::from_array(session.allocator(), &input_data, &input_shape[..])
+            .context("Failed to create input tensor")?;
 
         // Run inference
         let outputs = session
@@ -90,6 +89,7 @@ impl HtmlModelIntegration {
     }
 
     /// Tokenize HTML to indices
+    #[allow(dead_code)]
     fn tokenize_html(&self, html: &str, max_length: usize) -> Vec<u32> {
         let mut tokens = Vec::with_capacity(max_length);
 
@@ -107,6 +107,7 @@ impl HtmlModelIntegration {
     }
 
     /// Check if AI enhancement is enabled
+    #[allow(dead_code)]
     pub fn is_enabled(&self) -> bool {
         self.enabled
     }
@@ -120,7 +121,8 @@ pub struct CssModelIntegration {
 }
 
 impl CssModelIntegration {
-    pub fn new(engine: &InferenceEngine, model_path: Option<&Path>) -> Result<Self> {
+    #[allow(dead_code)]
+    pub fn new(_engine: &InferenceEngine, _model_path: Option<&Path>) -> Result<Self> {
         #[cfg(feature = "ai")]
         {
             let session = if let Some(path) = model_path {
@@ -151,6 +153,7 @@ impl CssModelIntegration {
     }
 
     /// Optimize CSS rules using AI
+    #[allow(dead_code)]
     pub fn optimize_rules(&self, css: &str) -> Result<Vec<String>> {
         // Placeholder: return original CSS split by rules
         let rules: Vec<String> = css
@@ -171,7 +174,8 @@ pub struct JsModelIntegration {
 }
 
 impl JsModelIntegration {
-    pub fn new(engine: &InferenceEngine, model_path: Option<&Path>) -> Result<Self> {
+    #[allow(dead_code)]
+    pub fn new(_engine: &InferenceEngine, _model_path: Option<&Path>) -> Result<Self> {
         #[cfg(feature = "ai")]
         {
             let session = if let Some(path) = model_path {
@@ -197,12 +201,14 @@ impl JsModelIntegration {
         }
     }
 
+    #[allow(dead_code)]
     pub fn is_enabled(&self) -> bool {
         self.enabled
     }
 
     /// Analyze JavaScript code patterns
-    pub fn analyze_patterns(&self, js: &str) -> Result<Vec<String>> {
+    #[allow(dead_code)]
+    pub fn analyze_patterns(&self, _js: &str) -> Result<Vec<String>> {
         // Placeholder: return basic patterns
         let patterns = vec!["function_declaration", "variable_assignment"];
 

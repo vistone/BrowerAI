@@ -112,7 +112,10 @@ impl LayoutEngine {
         // Start with root element
         let root_box = self.build_layout_box(&dom.document, BoxType::Block)?;
 
-        log::info!("Layout tree built with {} children", root_box.children.len());
+        log::info!(
+            "Layout tree built with {} children",
+            root_box.children.len()
+        );
         Ok(root_box)
     }
 
@@ -148,8 +151,8 @@ impl LayoutEngine {
             NodeData::Element { name, .. } => {
                 // Determine based on element type
                 match name.local.as_ref() {
-                    "div" | "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "header"
-                    | "footer" | "section" | "article" | "nav" => BoxType::Block,
+                    "div" | "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "header" | "footer"
+                    | "section" | "article" | "nav" => BoxType::Block,
                     "span" | "a" | "strong" | "em" | "b" | "i" => BoxType::Inline,
                     _ => BoxType::Block,
                 }

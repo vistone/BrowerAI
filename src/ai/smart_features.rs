@@ -1,7 +1,9 @@
-use anyhow::Result;
 use std::collections::HashMap;
 
 /// AI-powered resource prefetching predictor
+/// This struct provides an API for resource prefetching based on historical patterns.
+/// Methods are marked as part of the public API even if not currently used.
+#[allow(dead_code)]
 pub struct ResourcePredictor {
     /// Historical data of resource loading patterns
     patterns: HashMap<String, Vec<String>>,
@@ -11,6 +13,7 @@ pub struct ResourcePredictor {
 
 impl ResourcePredictor {
     /// Create a new resource predictor
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self {
             patterns: HashMap::new(),
@@ -19,12 +22,18 @@ impl ResourcePredictor {
     }
 
     /// Learn from a page load
+    #[allow(dead_code)]
     pub fn learn(&mut self, page_url: String, resources: Vec<String>) {
-        log::debug!("Learning pattern for {}: {} resources", page_url, resources.len());
+        log::debug!(
+            "Learning pattern for {}: {} resources",
+            page_url,
+            resources.len()
+        );
         self.patterns.insert(page_url, resources);
     }
 
     /// Predict resources that will be needed for a page
+    #[allow(dead_code)]
     pub fn predict(&self, page_url: &str) -> Vec<String> {
         // Simple prediction based on historical patterns
         if let Some(resources) = self.patterns.get(page_url) {
@@ -51,7 +60,10 @@ impl ResourcePredictor {
         predictions.sort();
         predictions.dedup();
 
-        log::debug!("Predicted {} resources from similar patterns", predictions.len());
+        log::debug!(
+            "Predicted {} resources from similar patterns",
+            predictions.len()
+        );
         predictions
     }
 
@@ -65,13 +77,11 @@ impl ResourcePredictor {
 
     /// Extract domain from URL
     fn extract_domain(&self, url: &str) -> String {
-        url.split('/')
-            .nth(2)
-            .unwrap_or(url)
-            .to_string()
+        url.split('/').nth(2).unwrap_or(url).to_string()
     }
 
     /// Get prediction confidence for a resource
+    #[allow(dead_code)]
     pub fn confidence(&self, _page_url: &str, _resource: &str) -> f32 {
         // Stub: return high confidence
         0.85
@@ -85,6 +95,8 @@ impl Default for ResourcePredictor {
 }
 
 /// Smart cache with AI-powered predictions
+/// Public API for smart caching functionality.
+#[allow(dead_code)]
 pub struct SmartCache {
     predictor: ResourcePredictor,
     cache_hits: u64,
@@ -93,6 +105,7 @@ pub struct SmartCache {
 
 impl SmartCache {
     /// Create a new smart cache
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self {
             predictor: ResourcePredictor::new(),
@@ -102,16 +115,19 @@ impl SmartCache {
     }
 
     /// Record a cache hit
+    #[allow(dead_code)]
     pub fn record_hit(&mut self) {
         self.cache_hits += 1;
     }
 
     /// Record a cache miss
+    #[allow(dead_code)]
     pub fn record_miss(&mut self) {
         self.cache_misses += 1;
     }
 
     /// Get cache hit rate
+    #[allow(dead_code)]
     pub fn hit_rate(&self) -> f32 {
         let total = self.cache_hits + self.cache_misses;
         if total == 0 {
@@ -122,16 +138,19 @@ impl SmartCache {
     }
 
     /// Learn from page load
+    #[allow(dead_code)]
     pub fn learn_page(&mut self, page_url: String, resources: Vec<String>) {
         self.predictor.learn(page_url, resources);
     }
 
     /// Get predicted resources for prefetching
+    #[allow(dead_code)]
     pub fn get_prefetch_list(&self, page_url: &str) -> Vec<String> {
         self.predictor.predict(page_url)
     }
 
     /// Get performance metrics
+    #[allow(dead_code)]
     pub fn metrics(&self) -> CacheMetrics {
         CacheMetrics {
             hits: self.cache_hits,
@@ -148,6 +167,8 @@ impl Default for SmartCache {
 }
 
 /// Cache performance metrics
+/// Public data structure for cache metrics.
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct CacheMetrics {
     pub hits: u64,
@@ -156,6 +177,8 @@ pub struct CacheMetrics {
 }
 
 /// Content predictor for smart loading
+/// Public API for content prediction functionality.
+#[allow(dead_code)]
 pub struct ContentPredictor {
     /// Viewport height for fold calculation
     viewport_height: f32,
@@ -163,16 +186,19 @@ pub struct ContentPredictor {
 
 impl ContentPredictor {
     /// Create a new content predictor
+    #[allow(dead_code)]
     pub fn new(viewport_height: f32) -> Self {
         Self { viewport_height }
     }
 
     /// Predict if content is above the fold
-    pub fn is_above_fold(&self, element_y: f32, element_height: f32) -> bool {
+    #[allow(dead_code)]
+    pub fn is_above_fold(&self, element_y: f32, _element_height: f32) -> bool {
         element_y < self.viewport_height
     }
 
     /// Calculate priority for loading a resource
+    #[allow(dead_code)]
     pub fn calculate_priority(&self, element_y: f32) -> LoadPriority {
         if element_y < self.viewport_height {
             LoadPriority::High
@@ -184,12 +210,15 @@ impl ContentPredictor {
     }
 
     /// Predict if an image should be lazy-loaded
+    #[allow(dead_code)]
     pub fn should_lazy_load(&self, element_y: f32) -> bool {
         element_y > self.viewport_height * 1.5
     }
 }
 
 /// Resource loading priority
+/// Public enum for load priority levels.
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LoadPriority {
     High,
