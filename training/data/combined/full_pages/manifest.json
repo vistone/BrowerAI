@@ -10,8 +10,8 @@
   },
   "format": "json",
   "schema": {
-    "input": "Data input description",
-    "output": "Data output description"
+    "input": "Complete web page with HTML, CSS, and JavaScript",
+    "output": "Parsed page structure and components"
   },
   "splits": {
     "train": 0.8,

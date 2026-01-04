@@ -10,8 +10,8 @@
   },
   "format": "json",
   "schema": {
-    "input": "Data input description",
-    "output": "Data output description"
+    "input": "CSS stylesheet content",
+    "output": "Deduplicated CSS with removed redundant rules"
   },
   "splits": {
     "train": 0.8,

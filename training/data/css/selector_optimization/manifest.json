@@ -10,8 +10,8 @@
   },
   "format": "json",
   "schema": {
-    "input": "Data input description",
-    "output": "Data output description"
+    "input": "Original CSS selectors",
+    "output": "Optimized CSS selectors with improved performance"
   },
   "splits": {
     "train": 0.8,

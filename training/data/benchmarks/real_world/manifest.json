@@ -10,8 +10,8 @@
   },
   "format": "json",
   "schema": {
-    "input": "Data input description",
-    "output": "Data output description"
+    "input": "Real-world website content",
+    "output": "Performance and parsing benchmark results"
   },
   "splits": {
     "train": 0.8,

@@ -10,8 +10,8 @@
   },
   "format": "json",
   "schema": {
-    "input": "Data input description",
-    "output": "Data output description"
+    "input": "Original JavaScript code",
+    "output": "Optimized JavaScript with performance improvements"
   },
   "splits": {
     "train": 0.8,

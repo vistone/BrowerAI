@@ -10,8 +10,8 @@
   },
   "format": "json",
   "schema": {
-    "input": "Data input description",
-    "output": "Data output description"
+    "input": "Malformed HTML content",
+    "output": "Corrected well-formed HTML"
   },
   "splits": {
     "train": 0.8,

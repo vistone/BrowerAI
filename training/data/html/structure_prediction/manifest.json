@@ -10,8 +10,8 @@
   },
   "format": "json",
   "schema": {
-    "input": "Data input description",
-    "output": "Data output description"
+    "input": "HTML document content",
+    "output": "Predicted DOM structure labels"
   },
   "splits": {
     "train": 0.8,
