@@ -32,7 +32,7 @@ This guide documents all implementations completed for BrowerAI's core functiona
 
 **Status**: All implementations ✅ COMPLETE
 
-**Note**: Training scripts generate synthetic data and train small demonstration models. For production use, additional training with real-world datasets and hyperparameter tuning is recommended.
+> **⚠️ Important Note**: Training scripts generate synthetic data and train demonstration models suitable for development and testing. For production deployment, these models should be trained on real-world datasets with proper validation, hyperparameter tuning, and performance optimization.
 
 ---
 
@@ -1260,8 +1260,8 @@ This implementation guide provides complete documentation for all BrowerAI compo
 - Phase 4.1: JavaScript Execution - Boa Engine integrated
 - Training Data Repository - 25 datasets, complete management system
 
-**Test Results**: 363 tests passing (271 lib + 87 unit + 5 integration)
+**Test Results**: 363 tests passing (271 library tests + 87 src unit tests + 5 integration tests)
 
-**Note**: Training scripts create demonstration models with synthetic data. Production deployment requires training on real-world datasets with appropriate validation.
+**Note**: Training scripts create demonstration models with synthetic data. For production deployment, train on real-world datasets with appropriate validation.
 
 **Last Updated**: January 4, 2026
