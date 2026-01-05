@@ -23,5 +23,5 @@ pub use learning::{
 pub use network::{HttpClient, ResourceCache};
 pub use parser::{CssParser, HtmlParser, JsParser};
 pub use plugins::{Plugin, PluginLoader, PluginRegistry};
-pub use renderer::{PredictiveRenderer, RenderEngine};
+pub use renderer::{AiLayoutHint, LayoutValidator, PredictiveRenderer, RenderEngine, ValidationReport};
 pub use testing::{WebsiteTestResult, WebsiteTestSuite, WebsiteTester};
