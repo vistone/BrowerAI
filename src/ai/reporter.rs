@@ -62,9 +62,12 @@ impl AiReporter {
         for model_type in model_types {
             let type_name = format!("{:?}", model_type);
             if let Some((config, path)) = self.runtime.best_model(model_type) {
-                let health_icon = match config.health {
+                let health_icon = match &config.health {
                     crate::ai::model_manager::ModelHealth::Ready => "✅",
                     crate::ai::model_manager::ModelHealth::MissingFile => "❌",
+                    crate::ai::model_manager::ModelHealth::LoadFailed(_) => "⚠️",
+                    crate::ai::model_manager::ModelHealth::ValidationFailed(_) => "⚠️",
+                    crate::ai::model_manager::ModelHealth::InferenceFailing => "❗",
                     crate::ai::model_manager::ModelHealth::Unknown => "❓",
                 };
                 report.push_str(&format!(

@@ -59,6 +59,9 @@ impl CssParser {
 
     /// Parse CSS content and extract rules
     pub fn parse(&self, css: &str) -> Result<Vec<CssRule>> {
+        use std::time::Instant;
+        use crate::ai::config::FallbackReason;
+
         let mut input = ParserInput::new(css);
         let mut parser = Parser::new(&mut input);
         let mut rules = Vec::new();
@@ -75,49 +78,72 @@ impl CssParser {
 
         log::info!("Successfully parsed CSS with {} rules", rules.len());
 
-        let ai_active = self.enable_ai && self.inference_engine.is_some();
-        if ai_active {
-            let monitor = self.ai_runtime.as_ref().and_then(|r| r.monitor());
-            let model_path = self.model_path.as_deref();
-            let model_name = self.model_name.as_deref().unwrap_or("css_model");
+        // Check if AI runtime is available and AI is enabled
+        let runtime = self.ai_runtime.as_ref();
+        let ai_enabled = runtime.map_or(false, |r| r.is_ai_enabled()) && self.enable_ai;
 
-            match CssModelIntegration::new(
-                self.inference_engine.as_ref().unwrap(),
-                model_path,
-                monitor,
-            ) {
-                Ok(mut integration) => {
-                    match integration.optimize_rules(css) {
-                        Ok(optimized) => {
-                            log::info!(
-                                "AI CSS optimization (model={}): generated {} candidate rules",
-                                model_name,
-                                optimized.len()
-                            );
-                        }
-                        Err(err) => {
-                            log::warn!(
-                                "AI CSS optimization failed (model={}): {}; continuing with baseline rules",
-                                model_name,
-                                err
-                            );
-                        }
-                    }
-                }
-                Err(err) => {
-                    log::warn!(
-                        "AI CSS integration could not start (model={}): {}; continuing without AI",
-                        model_name,
-                        err
-                    );
-                }
+        if !ai_enabled {
+            if self.enable_ai && runtime.is_none() {
+                log::debug!("AI enhancement disabled for CSS parsing; no runtime available");
+            } else {
+                log::debug!("AI enhancement disabled for CSS parsing; baseline path in use");
             }
-        } else if self.enable_ai {
+            return Ok(rules);
+        }
+
+        let runtime = runtime.unwrap();
+        let tracker = runtime.fallback_tracker();
+        tracker.record_attempt();
+
+        // Try AI enhancement
+        let ai_active = self.enable_ai && self.inference_engine.is_some();
+        if !ai_active {
+            tracker.record_fallback(FallbackReason::NoModelAvailable);
             log::warn!(
                 "AI was requested for CSS parsing but no inference engine is available; falling back to baseline parser"
             );
-        } else {
-            log::debug!("AI enhancement disabled for CSS parsing; baseline path in use");
+            return Ok(rules);
+        }
+
+        let monitor = runtime.monitor();
+        let model_path = self.model_path.as_deref();
+        let model_name = self.model_name.as_deref().unwrap_or("css_model");
+        let start_time = Instant::now();
+
+        match CssModelIntegration::new(
+            self.inference_engine.as_ref().unwrap(),
+            model_path,
+            monitor,
+        ) {
+            Ok(mut integration) => {
+                match integration.optimize_rules(css) {
+                    Ok(optimized) => {
+                        let elapsed_ms = start_time.elapsed().as_millis() as u64;
+                        tracker.record_success(elapsed_ms);
+                        log::info!(
+                            "AI CSS optimization (model={}, {}ms): generated {} candidate rules",
+                            model_name, elapsed_ms,
+                            optimized.len()
+                        );
+                    }
+                    Err(err) => {
+                        tracker.record_fallback(FallbackReason::InferenceFailed(err.to_string()));
+                        log::warn!(
+                            "AI CSS optimization failed (model={}): {}; continuing with baseline rules",
+                            model_name,
+                            err
+                        );
+                    }
+                }
+            }
+            Err(err) => {
+                tracker.record_fallback(FallbackReason::ModelLoadFailed(err.to_string()));
+                log::warn!(
+                    "AI CSS integration could not start (model={}): {}; continuing without AI",
+                    model_name,
+                    err
+                );
+            }
         }
 
         Ok(rules)
