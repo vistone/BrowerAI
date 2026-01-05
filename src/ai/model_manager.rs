@@ -152,7 +152,7 @@ impl ModelManager {
         let content =
             std::fs::read_to_string(config_path).context("Failed to read model config file")?;
 
-        // 尝试解析为带 models 键的格式或直接数组
+        // Try to parse as format with models key or direct array
         #[derive(serde::Deserialize)]
         struct ConfigWrapper {
             models: Vec<ModelConfig>,
@@ -163,7 +163,7 @@ impl ModelManager {
         } else if let Ok(direct) = toml::from_str::<Vec<ModelConfig>>(&content) {
             direct
         } else {
-            // 如果都失败，说明可能是空文件或只有注释
+            // If both fail, file may be empty or contain only comments
             log::info!("No models found in config file (may be empty or all comments)");
             Vec::new()
         };
