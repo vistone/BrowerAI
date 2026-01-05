@@ -13,7 +13,8 @@ pub use devtools::{DOMInspector, NetworkMonitor, PerformanceProfiler};
 pub use dom::{Document, DomElement, DomNode, DomApiExtensions, ElementHandle, JsSandbox};
 pub use learning::{
     FeedbackCollector, MetricsDashboard, OnlineLearner, PersonalizationEngine, SelfOptimizer,
-    VersionManager,
+    VersionManager, CodeGenerator, GenerationRequest, CodeType, GeneratedCode,
+    JsDeobfuscator, ObfuscationAnalysis, DeobfuscationStrategy, ContinuousLearningLoop,
 };
 pub use network::{HttpClient, ResourceCache};
 pub use parser::{CssParser, HtmlParser, JsParser};
