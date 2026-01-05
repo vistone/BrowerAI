@@ -22,6 +22,7 @@ pub mod personalization;
 pub mod website_learner;
 pub mod code_generator;
 pub mod deobfuscation;
+pub mod advanced_deobfuscation;
 pub mod continuous_loop;
 
 pub use feedback::{FeedbackCollector, Feedback, FeedbackType};
@@ -34,4 +35,5 @@ pub use personalization::{UserPreferences, PersonalizationEngine};
 pub use website_learner::WebsiteLearner;
 pub use code_generator::{CodeGenerator, GenerationRequest, CodeType, GeneratedCode};
 pub use deobfuscation::{JsDeobfuscator, ObfuscationAnalysis, DeobfuscationStrategy};
+pub use advanced_deobfuscation::{AdvancedDeobfuscator, AdvancedObfuscationAnalysis, FrameworkObfuscation};
 pub use continuous_loop::{ContinuousLearningLoop, ContinuousLearningConfig};
