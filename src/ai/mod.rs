@@ -1,4 +1,5 @@
 pub mod advanced_monitor;
+pub mod config;
 pub mod hot_reload;
 pub mod inference;
 pub mod integration;
@@ -11,10 +12,11 @@ pub mod reporter;
 pub mod feedback_pipeline;
 
 pub use advanced_monitor::AdvancedPerformanceMonitor;
+pub use config::{AiConfig, AiStats, FallbackReason, FallbackTracker};
 pub use hot_reload::HotReloadManager;
 pub use inference::InferenceEngine;
 pub use model_loader::ModelLoader;
-pub use model_manager::ModelManager;
+pub use model_manager::{ModelHealth, ModelHealthSummary, ModelManager};
 pub use runtime::AiRuntime;
 pub use reporter::AiReporter;
 pub use feedback_pipeline::FeedbackPipeline;

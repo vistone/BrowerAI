@@ -70,6 +70,16 @@ impl JsParser {
         }
     }
 
+    /// Enable or disable strict compatibility enforcement
+    pub fn set_enforce_compatibility(&mut self, enforce: bool) {
+        self.enforce_compatibility = enforce;
+    }
+
+    /// Get compatibility enforcement status
+    pub fn is_enforcing_compatibility(&self) -> bool {
+        self.enforce_compatibility
+    }
+
     /// Parse JavaScript content using Boa native Rust parser
     pub fn parse(&self, js: &str) -> Result<JsAst> {
         let compatibility_warnings = Self::detect_compatibility_issues(js);
@@ -111,47 +121,80 @@ impl JsParser {
             statement_count
         );
 
-        let ai_active = self.enable_ai && self.inference_engine.is_some();
-        if ai_active {
-            let monitor = self.ai_runtime.as_ref().and_then(|r| r.monitor());
-            let model_path = self.model_path.as_deref();
-            let model_name = self.model_name.as_deref().unwrap_or("js_model");
+        // Check if AI runtime is available and AI is enabled
+        let runtime = self.ai_runtime.as_ref();
+        let ai_enabled = runtime.map_or(false, |r| r.is_ai_enabled()) && self.enable_ai;
 
-            match JsModelIntegration::new(
-                self.inference_engine.as_ref().unwrap(),
-                model_path,
-                monitor,
-            ) {
-                Ok(integration) => match integration.analyze_patterns(js) {
-                    Ok(patterns) => {
-                        log::info!(
-                            "AI JS analysis (model={}): detected {} patterns",
-                            model_name,
-                            patterns.len()
-                        );
-                    }
-                    Err(err) => {
-                        log::warn!(
-                            "AI JS analysis failed (model={}): {}; continuing with baseline AST",
-                            model_name,
-                            err
-                        );
-                    }
-                },
+        if !ai_enabled {
+            if self.enable_ai && runtime.is_none() {
+                log::debug!("AI enhancement disabled for JS parsing; no runtime available");
+            } else {
+                log::debug!("AI enhancement disabled for JS parsing; baseline path in use");
+            }
+            return Ok(JsAst {
+                statement_count,
+                is_valid: true,
+            });
+        }
+
+        let runtime = runtime.unwrap();
+        let tracker = runtime.fallback_tracker();
+        tracker.record_attempt();
+
+        // Try AI enhancement
+        let ai_active = self.enable_ai && self.inference_engine.is_some();
+        if !ai_active {
+            use crate::ai::config::FallbackReason;
+            tracker.record_fallback(FallbackReason::NoModelAvailable);
+            log::warn!(
+                "AI was requested for JavaScript parsing but no inference engine is available; falling back to baseline parser"
+            );
+            return Ok(JsAst {
+                statement_count,
+                is_valid: true,
+            });
+        }
+
+        use std::time::Instant;
+        use crate::ai::config::FallbackReason;
+
+        let monitor = runtime.monitor();
+        let model_path = self.model_path.as_deref();
+        let model_name = self.model_name.as_deref().unwrap_or("js_model");
+        let start_time = Instant::now();
+
+        match JsModelIntegration::new(
+            self.inference_engine.as_ref().unwrap(),
+            model_path,
+            monitor,
+        ) {
+            Ok(integration) => match integration.analyze_patterns(js) {
+                Ok(patterns) => {
+                    let elapsed_ms = start_time.elapsed().as_millis() as u64;
+                    tracker.record_success(elapsed_ms);
+                    log::info!(
+                        "AI JS analysis (model={}, {}ms): detected {} patterns",
+                        model_name, elapsed_ms,
+                        patterns.len()
+                    );
+                }
                 Err(err) => {
+                    tracker.record_fallback(FallbackReason::InferenceFailed(err.to_string()));
                     log::warn!(
-                        "AI JS integration could not start (model={}): {}; continuing without AI",
+                        "AI JS analysis failed (model={}): {}; continuing with baseline AST",
                         model_name,
                         err
                     );
                 }
+            },
+            Err(err) => {
+                tracker.record_fallback(FallbackReason::ModelLoadFailed(err.to_string()));
+                log::warn!(
+                    "AI JS integration could not start (model={}): {}; continuing without AI",
+                    model_name,
+                    err
+                );
             }
-        } else if self.enable_ai {
-            log::warn!(
-                "AI was requested for JavaScript parsing but no inference engine is available; falling back to baseline parser"
-            );
-        } else {
-            log::debug!("AI enhancement disabled for JavaScript parsing; baseline path in use");
         }
 
         Ok(JsAst {
@@ -218,12 +261,6 @@ impl JsParser {
     #[allow(dead_code)]
     pub fn set_ai_enabled(&mut self, enabled: bool) {
         self.enable_ai = enabled && self.inference_engine.is_some();
-    }
-
-    /// Enable or disable strict compatibility enforcement
-    #[allow(dead_code)]
-    pub fn set_enforce_compatibility(&mut self, enforce: bool) {
-        self.enforce_compatibility = enforce;
     }
 
     /// Check if AI enhancement is enabled
