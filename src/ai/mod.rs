@@ -1,4 +1,5 @@
 pub mod advanced_monitor;
+pub mod autonomous_coordinator;
 pub mod config;
 pub mod hot_reload;
 pub mod inference;
@@ -12,6 +13,10 @@ pub mod reporter;
 pub mod feedback_pipeline;
 
 pub use advanced_monitor::AdvancedPerformanceMonitor;
+pub use autonomous_coordinator::{
+    AutonomousCoordinator, AutonomousConfig, AutonomousResult,
+    LearningMode, PreservationStrategy, ProcessingPhase, CoordinatorStats,
+};
 pub use config::{AiConfig, AiStats, FallbackReason, FallbackTracker};
 pub use hot_reload::HotReloadManager;
 pub use inference::InferenceEngine;
