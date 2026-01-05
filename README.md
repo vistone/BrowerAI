@@ -21,6 +21,9 @@ cargo run -- --ai-report
 
 # Learn from real websites
 cargo run -- --learn https://example.com
+
+# Run fully autonomous AI-driven browser demo
+cargo run --example autonomous_browser_demo
 ```
 
 ### Key Features
@@ -32,10 +35,13 @@ cargo run -- --learn https://example.com
 - 🔄 **Continuous Learning**: Automated learn-infer-generate loop
 - 📊 **Performance Monitoring**: Real-time inference metrics
 - 🎯 **Multi-Strategy**: Progressive and adaptive processing
+- 👻 **Seamless Experience**: Transparent AI integration without breaking user flow
+- ✅ **Functionality Preservation**: Ensure all original features and interactions work
 
 ### Documentation
 
 - [Full Documentation](docs/en/README.md)
+- [**AI-Driven Browser Architecture**](docs/AI_DRIVEN_BROWSER_ARCHITECTURE.md) - **✨ NEW!**
 - [Enhancement Guide](docs/ENHANCEMENTS.md) - NEW!
 - [Optimization Summary](docs/OPTIMIZATION_SUMMARY.md) - NEW!
 - [Intelligent Rendering Architecture](docs/INTELLIGENT_RENDERING_ARCHITECTURE.md) - NEW!
@@ -74,6 +80,9 @@ cargo run -- --ai-report
 
 # 访问真实网站学习
 cargo run -- --learn https://example.com
+
+# 运行完全自主的AI驱动浏览器演示
+cargo run --example autonomous_browser_demo
 ```
 
 ### 核心特性
@@ -85,10 +94,13 @@ cargo run -- --learn https://example.com
 - 🔄 **持续学习**: 自动化学习-推理-生成循环
 - 📊 **性能监控**: 实时推理指标
 - 🎯 **多策略**: 渐进式和自适应处理
+- 👻 **无感体验**: 透明的AI集成，不影响用户操作
+- ✅ **功能保持**: 确保所有原始功能和交互正常工作
 
 ### 文档
 
 - [完整文档](docs/zh-CN/README.md)
+- [**AI驱动浏览器架构**](docs/AI_DRIVEN_BROWSER_ARCHITECTURE.md) - **✨ 新增!**
 - [增强功能指南](docs/ENHANCEMENTS.md) - 新增!
 - [优化总结](docs/OPTIMIZATION_SUMMARY.md) - 新增!
 - [智能渲染架构](docs/INTELLIGENT_RENDERING_ARCHITECTURE.md) - 新增!
