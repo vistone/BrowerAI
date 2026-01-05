@@ -70,6 +70,16 @@ impl JsParser {
         }
     }
 
+    /// Enable or disable strict compatibility enforcement
+    pub fn set_enforce_compatibility(&mut self, enforce: bool) {
+        self.enforce_compatibility = enforce;
+    }
+
+    /// Get compatibility enforcement status
+    pub fn is_enforcing_compatibility(&self) -> bool {
+        self.enforce_compatibility
+    }
+
     /// Parse JavaScript content using Boa native Rust parser
     pub fn parse(&self, js: &str) -> Result<JsAst> {
         let compatibility_warnings = Self::detect_compatibility_issues(js);
@@ -251,12 +261,6 @@ impl JsParser {
     #[allow(dead_code)]
     pub fn set_ai_enabled(&mut self, enabled: bool) {
         self.enable_ai = enabled && self.inference_engine.is_some();
-    }
-
-    /// Enable or disable strict compatibility enforcement
-    #[allow(dead_code)]
-    pub fn set_enforce_compatibility(&mut self, enforce: bool) {
-        self.enforce_compatibility = enforce;
     }
 
     /// Check if AI enhancement is enabled
