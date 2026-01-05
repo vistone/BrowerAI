@@ -388,23 +388,38 @@ impl JsDeobfuscator {
 
     /// Apply variable renaming
     fn apply_variable_renaming(&self, code: &str) -> String {
-        // Simple variable renaming (placeholder - would use AST transformation)
+        use regex::Regex;
+        
         let mut result = code.to_string();
         let mut replacements = HashMap::new();
         let mut counter = 0;
         
-        // Find single-letter variables and rename them
-        for word in code.split_whitespace() {
-            if word.len() == 1 && word.chars().all(|c| c.is_alphabetic()) {
-                if !replacements.contains_key(word) {
-                    replacements.insert(word.to_string(), format!("var{}", counter));
-                    counter += 1;
-                }
+        // Reserved words that should not be renamed
+        let reserved = [
+            "var", "let", "const", "function", "return", "if", "else", "for", "while",
+            "do", "switch", "case", "break", "continue", "class", "this", "new",
+            "typeof", "instanceof", "in", "of", "try", "catch", "finally", "throw",
+            "async", "await", "true", "false", "null", "undefined", "console", "log"
+        ];
+        
+        // Find single-letter and short variable names and rename them
+        let var_pattern = Regex::new(r"\b[a-z]\b").unwrap();
+        
+        for cap in var_pattern.captures_iter(code) {
+            let var_name = cap.get(0).unwrap().as_str();
+            
+            if !reserved.contains(&var_name) && !replacements.contains_key(var_name) {
+                let new_name = format!("var{}", counter);
+                replacements.insert(var_name.to_string(), new_name);
+                counter += 1;
             }
         }
         
+        // Apply replacements using word boundaries
         for (old, new) in replacements {
-            result = result.replace(&old, &new);
+            let pattern = format!(r"\b{}\b", regex::escape(&old));
+            let re = Regex::new(&pattern).unwrap();
+            result = re.replace_all(&result, new.as_str()).to_string();
         }
         
         result
@@ -412,26 +427,71 @@ impl JsDeobfuscator {
 
     /// Apply string decoding
     fn apply_string_decoding(&self, code: &str) -> String {
-        // Decode hex strings (simplified)
-        let result = code.to_string();
+        use regex::Regex;
         
-        // This is a simplified example - full implementation would decode all encoded strings
-        if result.contains("\\x") {
-            log::debug!("String decoding applied");
-        }
+        let mut result = code.to_string();
         
+        // Decode hex-encoded strings (\xHH format)
+        let hex_pattern = Regex::new(r"\\x([0-9a-fA-F]{2})").unwrap();
+        
+        result = hex_pattern.replace_all(&result, |caps: &regex::Captures| {
+            let hex = &caps[1];
+            if let Ok(byte) = u8::from_str_radix(hex, 16) {
+                if byte.is_ascii_graphic() || byte == b' ' {
+                    // Convert back to readable character
+                    (byte as char).to_string()
+                } else {
+                    // Keep as-is if not printable
+                    format!("\\x{}", hex)
+                }
+            } else {
+                format!("\\x{}", hex)
+            }
+        }).to_string();
+        
+        // Decode unicode escapes (\uHHHH format)
+        let unicode_pattern = Regex::new(r"\\u([0-9a-fA-F]{4})").unwrap();
+        
+        result = unicode_pattern.replace_all(&result, |caps: &regex::Captures| {
+            let hex = &caps[1];
+            if let Ok(code_point) = u32::from_str_radix(hex, 16) {
+                if let Some(ch) = char::from_u32(code_point) {
+                    ch.to_string()
+                } else {
+                    format!("\\u{}", hex)
+                }
+            } else {
+                format!("\\u{}", hex)
+            }
+        }).to_string();
+        
+        log::debug!("String decoding applied");
         result
     }
 
     /// Apply control flow simplification
     fn apply_control_flow_simplification(&self, code: &str) -> String {
-        // Remove some obvious dead code
+        use regex::Regex;
+        
         let mut result = code.to_string();
         
-        // Remove if (false) blocks (simplified)
-        result = result.replace("if (false)", "// removed dead code");
-        result = result.replace("while (false)", "// removed dead code");
+        // Remove if(false) blocks with their content
+        let if_false_pattern = Regex::new(r"if\s*\(\s*false\s*\)\s*\{[^}]*\}").unwrap();
+        result = if_false_pattern.replace_all(&result, "").to_string();
         
+        // Remove while(false) blocks
+        let while_false_pattern = Regex::new(r"while\s*\(\s*false\s*\)\s*\{[^}]*\}").unwrap();
+        result = while_false_pattern.replace_all(&result, "").to_string();
+        
+        // Remove single-line if(false) statements
+        let if_false_single = Regex::new(r"if\s*\(\s*false\s*\)[^;{]*;").unwrap();
+        result = if_false_single.replace_all(&result, "").to_string();
+        
+        // Simplify if(true) to just the body
+        let if_true_pattern = Regex::new(r"if\s*\(\s*true\s*\)\s*\{([^}]*)\}").unwrap();
+        result = if_true_pattern.replace_all(&result, "$1").to_string();
+        
+        log::debug!("Control flow simplification applied");
         result
     }
 

@@ -136,13 +136,38 @@ impl CodeGenerator {
         };
 
         if let Some(pattern) = pattern {
-            // Apply constraints to customize the pattern
             let mut code = pattern.template.clone();
             
-            // Replace placeholders
+            // Defaults for HTML
+            let defaults: HashMap<String, String> = [
+                ("title".to_string(), "Generated Page".to_string()),
+                ("heading".to_string(), "Welcome".to_string()),
+                ("content".to_string(), "Generated content".to_string()),
+                ("action".to_string(), "/submit".to_string()),
+                ("method".to_string(), "POST".to_string()),
+                ("field".to_string(), "input".to_string()),
+                ("label".to_string(), "Input".to_string()),
+                ("header1".to_string(), "Column 1".to_string()),
+                ("header2".to_string(), "Column 2".to_string()),
+                ("data1".to_string(), "Data 1".to_string()),
+                ("data2".to_string(), "Data 2".to_string()),
+                ("item1".to_string(), "Item 1".to_string()),
+                ("item2".to_string(), "Item 2".to_string()),
+                ("item3".to_string(), "Item 3".to_string()),
+            ].into_iter().collect();
+            
+            // Apply constraints
             for (key, value) in &request.constraints {
                 let placeholder = format!("{{{{{}}}}}", key);
                 code = code.replace(&placeholder, value);
+            }
+            
+            // Apply defaults
+            for (key, value) in &defaults {
+                let placeholder = format!("{{{{{}}}}}", key);
+                if code.contains(&placeholder) {
+                    code = code.replace(&placeholder, value);
+                }
             }
             
             Ok(code)
@@ -173,10 +198,32 @@ impl CodeGenerator {
         if let Some(pattern) = pattern {
             let mut code = pattern.template.clone();
             
+            // Defaults for CSS
+            let defaults: HashMap<String, String> = [
+                ("font".to_string(), "Arial, sans-serif".to_string()),
+                ("padding".to_string(), "20px".to_string()),
+                ("background".to_string(), "#ffffff".to_string()),
+                ("bg_color".to_string(), "#007bff".to_string()),
+                ("text_color".to_string(), "#ffffff".to_string()),
+                ("radius".to_string(), "4px".to_string()),
+                ("shadow".to_string(), "0 2px 4px rgba(0,0,0,0.1)".to_string()),
+                ("margin".to_string(), "10px".to_string()),
+                ("width".to_string(), "1200px".to_string()),
+                ("gap".to_string(), "16px".to_string()),
+            ].into_iter().collect();
+            
             // Replace placeholders
             for (key, value) in &request.constraints {
                 let placeholder = format!("{{{{{}}}}}", key);
                 code = code.replace(&placeholder, value);
+            }
+            
+            // Apply defaults
+            for (key, value) in &defaults {
+                let placeholder = format!("{{{{{}}}}}", key);
+                if code.contains(&placeholder) {
+                    code = code.replace(&placeholder, value);
+                }
             }
             
             Ok(code)
@@ -203,10 +250,32 @@ impl CodeGenerator {
         if let Some(pattern) = pattern {
             let mut code = pattern.template.clone();
             
-            // Replace placeholders
+            // Replace placeholders with constraints or defaults
+            let defaults: HashMap<String, String> = [
+                ("name".to_string(), "generatedFunction".to_string()),
+                ("params".to_string(), "".to_string()),
+                ("body".to_string(), "// TODO: implement".to_string()),
+                ("description".to_string(), "Generated function".to_string()),
+                ("return_value".to_string(), "undefined".to_string()),
+                ("element_id".to_string(), "element".to_string()),
+                ("event".to_string(), "click".to_string()),
+                ("handler_body".to_string(), "// Handle event".to_string()),
+                ("url".to_string(), "/api/data".to_string()),
+                ("process_data".to_string(), "console.log(data);".to_string()),
+            ].into_iter().collect();
+            
+            // First apply constraints
             for (key, value) in &request.constraints {
                 let placeholder = format!("{{{{{}}}}}", key);
                 code = code.replace(&placeholder, value);
+            }
+            
+            // Then apply defaults for remaining placeholders
+            for (key, value) in &defaults {
+                let placeholder = format!("{{{{{}}}}}", key);
+                if code.contains(&placeholder) {
+                    code = code.replace(&placeholder, value);
+                }
             }
             
             Ok(code)
