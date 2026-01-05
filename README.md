@@ -36,11 +36,16 @@ cargo run -- --learn https://example.com
 ### Documentation
 
 - [Full Documentation](docs/en/README.md)
-- [Enhancement Guide](docs/ENHANCEMENTS.md) - **NEW!**
-- [Optimization Summary](docs/OPTIMIZATION_SUMMARY.md) - **NEW!**
+- [Enhancement Guide](docs/ENHANCEMENTS.md) - NEW!
+- [Optimization Summary](docs/OPTIMIZATION_SUMMARY.md) - NEW!
+- [Intelligent Rendering Architecture](docs/INTELLIGENT_RENDERING_ARCHITECTURE.md) - NEW!
+- [Real Network Testing Guide](docs/REAL_NETWORK_TESTING.md) - **NEW!**
+- [Comprehensive Testing](docs/COMPREHENSIVE_TESTING.md) - NEW!
+- [Real Test Results](docs/REAL_TEST_RESULTS.md) - NEW!
 - [Quick Reference](docs/en/QUICKREF.md)
 - [Getting Started](docs/en/GETTING_STARTED.md)
 - [Training Guide](training/README.md)
+- [Model Zoo](models/MODEL_ZOO.md) - NEW!
 
 ### Technology Stack
 
@@ -84,11 +89,16 @@ cargo run -- --learn https://example.com
 ### 文档
 
 - [完整文档](docs/zh-CN/README.md)
-- [增强功能指南](docs/ENHANCEMENTS.md) - **新增!**
-- [优化总结](docs/OPTIMIZATION_SUMMARY.md) - **新增!**
+- [增强功能指南](docs/ENHANCEMENTS.md) - 新增!
+- [优化总结](docs/OPTIMIZATION_SUMMARY.md) - 新增!
+- [智能渲染架构](docs/INTELLIGENT_RENDERING_ARCHITECTURE.md) - 新增!
+- [真实网络测试指南](docs/REAL_NETWORK_TESTING.md) - **新增!**
+- [全面测试文档](docs/COMPREHENSIVE_TESTING.md) - 新增!
+- [真实测试结果](docs/REAL_TEST_RESULTS.md) - 新增!
 - [快速参考](docs/zh-CN/QUICKREF.md)
 - [入门指南](docs/zh-CN/GETTING_STARTED.md)
 - [训练指南](training/README.md)
+- [模型库](models/MODEL_ZOO.md) - 新增!
 
 ### 技术栈
 
