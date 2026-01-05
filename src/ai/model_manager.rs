@@ -40,8 +40,17 @@ pub struct ModelManager {
 /// Health status for a model record
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum ModelHealth {
+    /// Model is ready to use
     Ready,
+    /// Model file is missing
     MissingFile,
+    /// Model failed to load
+    LoadFailed(String),
+    /// Model failed validation checks
+    ValidationFailed(String),
+    /// Model inference consistently fails
+    InferenceFailing,
+    /// Health status unknown
     Unknown,
 }
 
@@ -193,6 +202,130 @@ impl ModelManager {
     pub fn model_dir(&self) -> &Path {
         &self.model_dir
     }
+
+    /// Update the health status of a specific model
+    pub fn update_model_health(&mut self, model_name: &str, health: ModelHealth) -> Result<()> {
+        let mut found = false;
+        for models in self.models.values_mut() {
+            for model in models.iter_mut() {
+                if model.name == model_name {
+                    let old_health = model.health.clone();
+                    model.health = health.clone();
+                    found = true;
+                    
+                    // Log health changes
+                    if old_health != health {
+                        match &health {
+                            ModelHealth::Ready => {
+                                log::info!("Model '{}' health improved: {:?} -> Ready", model_name, old_health);
+                            }
+                            ModelHealth::LoadFailed(reason) => {
+                                log::warn!("Model '{}' failed to load: {}", model_name, reason);
+                            }
+                            ModelHealth::ValidationFailed(reason) => {
+                                log::warn!("Model '{}' failed validation: {}", model_name, reason);
+                            }
+                            ModelHealth::InferenceFailing => {
+                                log::error!("Model '{}' consistently failing inference - consider replacing", model_name);
+                            }
+                            _ => {
+                                log::debug!("Model '{}' health changed: {:?} -> {:?}", model_name, old_health, health);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        if !found {
+            anyhow::bail!("Model '{}' not found in registry", model_name);
+        }
+        
+        Ok(())
+    }
+
+    /// Check for bad models and return their names with reasons
+    pub fn detect_bad_models(&self) -> Vec<(String, String)> {
+        let mut bad_models = Vec::new();
+        
+        for models in self.models.values() {
+            for model in models {
+                let reason = match &model.health {
+                    ModelHealth::MissingFile => {
+                        Some(format!("Model file '{}' is missing", model.path.display()))
+                    }
+                    ModelHealth::LoadFailed(err) => {
+                        Some(format!("Failed to load: {}", err))
+                    }
+                    ModelHealth::ValidationFailed(err) => {
+                        Some(format!("Failed validation: {}", err))
+                    }
+                    ModelHealth::InferenceFailing => {
+                        Some("Inference consistently failing".to_string())
+                    }
+                    _ => None,
+                };
+                
+                if let Some(reason) = reason {
+                    bad_models.push((model.name.clone(), reason));
+                }
+            }
+        }
+        
+        bad_models
+    }
+
+    /// Get health summary for all models
+    pub fn health_summary(&self) -> ModelHealthSummary {
+        let mut summary = ModelHealthSummary::default();
+        
+        for models in self.models.values() {
+            for model in models {
+                summary.total += 1;
+                match model.health {
+                    ModelHealth::Ready => summary.ready += 1,
+                    ModelHealth::MissingFile => summary.missing_file += 1,
+                    ModelHealth::LoadFailed(_) => summary.load_failed += 1,
+                    ModelHealth::ValidationFailed(_) => summary.validation_failed += 1,
+                    ModelHealth::InferenceFailing => summary.inference_failing += 1,
+                    ModelHealth::Unknown => summary.unknown += 1,
+                }
+            }
+        }
+        
+        summary
+    }
+}
+
+/// Summary of model health across all registered models
+#[derive(Debug, Clone, Default)]
+pub struct ModelHealthSummary {
+    pub total: usize,
+    pub ready: usize,
+    pub missing_file: usize,
+    pub load_failed: usize,
+    pub validation_failed: usize,
+    pub inference_failing: usize,
+    pub unknown: usize,
+}
+
+impl ModelHealthSummary {
+    /// Get the percentage of healthy models
+    pub fn health_rate(&self) -> f64 {
+        if self.total == 0 {
+            0.0
+        } else {
+            self.ready as f64 / self.total as f64
+        }
+    }
+
+    /// Check if there are any bad models
+    pub fn has_issues(&self) -> bool {
+        self.missing_file > 0
+            || self.load_failed > 0
+            || self.validation_failed > 0
+            || self.inference_failing > 0
+    }
 }
 
 #[cfg(test)]
@@ -263,5 +396,180 @@ mod tests {
         let best = manager.get_best_model(&ModelType::CssParser).unwrap();
         assert_eq!(best.name, "ready_model");
         assert_eq!(best.health, ModelHealth::Ready);
+    }
+
+    #[test]
+    fn test_update_model_health() {
+        let temp_dir = tempdir().unwrap();
+        let mut manager = ModelManager::new(temp_dir.path().to_path_buf()).unwrap();
+
+        let config = ModelConfig {
+            name: "test_model".to_string(),
+            model_type: ModelType::HtmlParser,
+            path: PathBuf::from("test.onnx"),
+            description: "Test model".to_string(),
+            version: "1.0.0".to_string(),
+            priority: 1,
+            health: ModelHealth::Unknown,
+        };
+
+        manager.register_model(config).unwrap();
+
+        // Update health to Ready
+        manager
+            .update_model_health("test_model", ModelHealth::Ready)
+            .unwrap();
+        let model = manager.get_models(&ModelType::HtmlParser)[0];
+        assert_eq!(model.health, ModelHealth::Ready);
+
+        // Update health to LoadFailed
+        manager
+            .update_model_health(
+                "test_model",
+                ModelHealth::LoadFailed("Test error".to_string()),
+            )
+            .unwrap();
+        let model = manager.get_models(&ModelType::HtmlParser)[0];
+        match model.health {
+            ModelHealth::LoadFailed(_) => (),
+            _ => panic!("Expected LoadFailed"),
+        }
+    }
+
+    #[test]
+    fn test_detect_bad_models() {
+        let temp_dir = tempdir().unwrap();
+        let mut manager = ModelManager::new(temp_dir.path().to_path_buf()).unwrap();
+
+        // Add a good model (create the file)
+        let good_path = temp_dir.path().join("good.onnx");
+        std::fs::write(&good_path, b"fake model data").unwrap();
+        
+        let good_config = ModelConfig {
+            name: "good_model".to_string(),
+            model_type: ModelType::HtmlParser,
+            path: PathBuf::from("good.onnx"),
+            description: "Good model".to_string(),
+            version: "1.0.0".to_string(),
+            priority: 1,
+            health: ModelHealth::Unknown, // Will be set to Ready by register_model
+        };
+        manager.register_model(good_config).unwrap();
+
+        // Add bad models (don't create files - they will be marked as MissingFile)
+        let missing_config = ModelConfig {
+            name: "missing_model".to_string(),
+            model_type: ModelType::CssParser,
+            path: PathBuf::from("missing.onnx"),
+            description: "Missing model".to_string(),
+            version: "1.0.0".to_string(),
+            priority: 1,
+            health: ModelHealth::Unknown, // Will be set to MissingFile by register_model
+        };
+        manager.register_model(missing_config).unwrap();
+
+        // Update one model to LoadFailed status
+        manager
+            .update_model_health("missing_model", ModelHealth::LoadFailed("Test error".to_string()))
+            .unwrap();
+
+        let bad_models = manager.detect_bad_models();
+        assert_eq!(bad_models.len(), 1); // Only the LoadFailed one
+        
+        let names: Vec<String> = bad_models.iter().map(|(n, _)| n.clone()).collect();
+        assert!(names.contains(&"missing_model".to_string()));
+    }
+
+    #[test]
+    fn test_health_summary() {
+        let temp_dir = tempdir().unwrap();
+        let mut manager = ModelManager::new(temp_dir.path().to_path_buf()).unwrap();
+
+        // Create files for "ready" models
+        std::fs::write(temp_dir.path().join("ready1.onnx"), b"fake").unwrap();
+        std::fs::write(temp_dir.path().join("ready2.onnx"), b"fake").unwrap();
+
+        // Add models with various health statuses
+        let configs = vec![
+            ModelConfig {
+                name: "ready1".to_string(),
+                model_type: ModelType::HtmlParser,
+                path: PathBuf::from("ready1.onnx"),
+                description: "".to_string(),
+                version: "1.0.0".to_string(),
+                priority: 1,
+                health: ModelHealth::Unknown, // Will be set to Ready
+            },
+            ModelConfig {
+                name: "ready2".to_string(),
+                model_type: ModelType::CssParser,
+                path: PathBuf::from("ready2.onnx"),
+                description: "".to_string(),
+                version: "1.0.0".to_string(),
+                priority: 1,
+                health: ModelHealth::Unknown, // Will be set to Ready
+            },
+            ModelConfig {
+                name: "missing".to_string(),
+                model_type: ModelType::JsParser,
+                path: PathBuf::from("missing.onnx"),
+                description: "".to_string(),
+                version: "1.0.0".to_string(),
+                priority: 1,
+                health: ModelHealth::Unknown, // Will be set to MissingFile
+            },
+            ModelConfig {
+                name: "failing".to_string(),
+                model_type: ModelType::LayoutOptimizer,
+                path: PathBuf::from("failing.onnx"),
+                description: "".to_string(),
+                version: "1.0.0".to_string(),
+                priority: 1,
+                health: ModelHealth::Unknown, // Will be set to MissingFile, then we'll update
+            },
+        ];
+
+        for config in configs {
+            manager.register_model(config).unwrap();
+        }
+
+        // Update the failing model manually
+        manager
+            .update_model_health("failing", ModelHealth::InferenceFailing)
+            .unwrap();
+
+        let summary = manager.health_summary();
+        assert_eq!(summary.total, 4);
+        assert_eq!(summary.ready, 2);
+        assert_eq!(summary.missing_file, 1);
+        assert_eq!(summary.inference_failing, 1);
+        assert_eq!(summary.health_rate(), 0.5);
+        assert!(summary.has_issues());
+    }
+
+    #[test]
+    fn test_health_summary_all_healthy() {
+        let temp_dir = tempdir().unwrap();
+        let mut manager = ModelManager::new(temp_dir.path().to_path_buf()).unwrap();
+
+        // Create the model file so it's marked as Ready
+        std::fs::write(temp_dir.path().join("healthy.onnx"), b"fake").unwrap();
+
+        let config = ModelConfig {
+            name: "healthy".to_string(),
+            model_type: ModelType::HtmlParser,
+            path: PathBuf::from("healthy.onnx"),
+            description: "".to_string(),
+            version: "1.0.0".to_string(),
+            priority: 1,
+            health: ModelHealth::Unknown, // Will be set to Ready
+        };
+        manager.register_model(config).unwrap();
+
+        let summary = manager.health_summary();
+        assert_eq!(summary.total, 1);
+        assert_eq!(summary.ready, 1);
+        assert_eq!(summary.health_rate(), 1.0);
+        assert!(!summary.has_issues());
     }
 }

@@ -16,7 +16,7 @@ pub use config::{AiConfig, AiStats, FallbackReason, FallbackTracker};
 pub use hot_reload::HotReloadManager;
 pub use inference::InferenceEngine;
 pub use model_loader::ModelLoader;
-pub use model_manager::ModelManager;
+pub use model_manager::{ModelHealth, ModelHealthSummary, ModelManager};
 pub use runtime::AiRuntime;
 pub use reporter::AiReporter;
 pub use feedback_pipeline::FeedbackPipeline;
