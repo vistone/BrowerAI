@@ -63,6 +63,9 @@ impl HtmlParser {
 
     /// Parse HTML content into a DOM tree
     pub fn parse(&self, html: &str) -> Result<RcDom> {
+        use std::time::Instant;
+        use crate::ai::config::FallbackReason;
+
         let input = Cursor::new(html.as_bytes());
         let dom = parse_document(RcDom::default(), Default::default())
             .from_utf8()
@@ -70,48 +73,71 @@ impl HtmlParser {
 
         log::info!("Successfully parsed HTML document");
 
-        let ai_active = self.enable_ai && self.inference_engine.is_some();
-        if ai_active {
-            let monitor = self.ai_runtime.as_ref().and_then(|r| r.monitor());
-            let model_path = self.model_path.as_deref();
-            let model_name = self.model_name.as_deref().unwrap_or("html_model");
+        // Check if AI runtime is available and AI is enabled
+        let runtime = self.ai_runtime.as_ref();
+        let ai_enabled = runtime.map_or(false, |r| r.is_ai_enabled()) && self.enable_ai;
 
-            match HtmlModelIntegration::new(
-                self.inference_engine.as_ref().unwrap(),
-                model_path,
-                monitor,
-            ) {
-                Ok(mut integration) => {
-                    match integration.validate_structure(html) {
-                        Ok((valid, complexity)) => {
-                            log::info!(
-                                "AI HTML validation (model={}): valid={} complexity={:.3}",
-                                model_name, valid, complexity
-                            );
-                        }
-                        Err(err) => {
-                            log::warn!(
-                                "AI HTML validation failed (model={}): {}; using baseline output",
-                                model_name,
-                                err
-                            );
-                        }
-                    }
-                }
-                Err(err) => {
-                    log::warn!(
-                        "AI HTML integration could not start (model={}): {}; continuing without AI",
-                        model_name,
-                        err
-                    );
-                }
+        if !ai_enabled {
+            if self.enable_ai && runtime.is_none() {
+                log::debug!("AI enhancement disabled for HTML parsing; no runtime available");
+            } else {
+                log::debug!("AI enhancement disabled for HTML parsing; baseline path in use");
             }
-        } else if self.enable_ai {
+            return Ok(dom);
+        }
+
+        let runtime = runtime.unwrap();
+        let tracker = runtime.fallback_tracker();
+        tracker.record_attempt();
+
+        // Try AI enhancement
+        let ai_active = self.enable_ai && self.inference_engine.is_some();
+        if !ai_active {
+            tracker.record_fallback(FallbackReason::NoModelAvailable);
             log::warn!(
                 "AI was requested for HTML parsing but no inference engine is available; falling back to baseline parser"
             );
-        } else {
-            log::debug!("AI enhancement disabled for HTML parsing; baseline path in use");
+            return Ok(dom);
+        }
+
+        let monitor = runtime.monitor();
+        let model_path = self.model_path.as_deref();
+        let model_name = self.model_name.as_deref().unwrap_or("html_model");
+        let start_time = Instant::now();
+
+        match HtmlModelIntegration::new(
+            self.inference_engine.as_ref().unwrap(),
+            model_path,
+            monitor,
+        ) {
+            Ok(mut integration) => {
+                match integration.validate_structure(html) {
+                    Ok((valid, complexity)) => {
+                        let elapsed_ms = start_time.elapsed().as_millis() as u64;
+                        tracker.record_success(elapsed_ms);
+                        log::info!(
+                            "AI HTML validation (model={}, {}ms): valid={} complexity={:.3}",
+                            model_name, elapsed_ms, valid, complexity
+                        );
+                    }
+                    Err(err) => {
+                        tracker.record_fallback(FallbackReason::InferenceFailed(err.to_string()));
+                        log::warn!(
+                            "AI HTML validation failed (model={}): {}; using baseline output",
+                            model_name,
+                            err
+                        );
+                    }
+                }
+            }
+            Err(err) => {
+                tracker.record_fallback(FallbackReason::ModelLoadFailed(err.to_string()));
+                log::warn!(
+                    "AI HTML integration could not start (model={}): {}; continuing without AI",
+                    model_name,
+                    err
+                );
+            }
         }
 
         Ok(dom)
