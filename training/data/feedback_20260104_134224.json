@@ -1,0 +1,64 @@
+[
+  {
+    "ai_used": true,
+    "complexity": 0.5,
+    "error": null,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:24.871836639+00:00",
+    "type": "html_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 4,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:24.871839404+00:00",
+    "type": "js_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 1,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:24.871840676+00:00",
+    "type": "js_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 8,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:24.871841939+00:00",
+    "type": "js_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 4,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:24.871843021+00:00",
+    "type": "js_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 3,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:24.871844083+00:00",
+    "type": "js_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 1,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:24.871845215+00:00",
+    "type": "js_parsing"
+  }
+]

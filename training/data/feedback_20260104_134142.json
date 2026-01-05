@@ -1,0 +1,45 @@
+[
+  {
+    "ai_used": true,
+    "complexity": 0.5,
+    "error": null,
+    "success": true,
+    "timestamp": "2026-01-04T13:41:42.869954517+00:00",
+    "type": "html_parsing"
+  },
+  {
+    "ai_used": true,
+    "error": null,
+    "rule_count": 2,
+    "success": true,
+    "timestamp": "2026-01-04T13:41:42.869956761+00:00",
+    "type": "css_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 2,
+    "success": true,
+    "timestamp": "2026-01-04T13:41:42.869958675+00:00",
+    "type": "js_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 1,
+    "success": true,
+    "timestamp": "2026-01-04T13:41:42.869959867+00:00",
+    "type": "js_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 4,
+    "success": true,
+    "timestamp": "2026-01-04T13:41:42.869960819+00:00",
+    "type": "js_parsing"
+  }
+]

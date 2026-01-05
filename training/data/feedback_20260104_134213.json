@@ -1,0 +1,116 @@
+[
+  {
+    "ai_used": true,
+    "complexity": 0.5,
+    "error": null,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:13.918027875+00:00",
+    "type": "html_parsing"
+  },
+  {
+    "ai_used": true,
+    "error": null,
+    "rule_count": 1,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:13.918089390+00:00",
+    "type": "css_parsing"
+  },
+  {
+    "ai_used": true,
+    "error": null,
+    "rule_count": 0,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:13.918090522+00:00",
+    "type": "css_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 2,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:13.918092255+00:00",
+    "type": "js_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 2,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:13.918093167+00:00",
+    "type": "js_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 1,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:13.918093869+00:00",
+    "type": "js_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 1,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:13.918232296+00:00",
+    "type": "js_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 6,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:13.918233459+00:00",
+    "type": "js_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 7,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:13.918234300+00:00",
+    "type": "js_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 2,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:13.918235172+00:00",
+    "type": "js_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 6,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:13.918235953+00:00",
+    "type": "js_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 4,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:13.918236685+00:00",
+    "type": "js_parsing"
+  },
+  {
+    "ai_used": true,
+    "compatibility_warnings": [],
+    "error": null,
+    "statement_count": 3,
+    "success": true,
+    "timestamp": "2026-01-04T13:42:13.918237406+00:00",
+    "type": "js_parsing"
+  }
+]

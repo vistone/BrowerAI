@@ -1,0 +1,130 @@
+# Site category definitions with URL patterns and keywords
+categories:
+  news:
+    keywords:
+      - news
+      - headlines
+      - article
+      - breaking
+      - reporter
+      - journalism
+    url_patterns:
+      - news
+      - xinhua
+      - cnn
+      - bbc
+      - reuters
+    
+  ecommerce:
+    keywords:
+      - shop
+      - cart
+      - buy
+      - product
+      - price
+      - checkout
+      - store
+    url_patterns:
+      - taobao
+      - jd
+      - amazon
+      - ebay
+      - shop
+      - mall
+      
+  tech:
+    keywords:
+      - developer
+      - documentation
+      - api
+      - github
+      - code
+      - programming
+    url_patterns:
+      - github
+      - stackoverflow
+      - dev
+      - api
+      - docs
+      
+  social:
+    keywords:
+      - social
+      - follow
+      - share
+      - post
+      - comment
+      - profile
+    url_patterns:
+      - facebook
+      - twitter
+      - weibo
+      - zhihu
+      - douban
+      
+  video:
+    keywords:
+      - video
+      - watch
+      - play
+      - channel
+      - subscribe
+    url_patterns:
+      - youtube
+      - bilibili
+      - youku
+      - video
+      
+  education:
+    keywords:
+      - course
+      - learn
+      - education
+      - university
+      - student
+      - lecture
+    url_patterns:
+      - edu
+      - coursera
+      - udemy
+      - mooc
+      
+  government:
+    keywords:
+      - government
+      - official
+      - ministry
+      - department
+      - policy
+    url_patterns:
+      - gov
+      - mil
+      
+  finance:
+    keywords:
+      - bank
+      - finance
+      - investment
+      - stock
+      - trading
+    url_patterns:
+      - bank
+      - finance
+      - trading
+      
+  entertainment:
+    keywords:
+      - entertainment
+      - movie
+      - music
+      - game
+      - celebrity
+    url_patterns:
+      - entertainment
+      - movie
+      - music
+      - game
+      
+  other:
+    keywords: []
+    url_patterns: []

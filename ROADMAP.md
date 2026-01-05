@@ -94,6 +94,28 @@ Enable AI-powered parsing and optimization capabilities
 - **M2.3**: Models integrated (Week 10) ✅
 - **M2.4**: Testing complete (Week 12) ✅
 
+## AI-Centric Execution Refresh (2026 H1) - Proposed 🚧
+
+### Principles
+- AI-first with graceful fallback: any AI failure or absence must revert to non-AI paths.
+- Full observability: model selection, inference latency, and fallback reasons are logged/monitorable.
+- Unified interfaces/sandbox: AI and non-AI paths share abstractions across parse/exec/render, easing swaps (boa → V8/QuickJS).
+
+### Focus Tracks
+- AI loop + fallback: insert AI hooks in HTML/CSS/JS parsing and rendering; log model choice/latency/fallback; configurable switch by default.
+- Model management hardening: extend `ModelManager` with priority/health/version decisions; detect bad models with warnings; test best-choice strategy.
+- JS compatibility & sandbox: keep boa_parser, list unsupported features and pre-run checks; enforce quotas and IO/network denial; one sandbox interface to allow future V8/QuickJS.
+- Rendering/layout baseline: define minimal box-model assertions (structural or snapshot) and keep stubs for AI layout hints.
+- Performance & monitoring: wire `performance_monitor` into parse/render/AI nodes; capture latency and fallback rate; surface minimal metrics panel.
+- Engine selection spike: evaluate V8/QuickJS/WASM via the sandbox interface; document feasibility and cost.
+
+### Milestones (draft)
+- **M1**: AI loop + fallback landed (logging, config switch, no/bad-model fallback tests).
+- **M2**: JS sandbox and compatibility list ready; small compatibility test suite passes.
+- **M3**: Model priority/health/bad-model detection complete; best-choice strategy tested.
+- **M4**: Rendering/layout minimal baseline with regression tests; performance monitoring on key nodes.
+- **M5**: Engine selection spike (V8/QuickJS) delivered with decision report and interface gap analysis.
+
 ## Phase 3: Rendering Engine (Q2 2026) - IN PROGRESS 🚧
 
 ### Goals

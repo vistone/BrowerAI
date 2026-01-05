@@ -1,0 +1,107 @@
+{
+  "original_structure": {
+    "has_header": false,
+    "has_nav": false,
+    "has_sidebar": false,
+    "has_footer": false,
+    "has_articles": false,
+    "article_count": 0,
+    "section_count": 0,
+    "card_count": 0,
+    "layout_type": "single_page"
+  },
+  "original_theme": {
+    "uses_dark_mode": false,
+    "uses_light_mode": true,
+    "color_palette": [
+      "#ffffff"
+    ],
+    "font_families": [],
+    "uses_rem": false,
+    "uses_em": false,
+    "uses_viewport_units": false
+  },
+  "alternative_themes": [
+    {
+      "scheme_name": "blue_modern",
+      "colors": {
+        "primary": "#2563eb",
+        "secondary": "#3b82f6",
+        "accent": "#60a5fa",
+        "background": "#f8fafc",
+        "text": "#1e293b"
+      },
+      "layout_css": {
+        "container": "max-width: 800px; margin: 0 auto; padding: 2rem;"
+      },
+      "structure_preserved": true,
+      "responsive": true,
+      "generated_css": ":root {\n  --primary: #2563eb;\n  --secondary: #3b82f6;\n  --accent: #60a5fa;\n  --background: #f8fafc;\n  --text: #1e293b;\n}\n\nbody {\n  background: #f8fafc;\n  color: #1e293b;\n  font-family: system-ui, -apple-system, sans-serif;\n  line-height: 1.6;\n}\n\n.container {\n  max-width: 800px; margin: 0 auto; padding: 2rem;\n}\n"
+    },
+    {
+      "scheme_name": "green_nature",
+      "colors": {
+        "primary": "#059669",
+        "secondary": "#10b981",
+        "accent": "#34d399",
+        "background": "#f0fdf4",
+        "text": "#064e3b"
+      },
+      "layout_css": {
+        "container": "max-width: 800px; margin: 0 auto; padding: 2rem;"
+      },
+      "structure_preserved": true,
+      "responsive": true,
+      "generated_css": ":root {\n  --primary: #059669;\n  --secondary: #10b981;\n  --accent: #34d399;\n  --background: #f0fdf4;\n  --text: #064e3b;\n}\n\nbody {\n  background: #f0fdf4;\n  color: #064e3b;\n  font-family: system-ui, -apple-system, sans-serif;\n  line-height: 1.6;\n}\n\n.container {\n  max-width: 800px; margin: 0 auto; padding: 2rem;\n}\n"
+    },
+    {
+      "scheme_name": "purple_creative",
+      "colors": {
+        "primary": "#7c3aed",
+        "secondary": "#8b5cf6",
+        "accent": "#a78bfa",
+        "background": "#faf5ff",
+        "text": "#4c1d95"
+      },
+      "layout_css": {
+        "container": "max-width: 800px; margin: 0 auto; padding: 2rem;"
+      },
+      "structure_preserved": true,
+      "responsive": true,
+      "generated_css": ":root {\n  --primary: #7c3aed;\n  --secondary: #8b5cf6;\n  --accent: #a78bfa;\n  --background: #faf5ff;\n  --text: #4c1d95;\n}\n\nbody {\n  background: #faf5ff;\n  color: #4c1d95;\n  font-family: system-ui, -apple-system, sans-serif;\n  line-height: 1.6;\n}\n\n.container {\n  max-width: 800px; margin: 0 auto; padding: 2rem;\n}\n"
+    },
+    {
+      "scheme_name": "dark_elegant",
+      "colors": {
+        "primary": "#fbbf24",
+        "secondary": "#f59e0b",
+        "accent": "#d97706",
+        "background": "#1f2937",
+        "text": "#f9fafb"
+      },
+      "layout_css": {
+        "container": "max-width: 800px; margin: 0 auto; padding: 2rem;"
+      },
+      "structure_preserved": true,
+      "responsive": true,
+      "generated_css": ":root {\n  --primary: #fbbf24;\n  --secondary: #f59e0b;\n  --accent: #d97706;\n  --background: #1f2937;\n  --text: #f9fafb;\n}\n\nbody {\n  background: #1f2937;\n  color: #f9fafb;\n  font-family: system-ui, -apple-system, sans-serif;\n  line-height: 1.6;\n}\n\n.container {\n  max-width: 800px; margin: 0 auto; padding: 2rem;\n}\n"
+    },
+    {
+      "scheme_name": "minimalist",
+      "colors": {
+        "primary": "#64748b",
+        "secondary": "#475569",
+        "accent": "#94a3b8",
+        "background": "#ffffff",
+        "text": "#0f172a"
+      },
+      "layout_css": {
+        "container": "max-width: 800px; margin: 0 auto; padding: 2rem;"
+      },
+      "structure_preserved": true,
+      "responsive": true,
+      "generated_css": ":root {\n  --primary: #64748b;\n  --secondary: #475569;\n  --accent: #94a3b8;\n  --background: #ffffff;\n  --text: #0f172a;\n}\n\nbody {\n  background: #ffffff;\n  color: #0f172a;\n  font-family: system-ui, -apple-system, sans-serif;\n  line-height: 1.6;\n}\n\n.container {\n  max-width: 800px; margin: 0 auto; padding: 2rem;\n}\n"
+    }
+  ],
+  "recommendation_count": 5
+}

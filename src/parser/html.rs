@@ -5,11 +5,18 @@ use markup5ever_rcdom::{Handle, NodeData, RcDom};
 use std::default::Default;
 use std::io::Cursor;
 
-use crate::ai::InferenceEngine;
+use std::path::PathBuf;
+
+use crate::ai::integration::HtmlModelIntegration;
+use crate::ai::model_manager::ModelType;
+use crate::ai::{AiRuntime, InferenceEngine};
 
 /// HTML parser with AI enhancement capabilities
 pub struct HtmlParser {
     inference_engine: Option<InferenceEngine>,
+    ai_runtime: Option<AiRuntime>,
+    model_path: Option<PathBuf>,
+    model_name: Option<String>,
     enable_ai: bool,
 }
 
@@ -18,6 +25,9 @@ impl HtmlParser {
     pub fn new() -> Self {
         Self {
             inference_engine: None,
+            ai_runtime: None,
+            model_path: None,
+            model_name: None,
             enable_ai: false,
         }
     }
@@ -27,6 +37,26 @@ impl HtmlParser {
     pub fn with_ai(inference_engine: InferenceEngine) -> Self {
         Self {
             inference_engine: Some(inference_engine),
+            ai_runtime: None,
+            model_path: None,
+            model_name: None,
+            enable_ai: true,
+        }
+    }
+
+    /// Create a new HTML parser with AI runtime (engine + model catalog + monitor)
+    #[allow(dead_code)]
+    pub fn with_ai_runtime(ai_runtime: AiRuntime) -> Self {
+        let (model_name, model_path) = ai_runtime
+            .best_model(ModelType::HtmlParser)
+            .map(|(cfg, path)| (Some(cfg.name), Some(path)))
+            .unwrap_or((None, None));
+
+        Self {
+            inference_engine: Some(ai_runtime.engine()),
+            ai_runtime: Some(ai_runtime),
+            model_path,
+            model_name,
             enable_ai: true,
         }
     }
@@ -40,11 +70,48 @@ impl HtmlParser {
 
         log::info!("Successfully parsed HTML document");
 
-        // TODO: Apply AI-based optimizations and enhancements
-        if self.enable_ai && self.inference_engine.is_some() {
-            log::debug!("AI enhancement enabled for HTML parsing");
-            // Future: Use AI model to enhance parsing, fix malformed HTML,
-            // predict structure, etc.
+        let ai_active = self.enable_ai && self.inference_engine.is_some();
+        if ai_active {
+            let monitor = self.ai_runtime.as_ref().and_then(|r| r.monitor());
+            let model_path = self.model_path.as_deref();
+            let model_name = self.model_name.as_deref().unwrap_or("html_model");
+
+            match HtmlModelIntegration::new(
+                self.inference_engine.as_ref().unwrap(),
+                model_path,
+                monitor,
+            ) {
+                Ok(mut integration) => {
+                    match integration.validate_structure(html) {
+                        Ok((valid, complexity)) => {
+                            log::info!(
+                                "AI HTML validation (model={}): valid={} complexity={:.3}",
+                                model_name, valid, complexity
+                            );
+                        }
+                        Err(err) => {
+                            log::warn!(
+                                "AI HTML validation failed (model={}): {}; using baseline output",
+                                model_name,
+                                err
+                            );
+                        }
+                    }
+                }
+                Err(err) => {
+                    log::warn!(
+                        "AI HTML integration could not start (model={}): {}; continuing without AI",
+                        model_name,
+                        err
+                    );
+                }
+            }
+        } else if self.enable_ai {
+            log::warn!(
+                "AI was requested for HTML parsing but no inference engine is available; falling back to baseline parser"
+            );
+        } else {
+            log::debug!("AI enhancement disabled for HTML parsing; baseline path in use");
         }
 
         Ok(dom)

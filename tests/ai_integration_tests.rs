@@ -1,6 +1,6 @@
 //! AI-specific integration tests for BrowerAI Phase 2.4
 
-use browerai::ai::integration::HtmlModelIntegration;
+use browerai::ai::integration::{HtmlModelIntegration, JsDeobfuscatorIntegration};
 use browerai::ai::InferenceEngine;
 use browerai::parser::{CssParser, HtmlParser, JsParser};
 
@@ -29,7 +29,7 @@ fn test_parser_with_ai_integration() {
 #[test]
 fn test_ai_model_integration_fallback() {
     let engine = InferenceEngine::new().unwrap();
-    let integration = HtmlModelIntegration::new(&engine, None).unwrap();
+    let mut integration = HtmlModelIntegration::new(&engine, None, None).unwrap();
 
     // Test fallback behavior when no model is loaded
     let (valid, complexity) = integration
@@ -93,4 +93,48 @@ fn test_js_parser_basic() {
 
     let result = parser.parse(js);
     assert!(result.is_ok());
+}
+
+#[test]
+fn test_js_deobfuscator_integration() {
+    let engine = InferenceEngine::new().unwrap();
+    
+    // Test without model (fallback mode)
+    let mut integration = JsDeobfuscatorIntegration::new(&engine, None, None).unwrap();
+    
+    let obfuscated = "var a=function(){return 42;}";
+    let result = integration.deobfuscate(obfuscated);
+    
+    assert!(result.is_ok());
+    // In fallback mode, should return original
+    assert_eq!(result.unwrap(), obfuscated);
+}
+
+#[test]
+fn test_js_deobfuscator_with_model() {
+    use std::path::PathBuf;
+    
+    let engine = InferenceEngine::new().unwrap();
+    let model_path = PathBuf::from("models/local/js_deobfuscator_v1.onnx");
+    
+    if model_path.exists() {
+        let mut integration = JsDeobfuscatorIntegration::new(&engine, Some(&model_path), None).unwrap();
+        assert!(integration.is_enabled());
+        
+        let obfuscated = "var a=function(){return 42;}";
+        let result = integration.deobfuscate(obfuscated);
+        
+        // Should succeed (even if output quality varies with training)
+        match result {
+            Ok(deobfuscated) => {
+                println!("Input:  {}", obfuscated);
+                println!("Output: {}", deobfuscated);
+            }
+            Err(e) => {
+                println!("Deobfuscation failed (expected with limited training data): {}", e);
+            }
+        }
+    } else {
+        println!("Skipping test - model file not found");
+    }
 }

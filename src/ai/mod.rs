@@ -6,9 +6,15 @@ pub mod model_loader;
 pub mod model_manager;
 pub mod performance_monitor;
 pub mod smart_features;
+pub mod runtime;
+pub mod reporter;
+pub mod feedback_pipeline;
 
 pub use advanced_monitor::AdvancedPerformanceMonitor;
 pub use hot_reload::HotReloadManager;
 pub use inference::InferenceEngine;
 pub use model_loader::ModelLoader;
 pub use model_manager::ModelManager;
+pub use runtime::AiRuntime;
+pub use reporter::AiReporter;
+pub use feedback_pipeline::FeedbackPipeline;

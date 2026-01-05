@@ -1,46 +1,25 @@
-# BrowerAI Model Configuration
-#
-# This file defines the ONNX models used by BrowerAI for AI-powered
-# HTML/CSS/JS parsing and rendering.
-#
-# Place your ONNX model files in the models/local/ directory
+[[models]]
+name = "html_complexity_v1"
+model_type = "HtmlParser"
+path = "html_complexity_v1.onnx"
+description = "HTML complexity prediction model trained on 36 samples"
+version = "1.0.0"
+priority = 100
 
-# Example HTML Parser Model
-# [[models]]
-# name = "html_parser_v1"
-# model_type = "HtmlParser"
-# path = "html_parser_v1.onnx"
-# description = "Base HTML parsing and structure understanding model"
-# version = "1.0.0"
+[[models]]
+name = "code_understanding_v1"
+model_type = "CodeUnderstanding"
+path = "code_understanding_v1.onnx"
+description = "深度学习代码理解模型 - 15K参数，站点/技术栈分类"
+version = "1.0.0"
+priority = 90
+enabled = true
 
-# Example CSS Parser Model
-# [[models]]
-# name = "css_optimizer_v1"
-# model_type = "CssParser"
-# path = "css_optimizer_v1.onnx"
-# description = "CSS rule optimization and suggestion model"
-# version = "1.0.0"
-
-# Example JavaScript Parser Model
-# [[models]]
-# name = "js_analyzer_v1"
-# model_type = "JsParser"
-# path = "js_analyzer_v1.onnx"
-# description = "JavaScript code analysis and tokenization model"
-# version = "1.0.0"
-
-# Example Layout Optimizer Model
-# [[models]]
-# name = "layout_optimizer_v1"
-# model_type = "LayoutOptimizer"
-# path = "layout_optimizer_v1.onnx"
-# description = "AI-powered layout calculation optimizer"
-# version = "1.0.0"
-
-# Example Rendering Optimizer Model
-# [[models]]
-# name = "render_optimizer_v1"
-# model_type = "RenderingOptimizer"
-# path = "render_optimizer_v1.onnx"
-# description = "Rendering performance optimization model"
-# version = "1.0.0"
+[[models]]
+name = "js_deobfuscator_v1"
+model_type = "JsDeobfuscator"
+path = "js_deobfuscator_v1.onnx"
+description = "Seq2Seq JS去混淆模型 - LSTM编码器/解码器，vocab 160"
+version = "1.0.0"
+priority = 80
+enabled = true
