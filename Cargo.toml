@@ -47,8 +47,14 @@ env_logger = "0.11"
 # HTTP client for website learning
 reqwest = { version = "0.11", features = ["blocking"] }
 
+# URL parsing for deep crawling
+url = "2.5"
+
 # Timestamp for feedback data
 chrono = "0.4"
+
+# Regular expressions for deobfuscation
+regex = "1.10"
 
 [dev-dependencies]
 tempfile = "3.8"
