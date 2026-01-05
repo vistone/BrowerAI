@@ -53,7 +53,7 @@ impl WebsiteLearner {
                 // Record to feedback pipeline (save actual HTML content)
                 self.runtime.feedback().record_html_parsing(
                     true,
-                    0.5, // 默认复杂度
+                    0.5, // Default complexity
                     true,
                     None,
                     Some(html.to_string()),
