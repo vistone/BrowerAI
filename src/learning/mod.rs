@@ -16,6 +16,7 @@ pub mod online_learning;
 pub mod ab_testing;
 pub mod optimization;
 pub mod personalization;
+pub mod website_learner;
 
 pub use feedback::{FeedbackCollector, Feedback, FeedbackType};
 pub use versioning::{ModelVersion, VersionManager};
@@ -24,3 +25,4 @@ pub use online_learning::{OnlineLearner, LearningConfig};
 pub use ab_testing::{ABTest, TestVariant, ABTestManager};
 pub use optimization::{SelfOptimizer, OptimizationStrategy};
 pub use personalization::{UserPreferences, PersonalizationEngine};
+pub use website_learner::WebsiteLearner;

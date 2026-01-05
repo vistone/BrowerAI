@@ -1,0 +1,16 @@
+Collecting onnxscript
+  Downloading onnxscript-0.5.7-py3-none-any.whl.metadata (13 kB)
+Requirement already satisfied: ml_dtypes in ./venv/lib/python3.12/site-packages (from onnxscript) (0.5.4)
+Requirement already satisfied: numpy in ./venv/lib/python3.12/site-packages (from onnxscript) (2.4.0)
+Collecting onnx_ir<2,>=0.1.12 (from onnxscript)
+  Downloading onnx_ir-0.1.13-py3-none-any.whl.metadata (3.2 kB)
+Requirement already satisfied: onnx>=1.16 in ./venv/lib/python3.12/site-packages (from onnxscript) (1.20.0)
+Requirement already satisfied: packaging in ./venv/lib/python3.12/site-packages (from onnxscript) (25.0)
+Requirement already satisfied: typing_extensions>=4.10 in ./venv/lib/python3.12/site-packages (from onnxscript) (4.15.0)
+Requirement already satisfied: protobuf>=4.25.1 in ./venv/lib/python3.12/site-packages (from onnx>=1.16->onnxscript) (6.33.2)
+Downloading onnxscript-0.5.7-py3-none-any.whl (693 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 693.4/693.4 kB 8.3 MB/s  0:00:00
+Downloading onnx_ir-0.1.13-py3-none-any.whl (133 kB)
+Installing collected packages: onnx_ir, onnxscript
+
+Successfully installed onnx_ir-0.1.13 onnxscript-0.5.7

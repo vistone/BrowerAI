@@ -2,14 +2,18 @@ use anyhow::Result;
 use std::path::Path;
 
 #[cfg(feature = "ai")]
-use ort::{Environment, Session, SessionBuilder, Value};
-#[cfg(feature = "ai")]
-use std::sync::Arc;
+use ort::{
+    session::input::SessionInputValue,
+    session::Session,
+    value::Value,
+};
+
+use crate::ai::performance_monitor::PerformanceMonitor;
 
 /// Inference engine for running ONNX models
+#[derive(Clone)]
 pub struct InferenceEngine {
-    #[cfg(feature = "ai")]
-    environment: Arc<Environment>,
+    monitor: Option<PerformanceMonitor>,
 }
 
 impl InferenceEngine {
@@ -17,22 +21,33 @@ impl InferenceEngine {
     pub fn new() -> Result<Self> {
         #[cfg(feature = "ai")]
         {
-            let environment = Environment::builder()
+            // Initialize global environment once
+            ort::init()
                 .with_name("BrowerAI")
-                .build()
-                .map_err(|e| anyhow::anyhow!("Failed to create ONNX environment: {}", e))?;
+                .commit()
+                .map_err(|e| anyhow::anyhow!("Failed to initialize ONNX environment: {}", e))?;
 
-            Ok(Self {
-                environment: Arc::new(environment),
-            })
+            Ok(Self { monitor: None })
         }
 
         #[cfg(not(feature = "ai"))]
         {
             log::warn!("AI feature not enabled. Inference engine will run in stub mode.");
             log::warn!("To enable AI features, compile with: cargo build --features ai");
-            Ok(Self {})
+            Ok(Self { monitor: None })
         }
+    }
+
+    /// Create a new inference engine with a performance monitor
+    pub fn with_monitor(monitor: PerformanceMonitor) -> Result<Self> {
+        let mut engine = Self::new()?;
+        engine.monitor = Some(monitor);
+        Ok(engine)
+    }
+
+    /// Access the performance monitor if present
+    pub fn monitor_handle(&self) -> Option<PerformanceMonitor> {
+        self.monitor.clone()
     }
 
     /// Load an ONNX model from the specified path
@@ -45,9 +60,9 @@ impl InferenceEngine {
             ));
         }
 
-        let session = SessionBuilder::new(&self.environment)
+        let session = Session::builder()
             .map_err(|e| anyhow::anyhow!("Failed to create session builder: {}", e))?
-            .with_model_from_file(model_path)
+            .commit_from_file(model_path)
             .map_err(|e| anyhow::anyhow!("Failed to load model from file: {}", e))?;
 
         log::info!("Successfully loaded model from {:?}", model_path);
@@ -67,33 +82,46 @@ impl InferenceEngine {
     #[cfg(feature = "ai")]
     pub fn infer(
         &self,
-        session: &Session,
-        input_name: &str,
+        session: &mut Session,
+        model_name: &str,
+        _input_name: &str,
         input_data: Vec<f32>,
         shape: Vec<i64>,
     ) -> Result<Vec<f32>> {
-        // Create input tensor
-        let input_tensor = Value::from_array(session.allocator(), &shape, &input_data)
+        let input_bytes = input_data.len() * std::mem::size_of::<f32>();
+        let timer = self.monitor.as_ref().map(|m| m.start_inference(model_name));
+
+        // Create input tensor (shape, data)
+        let input_tensor = Value::from_array((shape.clone(), input_data.clone()))
             .map_err(|e| anyhow::anyhow!("Failed to create input tensor: {}", e))?;
 
         // Run inference
+        let inputs = [SessionInputValue::from(input_tensor)];
         let outputs = session
-            .run(vec![input_tensor])
+            .run(inputs)
             .map_err(|e| anyhow::anyhow!("Failed to run inference: {}", e))?;
 
         // Extract output data
-        if outputs.is_empty() {
+        if outputs.len() == 0 {
+            if let Some(t) = timer {
+                t.complete(input_bytes, 0, false);
+            }
             return Err(anyhow::anyhow!("No outputs from inference"));
         }
 
         let output = &outputs[0];
         let output_data = output
-            .try_extract::<f32>()
+            .try_extract_array::<f32>()
             .map_err(|e| anyhow::anyhow!("Failed to extract output data: {}", e))?;
 
-        let result = output_data.view().iter().copied().collect();
+        let result: Vec<f32> = output_data.iter().copied().collect();
+        let output_bytes = result.len() * std::mem::size_of::<f32>();
 
-        log::debug!("Inference completed successfully");
+        if let Some(t) = timer {
+            t.complete(input_bytes, output_bytes, true);
+        }
+
+        log::debug!("Inference completed successfully for model {}", model_name);
         Ok(result)
     }
 
@@ -103,6 +131,7 @@ impl InferenceEngine {
     pub fn infer(
         &self,
         _session: &(),
+        _model_name: &str,
         _input_name: &str,
         _input_data: Vec<f32>,
         _shape: Vec<i64>,

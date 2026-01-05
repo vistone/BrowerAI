@@ -1,43 +1,191 @@
 # BrowerAI
 
-AI-Powered Browser with Autonomous HTML/CSS/JS Parsing and Rendering
+🤖 **AI-Powered Self-Learning Browser** - 基于浏览器技术的 AI 自主学习系统
 
 ## Overview
 
-BrowerAI is an experimental browser project that leverages artificial intelligence to autonomously learn, parse, and render web content. Unlike traditional browsers that use hard-coded parsing rules, BrowerAI uses machine learning models to understand and process HTML, CSS, and JavaScript.
+BrowerAI 是一个实验性浏览器项目，使用 AI 自主学习来解析和渲染网页内容。与传统浏览器使用硬编码规则不同，BrowerAI 通过访问真实网站不断学习，使用机器学习模型理解和处理 HTML、CSS 和 JavaScript。
 
-## Features
+**核心理念**：浏览器作为教师 (Browser as Teacher) - 每次访问网站都是一次学习机会，形成"访问 → 解析 → 反馈 → 训练 → 部署"的完整闭环。
 
-- **AI-Powered HTML Parsing**: Uses ML models to understand and parse HTML structure
-- **Intelligent CSS Processing**: AI-enhanced CSS parsing and optimization
-- **Smart JavaScript Analysis**: ML-based JavaScript tokenization and analysis
-- **Adaptive Rendering**: AI-optimized rendering engine for better performance
-- **Local Model Library**: Manages and organizes ONNX models locally
-- **Learning & Adaptation**: Continuous learning from user feedback and system metrics
-- **Model Versioning**: Semantic versioning and lifecycle management for AI models
-- **Self-Optimization**: Autonomous performance improvement and model selection
-- **User Personalization**: Privacy-preserving personalization for customized experiences
-- **A/B Testing**: Built-in framework for controlled experiments
-- **Metrics Dashboard**: Real-time performance monitoring and analytics
+## ✨ 核心特性
 
-## Architecture
+### 🎓 自主学习系统
+- **真实网站访问**: 自动访问并学习真实网站的结构和内容
+- **反馈收集管道**: 记录所有解析、渲染、性能数据用于训练
+- **学习闭环**: 从访问到模型训练的完整自动化流程
+- **批量学习**: 支持并行访问多个网站收集数据
+
+### 🧠 AI 增强引擎
+- **AI HTML 解析**: ML 模型辅助理解 HTML 结构和复杂度
+- **智能 CSS 优化**: AI 生成 CSS 优化建议
+- **JS 代码分析**: ML 驱动的 JavaScript 模式识别
+- **自适应渲染**: AI 优化的渲染引擎
+
+### 📊 监控与报告
+- **AI 系统报告**: 全面的模型健康状态和性能监控
+- **性能指标**: 实时追踪推理时间、成功率
+- **反馈统计**: 详细的事件类型分布和趋势
+- **训练数据导出**: JSON 格式用于模型训练
+
+### 🔄 持续改进
+- **模型版本管理**: 语义化版本控制和生命周期管理
+- **A/B 测试框架**: 内置实验系统对比模型版本
+- **在线学习**: 支持增量学习和模型微调
+- **自我优化**: 基于历史数据自动调整参数
+
+## 🚀 快速开始
+
+### 演示 AI 集成
+```bash
+cargo run
+```
+
+### 查看 AI 系统状态
+```bash
+cargo run -- --ai-report
+```
+
+### 访问真实网站学习
+```bash
+# 单个网站
+cargo run -- --learn https://example.com
+
+# 多个网站
+cargo run -- --learn https://example.com https://httpbin.org/html https://www.w3.org
+```
+
+**学习输出示例**：
+```
+🌐 开始批量访问 2 个网站...
+    
+📍 [1/2] 访问: https://example.com
+  ✅ 获取成功，大小: 513 bytes，耗时: 0.05s
+  ✅ HTML 解析成功，耗时: 0.44ms
+  📝 提取文本内容: 285 字符
+  ✅ 渲染完成，节点数: 19
+✅ 访问完成！总耗时: 53.02ms，反馈事件数: 2
+
+📊 学习报告摘要
+════════════════════════════════════════
+网站: https://example.com
+HTML 大小: 513 bytes | CSS 规则: 7 | 渲染节点: 19
+
+【反馈管道统计】
+  总事件数: 2
+  HTML 解析事件: 1
+  CSS 解析事件: 1
+
+💾 反馈数据已导出到: ./training/data/feedback_20260104_103839.json
+```
+
+查看 [QUICKREF.md](QUICKREF.md) 获取完整命令参考。
+
+## 🎯 学习工作流
+
+```
+1. 访问网站 → 2. 收集反馈 → 3. 训练模型 → 4. 部署更新 → 5. 再次访问
+    ↓              ↓              ↓              ↓              ↓
+  HTTP GET     JSON 导出      ONNX 训练      模型加载      性能提升
+```
+
+**完整流程**：
+```bash
+# 1. 收集数据
+cargo run -- --learn https://example.com https://httpbin.org/html
+
+# 2. 查看反馈
+cat training/data/feedback_*.json | jq '.'
+
+# 3. 训练模型（Python）
+cd training && python scripts/train_html_parser_v2.py
+
+# 4. 部署模型
+cp training/models/*.onnx models/local/
+
+# 5. 测试效果
+cargo build --features ai && cargo run -- --ai-report
+```
+
+## 📚 文档
+
+- **[QUICKREF.md](QUICKREF.md)** - 快速参考和常用命令
+- **[LEARNING_GUIDE.md](LEARNING_GUIDE.md)** - 学习与调优详细指南
+- **[AI_LEARNING_IMPLEMENTATION.md](AI_LEARNING_IMPLEMENTATION.md)** - 技术实现报告
+- **[GETTING_STARTED.md](GETTING_STARTED.md)** - 项目入门教程
+- **[training/QUICKSTART.md](training/QUICKSTART.md)** - 模型训练快速开始
+
+## 🏗️ Architecture
 
 ```
 BrowerAI/
 ├── src/
-│   ├── ai/                  # AI/ML components
-│   │   ├── model_manager.rs # Model library management
-│   │   └── inference.rs     # ONNX Runtime inference engine
-│   ├── parser/              # Content parsers
-│   │   ├── html.rs          # HTML parser with AI
-│   │   ├── css.rs           # CSS parser with AI
-│   │   └── js.rs            # JavaScript parser with AI
-│   ├── renderer/            # Rendering engine
-│   │   └── engine.rs        # AI-powered renderer
-│   └── main.rs              # Application entry point
-├── models/                  # Model storage
-│   └── local/              # Local ONNX models
-└── examples/               # Example code and demos
+│   ├── ai/                          # AI/ML 核心系统
+│   │   ├── runtime.rs               # AI 运行时（集成所有 AI 组件）
+│   │   ├── inference.rs             # ONNX 推理引擎
+│   │   ├── model_manager.rs         # 模型库管理
+│   │   ├── feedback_pipeline.rs     # 反馈事件收集 ⭐ NEW
+│   │   ├── reporter.rs              # AI 状态报告 ⭐ NEW
+│   │   ├── performance_monitor.rs   # 性能监控
+│   │   └── hot_reload.rs            # 模型热重载
+│   ├── parser/                      # 内容解析器（AI 增强）
+│   │   ├── html.rs                  # HTML 解析 + AI 验证
+│   │   ├── css.rs                   # CSS 解析 + AI 优化
+│   │   └── js.rs                    # JavaScript 解析 + AI 分析
+│   ├── renderer/                    # 渲染引擎
+│   │   ├── engine.rs                # AI 优化的渲染
+│   │   ├── layout.rs                # 布局计算
+│   │   └── paint.rs                 # 绘制操作
+│   ├── learning/                    # 学习系统 ⭐ NEW
+│   │   ├── website_learner.rs       # 真实网站访问学习器
+│   │   ├── feedback.rs              # 用户反馈收集
+│   │   ├── online_learning.rs       # 在线学习
+│   │   ├── versioning.rs            # 模型版本管理
+│   │   ├── ab_testing.rs            # A/B 测试框架
+│   │   ├── personalization.rs       # 用户个性化
+│   │   └── optimization.rs          # 自我优化
+│   ├── network/                     # 网络层
+│   │   ├── http.rs                  # HTTP 客户端
+│   │   └── cache.rs                 # 资源缓存
+│   └── main.rs                      # CLI 入口（4 种模式）⭐ NEW
+├── models/
+│   ├── model_config.toml            # 模型配置文件
+│   └── local/                       # 本地 ONNX 模型存储
+├── training/                        # 训练管道
+│   ├── data/                        # 反馈数据（自动生成）⭐ NEW
+│   │   └── feedback_*.json
+│   ├── scripts/                     # Python 训练脚本
+│   │   ├── train_html_parser_v2.py
+│   │   ├── train_css_parser.py
+│   │   └── train_js_parser.py
+│   └── models/                      # 训练输出的 ONNX 模型
+└── examples/                        # 示例代码
+    └── basic_usage.rs
+```
+
+**数据流**:
+```
+真实网站 URLs
+    ↓ (HTTP GET)
+WebsiteLearner
+    ↓ (HTML 字符串)
+HtmlParser (AI) → FeedbackPipeline
+    ↓ (DOM tree)
+CssParser (AI) → FeedbackPipeline
+    ↓ (CSS rules)
+JsParser (AI) → FeedbackPipeline
+    ↓ (AST)
+RenderEngine → FeedbackPipeline
+    ↓ (渲染结果)
+JSON 导出 (training/data/feedback_*.json)
+    ↓
+Python 训练脚本
+    ↓
+ONNX 模型 (training/models/*.onnx)
+    ↓
+部署到 models/local/
+    ↓
+下次访问使用新模型 ♻️
 ```
 
 ## Technology Stack

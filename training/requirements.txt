@@ -5,6 +5,12 @@ torch>=2.0.0
 torchvision>=0.15.0
 onnx>=1.14.0
 onnxruntime>=1.15.0
+onnxscript>=0.1.0
+
+# ONNX 工具（可选 - 模型优化用）
+# onnx-simplifier>=0.4.0  # 需要 git 环境，可选安装
+# tf2onnx>=1.14.0  # TensorFlow 转换
+# skl2onnx>=1.14.0  # scikit-learn 转换
 
 # Data Processing
 numpy>=1.24.0

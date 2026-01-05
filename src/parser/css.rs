@@ -1,11 +1,18 @@
 use anyhow::Result;
 use cssparser::{Parser, ParserInput, Token};
 
-use crate::ai::InferenceEngine;
+use std::path::PathBuf;
+
+use crate::ai::integration::CssModelIntegration;
+use crate::ai::model_manager::ModelType;
+use crate::ai::{AiRuntime, InferenceEngine};
 
 /// CSS parser with AI enhancement capabilities
 pub struct CssParser {
     inference_engine: Option<InferenceEngine>,
+    ai_runtime: Option<AiRuntime>,
+    model_path: Option<PathBuf>,
+    model_name: Option<String>,
     enable_ai: bool,
 }
 
@@ -14,6 +21,9 @@ impl CssParser {
     pub fn new() -> Self {
         Self {
             inference_engine: None,
+            ai_runtime: None,
+            model_path: None,
+            model_name: None,
             enable_ai: false,
         }
     }
@@ -23,6 +33,26 @@ impl CssParser {
     pub fn with_ai(inference_engine: InferenceEngine) -> Self {
         Self {
             inference_engine: Some(inference_engine),
+            ai_runtime: None,
+            model_path: None,
+            model_name: None,
+            enable_ai: true,
+        }
+    }
+
+    /// Create a new CSS parser with AI runtime (engine + model catalog + monitor)
+    #[allow(dead_code)]
+    pub fn with_ai_runtime(ai_runtime: AiRuntime) -> Self {
+        let (model_name, model_path) = ai_runtime
+            .best_model(ModelType::CssParser)
+            .map(|(cfg, path)| (Some(cfg.name), Some(path)))
+            .unwrap_or((None, None));
+
+        Self {
+            inference_engine: Some(ai_runtime.engine()),
+            ai_runtime: Some(ai_runtime),
+            model_path,
+            model_name,
             enable_ai: true,
         }
     }
@@ -45,11 +75,49 @@ impl CssParser {
 
         log::info!("Successfully parsed CSS with {} rules", rules.len());
 
-        // TODO: Apply AI-based optimizations
-        if self.enable_ai && self.inference_engine.is_some() {
-            log::debug!("AI enhancement enabled for CSS parsing");
-            // Future: Use AI model to optimize CSS, suggest improvements,
-            // detect unused rules, etc.
+        let ai_active = self.enable_ai && self.inference_engine.is_some();
+        if ai_active {
+            let monitor = self.ai_runtime.as_ref().and_then(|r| r.monitor());
+            let model_path = self.model_path.as_deref();
+            let model_name = self.model_name.as_deref().unwrap_or("css_model");
+
+            match CssModelIntegration::new(
+                self.inference_engine.as_ref().unwrap(),
+                model_path,
+                monitor,
+            ) {
+                Ok(mut integration) => {
+                    match integration.optimize_rules(css) {
+                        Ok(optimized) => {
+                            log::info!(
+                                "AI CSS optimization (model={}): generated {} candidate rules",
+                                model_name,
+                                optimized.len()
+                            );
+                        }
+                        Err(err) => {
+                            log::warn!(
+                                "AI CSS optimization failed (model={}): {}; continuing with baseline rules",
+                                model_name,
+                                err
+                            );
+                        }
+                    }
+                }
+                Err(err) => {
+                    log::warn!(
+                        "AI CSS integration could not start (model={}): {}; continuing without AI",
+                        model_name,
+                        err
+                    );
+                }
+            }
+        } else if self.enable_ai {
+            log::warn!(
+                "AI was requested for CSS parsing but no inference engine is available; falling back to baseline parser"
+            );
+        } else {
+            log::debug!("AI enhancement disabled for CSS parsing; baseline path in use");
         }
 
         Ok(rules)

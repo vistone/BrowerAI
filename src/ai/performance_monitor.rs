@@ -84,6 +84,7 @@ impl ModelStats {
 }
 
 /// Performance monitor for tracking AI model performance
+#[derive(Clone)]
 pub struct PerformanceMonitor {
     stats: Arc<RwLock<HashMap<String, ModelStats>>>,
     enabled: bool,
