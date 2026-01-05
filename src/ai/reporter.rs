@@ -5,7 +5,7 @@ use crate::ai::model_manager::{ModelManager, ModelType};
 use crate::ai::performance_monitor::PerformanceMonitor;
 use crate::ai::AiRuntime;
 
-/// AI 报告生成器，用于导出模型健康、性能指标和学习状态
+/// AI report generator for exporting model health, performance metrics, and learning status
 pub struct AiReporter {
     runtime: AiRuntime,
     monitor: PerformanceMonitor,
@@ -16,36 +16,36 @@ impl AiReporter {
         Self { runtime, monitor }
     }
 
-    /// 生成完整的 AI 状态报告
+    /// Generate complete AI status report
     pub fn generate_full_report(&self) -> String {
         let mut report = String::new();
         
         report.push_str("╔════════════════════════════════════════════════════════════════╗\n");
-        report.push_str("║          BrowerAI - AI 系统状态报告                           ║\n");
+        report.push_str("║          BrowerAI - AI System Status Report                  ║\n");
         report.push_str("╚════════════════════════════════════════════════════════════════╝\n\n");
 
-        // 1. 性能监控报告
-        report.push_str("【性能监控】\n");
+        // 1. Performance monitoring report
+        report.push_str("【Performance Monitoring】\n");
         report.push_str(&self.monitor.generate_report());
         report.push_str("\n");
 
-        // 2. 模型健康状态
-        report.push_str("【模型健康状态】\n");
+        // 2. Model health status
+        report.push_str("【Model Health Status】\n");
         if self.runtime.has_models() {
             report.push_str(&self.generate_model_health_report());
         } else {
-            report.push_str("  ⚠️  未加载模型目录\n");
+            report.push_str("  ⚠️  No model directory loaded\n");
         }
         report.push_str("\n");
 
-        // 3. 推荐操作
-        report.push_str("【推荐操作】\n");
+        // 3. Recommended actions
+        report.push_str("【Recommended Actions】\n");
         report.push_str(&self.generate_recommendations());
 
         report
     }
 
-    /// 生成模型健康状态报告
+    /// Generate model health status report
     fn generate_model_health_report(&self) -> String {
         let mut report = String::new();
         
@@ -68,7 +68,7 @@ impl AiReporter {
                     crate::ai::model_manager::ModelHealth::Unknown => "❓",
                 };
                 report.push_str(&format!(
-                    "  {} {:20} | {} | v{} | 优先级: {} | 路径: {}\n",
+                    "  {} {:20} | {} | v{} | Priority: {} | Path: {}\n",
                     health_icon,
                     type_name,
                     config.name,
@@ -77,43 +77,43 @@ impl AiReporter {
                     path.display()
                 ));
             } else {
-                report.push_str(&format!("  ⚠️  {:20} | 无可用模型\n", type_name));
+                report.push_str(&format!("  ⚠️  {:20} | No available model\n", type_name));
             }
         }
 
         report
     }
 
-    /// 生成推荐操作
+    /// Generate recommendations
     fn generate_recommendations(&self) -> String {
         let mut recommendations = Vec::new();
 
-        // 检查性能指标
+        // Check performance metrics
         let all_stats = self.monitor.get_all_stats();
         for stats in &all_stats {
             if stats.total_inferences > 100 && stats.success_rate() < 80.0 {
                 recommendations.push(format!(
-                    "  ⚠️  模型 '{}' 成功率低 ({:.1}%)，建议重新训练或切换模型",
+                    "  ⚠️  Model '{}' has low success rate ({:.1}%), consider retraining or switching models",
                     stats.model_name,
                     stats.success_rate()
                 ));
             }
         }
 
-        // 检查模型可用性
+        // Check model availability
         if !self.runtime.has_models() {
-            recommendations.push("  💡 运行 'cd training && python scripts/prepare_data.py' 准备训练数据".to_string());
-            recommendations.push("  💡 运行训练脚本生成模型，参考 training/QUICKSTART.md".to_string());
+            recommendations.push("  💡 Run 'cd training && python scripts/prepare_data.py' to prepare training data".to_string());
+            recommendations.push("  💡 Run training scripts to generate models, see training/QUICKSTART.md".to_string());
         }
 
         if recommendations.is_empty() {
-            recommendations.push("  ✅ 系统运行正常，无需特殊操作".to_string());
+            recommendations.push("  ✅ System running normally, no special actions needed".to_string());
         }
 
         recommendations.join("\n")
     }
 
-    /// 导出性能指标到 JSON
+    /// Export performance metrics to JSON
     pub fn export_metrics_json(&self) -> Result<String> {
         let all_stats = self.monitor.get_all_stats();
         

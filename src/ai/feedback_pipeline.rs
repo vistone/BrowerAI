@@ -4,65 +4,65 @@ use std::sync::{Arc, RwLock};
 
 use crate::learning::feedback::{Feedback, FeedbackType};
 
-/// 在线反馈管道，收集浏览器运行中的各类事件用于后续学习
+/// Online feedback pipeline for collecting various browser events for subsequent learning
 #[derive(Clone)]
 pub struct FeedbackPipeline {
     events: Arc<RwLock<VecDeque<FeedbackEvent>>>,
     max_capacity: usize,
 }
 
-/// 反馈事件类型
+/// Feedback event types
 #[derive(Debug, Clone)]
 pub enum FeedbackEvent {
-    /// HTML 解析事件
+    /// HTML parsing event
     HtmlParsing {
         success: bool,
         complexity: f32,
         ai_used: bool,
         error: Option<String>,
-        /// 实际HTML内容（用于混淆分析）
+        /// Actual HTML content (for obfuscation analysis)
         content: Option<String>,
-        /// HTML大小
+        /// HTML size
         size: usize,
     },
-    /// CSS 解析事件
+    /// CSS parsing event
     CssParsing {
         success: bool,
         rule_count: usize,
         ai_used: bool,
         error: Option<String>,
-        /// 实际CSS内容
+        /// Actual CSS content
         content: Option<String>,
     },
-    /// JavaScript 解析事件
+    /// JavaScript parsing event
     JsParsing {
         success: bool,
         statement_count: usize,
         compatibility_warnings: Vec<String>,
         ai_used: bool,
         error: Option<String>,
-        /// 实际JS内容（用于混淆检测）
+        /// Actual JS content (for obfuscation detection)
         content: Option<String>,
     },
-    /// JavaScript 执行兼容性违规
+    /// JavaScript execution compatibility violation
     JsCompatibilityViolation {
         feature: String,
         detail: String,
         enforced: bool,
     },
-    /// 渲染性能事件
+    /// Rendering performance event
     RenderingPerformance {
         node_count: usize,
         duration_ms: f64,
         ai_optimized: bool,
     },
-    /// 布局性能事件
+    /// Layout performance event
     LayoutPerformance {
         element_count: usize,
         duration_ms: f64,
         ai_optimized: bool,
     },
-    /// AI 模型推理事件
+    /// AI model inference event
     ModelInference {
         model_name: String,
         success: bool,
@@ -72,7 +72,7 @@ pub enum FeedbackEvent {
 }
 
 impl FeedbackPipeline {
-    /// 创建新的反馈管道
+    /// Create a new feedback pipeline
     pub fn new(max_capacity: usize) -> Self {
         Self {
             events: Arc::new(RwLock::new(VecDeque::with_capacity(max_capacity))),
@@ -80,18 +80,18 @@ impl FeedbackPipeline {
         }
     }
 
-    /// 添加事件到管道
+    /// Add event to pipeline
     pub fn push_event(&self, event: FeedbackEvent) {
         let mut events = self.events.write().unwrap();
         
         if events.len() >= self.max_capacity {
-            events.pop_front(); // 删除最老的事件
+            events.pop_front(); // Remove oldest event
         }
         
         events.push_back(event);
     }
 
-    /// 记录 HTML 解析事件
+    /// Record HTML parsing event
     pub fn record_html_parsing(&self, success: bool, complexity: f32, ai_used: bool, error: Option<String>, content: Option<String>, size: usize) {
         self.push_event(FeedbackEvent::HtmlParsing {
             success,
@@ -103,7 +103,7 @@ impl FeedbackPipeline {
         });
     }
 
-    /// 记录 CSS 解析事件
+    /// Record CSS parsing event
     pub fn record_css_parsing(&self, success: bool, rule_count: usize, ai_used: bool, error: Option<String>, content: Option<String>) {
         self.push_event(FeedbackEvent::CssParsing {
             success,
@@ -114,7 +114,7 @@ impl FeedbackPipeline {
         });
     }
 
-    /// 记录 JavaScript 解析事件
+    /// Record JavaScript parsing event
     pub fn record_js_parsing(
         &self,
         success: bool,
@@ -134,7 +134,7 @@ impl FeedbackPipeline {
         });
     }
 
-    /// 记录 JS 兼容性违规
+    /// Record JS compatibility violation
     pub fn record_js_compatibility_violation(&self, feature: String, detail: String, enforced: bool) {
         self.push_event(FeedbackEvent::JsCompatibilityViolation {
             feature,
@@ -143,7 +143,7 @@ impl FeedbackPipeline {
         });
     }
 
-    /// 记录渲染性能事件
+    /// Record rendering performance event
     pub fn record_rendering_performance(&self, node_count: usize, duration_ms: f64, ai_optimized: bool) {
         self.push_event(FeedbackEvent::RenderingPerformance {
             node_count,
@@ -152,7 +152,7 @@ impl FeedbackPipeline {
         });
     }
 
-    /// 记录布局性能事件
+    /// Record layout performance event
     pub fn record_layout_performance(&self, element_count: usize, duration_ms: f64, ai_optimized: bool) {
         self.push_event(FeedbackEvent::LayoutPerformance {
             element_count,
@@ -161,7 +161,7 @@ impl FeedbackPipeline {
         });
     }
 
-    /// 记录模型推理事件
+    /// Record model inference event
     pub fn record_model_inference(&self, model_name: String, success: bool, duration_ms: f64, error: Option<String>) {
         self.push_event(FeedbackEvent::ModelInference {
             model_name,
@@ -171,22 +171,22 @@ impl FeedbackPipeline {
         });
     }
 
-    /// 获取所有事件
+    /// Get all events
     pub fn get_events(&self) -> Vec<FeedbackEvent> {
         self.events.read().unwrap().iter().cloned().collect()
     }
 
-    /// 清空事件队列
+    /// Clear event queue
     pub fn clear(&self) {
         self.events.write().unwrap().clear();
     }
 
-    /// 获取事件数量
+    /// Get event count
     pub fn len(&self) -> usize {
         self.events.read().unwrap().len()
     }
 
-    /// 转换为训练样本格式（可导出到 JSON）
+    /// Convert to training sample format (exportable to JSON)
     pub fn export_training_samples(&self) -> Result<String> {
         let events = self.get_events();
         let samples: Vec<serde_json::Value> = events
@@ -197,7 +197,7 @@ impl FeedbackPipeline {
         Ok(serde_json::to_string_pretty(&samples)?)
     }
 
-    /// 将事件转换为 JSON
+    /// Convert event to JSON
     fn event_to_json(&self, event: &FeedbackEvent) -> serde_json::Value {
         match event {
             FeedbackEvent::HtmlParsing { success, complexity, ai_used, error, content, size } => {
@@ -275,24 +275,24 @@ impl FeedbackPipeline {
         }
     }
 
-    /// 生成统计摘要
+    /// Generate statistics summary
     pub fn generate_summary(&self) -> String {
         let events = self.get_events();
         let mut summary = String::new();
 
-        summary.push_str("【反馈管道统计】\n");
-        summary.push_str(&format!("  总事件数: {}\n", events.len()));
+        summary.push_str("【Feedback Pipeline Statistics】\n");
+        summary.push_str(&format!("  Total events: {}\n", events.len()));
 
-        // 统计各类事件
+        // Count each event type
         let html_count = events.iter().filter(|e| matches!(e, FeedbackEvent::HtmlParsing { .. })).count();
         let css_count = events.iter().filter(|e| matches!(e, FeedbackEvent::CssParsing { .. })).count();
         let js_count = events.iter().filter(|e| matches!(e, FeedbackEvent::JsParsing { .. })).count();
         let violation_count = events.iter().filter(|e| matches!(e, FeedbackEvent::JsCompatibilityViolation { .. })).count();
 
-        summary.push_str(&format!("  HTML 解析事件: {}\n", html_count));
-        summary.push_str(&format!("  CSS 解析事件: {}\n", css_count));
-        summary.push_str(&format!("  JS 解析事件: {}\n", js_count));
-        summary.push_str(&format!("  兼容性违规: {}\n", violation_count));
+        summary.push_str(&format!("  HTML parsing events: {}\n", html_count));
+        summary.push_str(&format!("  CSS parsing events: {}\n", css_count));
+        summary.push_str(&format!("  JS parsing events: {}\n", js_count));
+        summary.push_str(&format!("  Compatibility violations: {}\n", violation_count));
 
         summary
     }
@@ -300,6 +300,6 @@ impl FeedbackPipeline {
 
 impl Default for FeedbackPipeline {
     fn default() -> Self {
-        Self::new(10000) // 默认保存 10000 条事件
+        Self::new(10000) // Default save 10000 events
     }
 }

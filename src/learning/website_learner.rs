@@ -6,14 +6,14 @@ use crate::ai::AiRuntime;
 use crate::parser::{HtmlParser, CssParser, JsParser};
 use crate::renderer::RenderEngine;
 
-/// 真实网站访问和学习系统
+/// Real website visiting and learning system
 pub struct WebsiteLearner {
     runtime: AiRuntime,
     client: Client,
 }
 
 impl WebsiteLearner {
-    /// 创建新的网站学习器
+    /// Create a new website learner
     pub fn new(runtime: AiRuntime) -> Result<Self> {
         let client = Client::builder()
             .timeout(Duration::from_secs(30))
@@ -23,37 +23,37 @@ impl WebsiteLearner {
         Ok(Self { runtime, client })
     }
 
-    /// 访问并学习一个网站
+    /// Visit and learn from a website
     pub fn visit_and_learn(&self, url: &str) -> Result<VisitReport> {
-        log::info!("🌐 开始访问网站: {}", url);
+        log::info!("🌐 Starting website visit: {}", url);
         
         let start = std::time::Instant::now();
         
-        // 1. 获取 HTML
-        log::info!("  📥 正在获取 HTML...");
+        // 1. Fetch HTML
+        log::info!("  📥 Fetching HTML...");
         let response = self.client.get(url).send()?;
         let html = response.text()?;
         let fetch_duration = start.elapsed();
         
-        log::info!("  ✅ 获取成功，大小: {} bytes，耗时: {:.2}s", 
+        log::info!("  ✅ Fetch succeeded, size: {} bytes, duration: {:.2}s", 
             html.len(), 
             fetch_duration.as_secs_f64()
         );
 
-        // 2. 解析 HTML
-        log::info!("  🔍 正在解析 HTML...");
+        // 2. Parse HTML
+        log::info!("  🔍 Parsing HTML...");
         let parser = HtmlParser::with_ai_runtime(self.runtime.clone());
         let parse_start = std::time::Instant::now();
         
         let dom = match parser.parse(&html) {
             Ok(dom) => {
                 let parse_duration = parse_start.elapsed();
-                log::info!("  ✅ HTML 解析成功，耗时: {:.2}ms", parse_duration.as_secs_f64() * 1000.0);
+                log::info!("  ✅ HTML parsing succeeded, duration: {:.2}ms", parse_duration.as_secs_f64() * 1000.0);
                 
-                // 记录到反馈管道（保存实际HTML内容）
+                // Record to feedback pipeline (save actual HTML content)
                 self.runtime.feedback().record_html_parsing(
                     true,
-                    0.5, // 默认复杂度
+                    0.5, // Default complexity
                     true,
                     None,
                     Some(html.to_string()),
@@ -63,7 +63,7 @@ impl WebsiteLearner {
                 Some(dom)
             }
             Err(e) => {
-                log::error!("  ❌ HTML 解析失败: {}", e);
+                log::error!("  ❌ HTML parsing failed: {}", e);
                 self.runtime.feedback().record_html_parsing(
                     false,
                     0.0,
@@ -76,36 +76,36 @@ impl WebsiteLearner {
             }
         };
 
-        // 3. 提取文本内容
+        // 3. Extract text content
         let text_content = if let Some(ref dom) = dom {
             let text = parser.extract_text(dom);
-            log::info!("  📝 提取文本内容: {} 字符", text.len());
+            log::info!("  📝 Extracted text content: {} characters", text.len());
             Some(text)
         } else {
             None
         };
 
-        // 4. 查找并解析 CSS（简化版）
-        log::info!("  🎨 正在查找 CSS...");
+        // 4. Find and parse CSS (simplified)
+        log::info!("  🎨 Searching for CSS...");
         let css_parser = CssParser::with_ai_runtime(self.runtime.clone());
         let css_count = self.extract_and_parse_css(&html, &css_parser);
 
-        // 5. 查找并解析 JavaScript（简化版）
-        log::info!("  ⚙️  正在查找 JavaScript...");
+        // 5. Find and parse JavaScript (simplified)
+        log::info!("  ⚙️  Searching for JavaScript...");
         let js_parser = JsParser::with_ai_runtime(self.runtime.clone());
         let js_count = self.extract_and_parse_js(&html, &js_parser);
 
-        // 6. 渲染（如果解析成功）
+        // 6. Render (if parsing succeeded)
         let render_node_count = if let Some(ref dom) = dom {
-            log::info!("  🖼️  正在渲染...");
+            log::info!("  🖼️  Rendering...");
             let mut render_engine = RenderEngine::new();
             match render_engine.render(dom, &[]) {
                 Ok(tree) => {
-                    log::info!("  ✅ 渲染完成，节点数: {}", tree.nodes.len());
+                    log::info!("  ✅ Rendering completed, node count: {}", tree.nodes.len());
                     Some(tree.nodes.len())
                 }
                 Err(e) => {
-                    log::error!("  ❌ 渲染失败: {}", e);
+                    log::error!("  ❌ Rendering failed: {}", e);
                     None
                 }
             }
@@ -127,18 +127,18 @@ impl WebsiteLearner {
             total_duration_ms: total_duration.as_secs_f64() * 1000.0,
         };
 
-        log::info!("✅ 访问完成！");
-        log::info!("  总耗时: {:.2}ms", report.total_duration_ms);
-        log::info!("  反馈事件数: {}", self.runtime.feedback().len());
+        log::info!("✅ Visit completed!");
+        log::info!("  Total duration: {:.2}ms", report.total_duration_ms);
+        log::info!("  Feedback events: {}", self.runtime.feedback().len());
 
         Ok(report)
     }
 
-    /// 提取并解析 CSS
+    /// Extract and parse CSS
     fn extract_and_parse_css(&self, html: &str, parser: &CssParser) -> usize {
         let mut count = 0;
         
-        // 简单的 CSS 提取（查找 <style> 标签）
+        // Simple CSS extraction (find <style> tags)
         for style_block in html.split("<style>").skip(1) {
             if let Some(css) = style_block.split("</style>").next() {
                 match parser.parse(css) {
@@ -168,11 +168,11 @@ impl WebsiteLearner {
         count
     }
 
-    /// 提取并解析 JavaScript
+    /// Extract and parse JavaScript
     fn extract_and_parse_js(&self, html: &str, parser: &JsParser) -> usize {
         let mut count = 0;
         
-        // 简单的 JS 提取（查找 <script> 标签）
+        // Simple JS extraction (find <script> tags)
         for script_block in html.split("<script>").skip(1) {
             if let Some(js) = script_block.split("</script>").next() {
                 if !js.trim().is_empty() {
@@ -206,19 +206,19 @@ impl WebsiteLearner {
         count
     }
 
-    /// 批量访问多个网站
+    /// Batch visit multiple websites
     pub fn batch_visit(&self, urls: &[&str]) -> Vec<VisitReport> {
         let mut reports = Vec::new();
         
         for (i, url) in urls.iter().enumerate() {
-            log::info!("\n📍 [{}/{}] 访问: {}", i + 1, urls.len(), url);
+            log::info!("\n📍 [{}/{}] Visiting: {}", i + 1, urls.len(), url);
             
             match self.visit_and_learn(url) {
                 Ok(report) => reports.push(report),
-                Err(e) => log::error!("❌ 访问失败: {}", e),
+                Err(e) => log::error!("❌ Visit failed: {}", e),
             }
             
-            // 避免请求过快
+            // Avoid too frequent requests
             if i < urls.len() - 1 {
                 std::thread::sleep(Duration::from_secs(1));
             }
@@ -227,16 +227,16 @@ impl WebsiteLearner {
         reports
     }
 
-    /// 导出学习到的反馈数据
+    /// Export learned feedback data
     pub fn export_feedback(&self, path: &str) -> Result<()> {
         let json = self.runtime.feedback().export_training_samples()?;
         std::fs::write(path, json)?;
-        log::info!("💾 反馈数据已导出到: {}", path);
+        log::info!("💾 Feedback data exported to: {}", path);
         Ok(())
     }
 }
 
-/// 网站访问报告
+/// Website visit report
 #[derive(Debug, Clone)]
 pub struct VisitReport {
     pub url: String,
@@ -251,18 +251,18 @@ pub struct VisitReport {
 }
 
 impl VisitReport {
-    /// 生成可读的报告
+    /// Generate a readable report
     pub fn format(&self) -> String {
         format!(
-            "网站: {}\n\
-             成功: {}\n\
-             HTML 大小: {} bytes\n\
-             文本长度: {} 字符\n\
-             CSS 规则: {}\n\
-             JS 语句: {}\n\
-             渲染节点: {}\n\
-             获取耗时: {:.2}ms\n\
-             总耗时: {:.2}ms",
+            "Website: {}\n\
+             Success: {}\n\
+             HTML size: {} bytes\n\
+             Text length: {} characters\n\
+             CSS rules: {}\n\
+             JS statements: {}\n\
+             Render nodes: {}\n\
+             Fetch duration: {:.2}ms\n\
+             Total duration: {:.2}ms",
             self.url,
             if self.success { "✅" } else { "❌" },
             self.html_size,
