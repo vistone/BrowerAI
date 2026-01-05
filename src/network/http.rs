@@ -70,6 +70,8 @@ impl HttpResponse {
 pub struct HttpClient {
     user_agent: String,
     timeout: Duration,
+    #[cfg(test)]
+    use_stub: bool,
 }
 
 impl HttpClient {
@@ -78,6 +80,18 @@ impl HttpClient {
         Self {
             user_agent: "BrowerAI/0.1.0".to_string(),
             timeout: Duration::from_secs(30),
+            #[cfg(test)]
+            use_stub: true,  // Use stub in tests by default
+        }
+    }
+    
+    /// Create client for real HTTP requests (not using stub)
+    #[cfg(test)]
+    pub fn new_real() -> Self {
+        Self {
+            user_agent: "BrowerAI/0.1.0".to_string(),
+            timeout: Duration::from_secs(30),
+            use_stub: false,
         }
     }
 
@@ -93,7 +107,7 @@ impl HttpClient {
         self
     }
 
-    /// Execute an HTTP request (stub implementation)
+    /// Execute an HTTP request
     pub fn execute(&self, mut request: HttpRequest) -> Result<HttpResponse> {
         log::info!(
             "Executing {} request to {}",
@@ -110,8 +124,16 @@ impl HttpClient {
 
         let start = Instant::now();
 
-        // Stub implementation - in real implementation, this would use reqwest or similar
-        let response = self.execute_stub(&request)?;
+        // Use stub in tests, real implementation otherwise
+        #[cfg(test)]
+        let response = if self.use_stub {
+            self.execute_stub(&request)?
+        } else {
+            self.execute_real(&request)?
+        };
+        
+        #[cfg(not(test))]
+        let response = self.execute_real(&request)?;
 
         let response_time = start.elapsed();
         log::info!("Request completed in {:?}", response_time);
@@ -123,7 +145,7 @@ impl HttpClient {
             response_time,
         })
     }
-
+    
     /// Stub implementation for testing
     fn execute_stub(
         &self,
@@ -143,6 +165,64 @@ impl HttpClient {
         );
 
         Ok((200, headers, body.into_bytes()))
+    }
+
+    /// Real implementation using reqwest
+    fn execute_real(
+        &self,
+        request: &HttpRequest,
+    ) -> Result<(u16, HashMap<String, String>, Vec<u8>)> {
+        // Use blocking reqwest client for synchronous API
+        let client = reqwest::blocking::Client::builder()
+            .timeout(self.timeout)
+            .build()
+            .context("Failed to create HTTP client")?;
+
+        let mut req_builder = match request.method {
+            HttpMethod::GET => client.get(&request.url),
+            HttpMethod::POST => client.post(&request.url),
+            HttpMethod::PUT => client.put(&request.url),
+            HttpMethod::DELETE => client.delete(&request.url),
+            HttpMethod::HEAD => client.head(&request.url),
+        };
+
+        // Add headers
+        for (key, value) in &request.headers {
+            req_builder = req_builder.header(key, value);
+        }
+
+        // Add body if present
+        if let Some(ref body) = request.body {
+            req_builder = req_builder.body(body.clone());
+        }
+
+        // Execute request
+        let response = req_builder
+            .send()
+            .context("Failed to send HTTP request")?;
+
+        // Extract response data
+        let status_code = response.status().as_u16();
+        
+        let mut headers = HashMap::new();
+        for (key, value) in response.headers() {
+            if let Ok(value_str) = value.to_str() {
+                headers.insert(key.to_string(), value_str.to_string());
+            }
+        }
+
+        let body = response
+            .bytes()
+            .context("Failed to read response body")?
+            .to_vec();
+
+        log::debug!(
+            "Received {} response with {} bytes",
+            status_code,
+            body.len()
+        );
+
+        Ok((status_code, headers, body))
     }
 
     /// Convenience method for GET requests
