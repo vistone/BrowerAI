@@ -1,232 +1,256 @@
-# BrowerAI ONNX 模型库和训练指南
+# BrowerAI ONNX Model Library and Training Guide
 
-## 📦 需要的模型库
+## 📦 Required Model Libraries
 
-BrowerAI 需要两层模型库架构：
+BrowerAI requires a two-tier model library architecture:
 
-### 1. 训练端（Python）
+### 1. Training Environment (Python)
 
-**位置**: `training/`
+**Location**: `training/`
 
-**目的**: 使用 PyTorch 训练模型并导出为 ONNX 格式
+**Purpose**: Use PyTorch to train models and export them to ONNX format
 
-**核心库**:
-- **PyTorch** (⭐⭐⭐⭐⭐ 推荐): 训练深度学习模型
-- **ONNX**: 模型格式标准
-- **ONNXRuntime**: Python 端模型验证
+**Core Libraries**:
+- **PyTorch** (⭐⭐⭐⭐⭐ Recommended): Train deep learning models
+- **ONNX**: Model format standard
+- **ONNXRuntime**: Python-side model validation
 
-**为什么选 PyTorch**:
-- ✅ 最成熟的 Python ML 框架
-- ✅ ONNX 导出简单 (`torch.onnx.export`)
-- ✅ 生态系统丰富（预训练模型、工具）
-- ✅ 社区支持最好
-- ✅ 调试友好
+**Why PyTorch**:
+- ✅ Most mature Python ML framework
+- ✅ Simple ONNX export (`torch.onnx.export`)
+- ✅ Rich ecosystem (pre-trained models, tools)
+- ✅ Best community support
+- ✅ Debugging-friendly
 
-**替代方案**:
-- TensorFlow + tf2onnx（也不错，但生态略弱）
-- scikit-learn + skl2onnx（适合传统 ML）
+**Alternatives**:
+- TensorFlow + tf2onnx (also good, but slightly weaker ecosystem)
+- scikit-learn + skl2onnx (suitable for traditional ML)
 
-### 2. 推理端（Rust）
+### 2. Inference Environment (Rust)
 
-**位置**: `src/ai/`, `models/local/`
+**Location**: `src/ai/`, `models/local/`
 
-**目的**: 加载 ONNX 模型并进行高速推理
+**Purpose**: Load ONNX models and perform high-speed inference
 
-**核心库**:
-- **ort** (⭐⭐⭐⭐⭐ 当前使用): ONNX Runtime for Rust
+**Core Libraries**:
+- **ort** (⭐⭐⭐⭐⭐ Currently used): ONNX Runtime for Rust
   - GitHub: https://github.com/pykeio/ort
-  - 文档: https://docs.rs/ort/
+  - Documentation: https://docs.rs/ort/
 
-**为什么选 ort**:
-- ✅ 官方 ONNX Runtime 的 Rust 绑定
-- ✅ Microsoft 支持，稳定可靠
-- ✅ CPU/GPU 加速
-- ✅ API 友好，类型安全
-- ✅ 活跃维护
+**Why ort**:
+- ✅ Official ONNX Runtime Rust bindings
+- ✅ Microsoft-supported, stable and reliable
+- ✅ CPU/GPU acceleration
+- ✅ Friendly API, type-safe
+- ✅ Actively maintained
 
-**替代方案**:
-- `tract` (Pure Rust ML 推理): 无需 C++ 依赖，但模型支持有限
+**Alternatives**:
+- `tract` (Pure Rust ML inference): No C++ dependencies, but limited model support
 
-## 🎯 模型类型设计
+## 🎯 Model Type Design
 
-### 1. HTML 复杂度预测器
+BrowerAI supports the following model types:
 
-**任务**: 回归（输出 0.0-1.0 复杂度评分）
+### 1. HtmlParser
+- **Purpose**: Analyze HTML structure and complexity
+- **Input**: HTML text (tokenized)
+- **Output**: Complexity score (0.0-1.0)
 
-**输入特征** (100 维):
-```
-- 标签数量（归一化）
-- 嵌套深度
-- 文本长度
-- 表格/表单数量
-- 多媒体元素数量
-- class/id 使用情况
-- 语义标签占比
-- ...
-```
+### 2. CssParser
+- **Purpose**: CSS optimization and deduplication
+- **Input**: CSS rules
+- **Output**: Optimization suggestions
 
-**输出**: `complexity: f32` (0.0-1.0)
+### 3. JsParser
+- **Purpose**: JavaScript pattern recognition and obfuscation detection
+- **Input**: JavaScript code (tokenized)
+- **Output**: Pattern classification, obfuscation score
 
-**训练脚本**: `training/scripts/train_html_complexity.py`
+### 4. LayoutOptimizer
+- **Purpose**: Optimize layout calculations
+- **Input**: DOM tree structure
+- **Output**: Layout optimization hints
 
-### 2. CSS 优化建议生成器
+### 5. RenderingOptimizer
+- **Purpose**: Optimize rendering process
+- **Input**: Render tree
+- **Output**: Rendering optimization strategy
 
-**任务**: 多标签分类（5 个优化类别）
+### 6. JsDeobfuscator
+- **Purpose**: Detect and analyze obfuscated JavaScript
+- **Input**: JavaScript code
+- **Output**: Obfuscation type, complexity score
 
-**输入特征** (80 维):
-```
-- 规则数量
-- 选择器复杂度
-- 重复属性数量
-- 未使用选择器数量
-- 颜色格式统计
-- ...
-```
+## 🔧 Model Training Workflow
 
-**输出**: `suggestions: [f32; 5]`
-- [0]: 合并重复规则
-- [1]: 简化选择器
-- [2]: 删除未使用
-- [3]: 优化颜色值
-- [4]: 压缩属性
-
-**训练脚本**: `training/scripts/train_css_optimizer.py`
-
-### 3. JS 模式识别器（未来）
-
-**任务**: 多分类（检测代码模式）
-
-**输出**: `patterns: Vec<String>`
-- "event_driven"
-- "promise_chain"
-- "async_await"
-- "callback_hell"
-- ...
-
-## 🛠️ ONNX 工具链推荐
-
-### Python 端
+### Step 1: Collect Feedback Data
 
 ```bash
-# 核心依赖
-pip install torch onnx onnxruntime
+# Visit websites to collect data
+cargo run -- --learn https://example.com https://www.mozilla.org
 
-# 工具链
-pip install onnx-simplifier  # 模型优化
-pip install netron           # 可视化
-pip install onnxoptimizer    # 额外优化
+# Check collected data
+ls -lh training/data/feedback_*.json
 ```
 
-**常用命令**:
-
-```bash
-# 1. 验证 ONNX 模型
-python -c "import onnx; onnx.checker.check_model('model.onnx')"
-
-# 2. 简化模型（减小体积）
-python -m onnxsim model.onnx model_simplified.onnx
-
-# 3. 可视化模型结构
-netron model.onnx  # 打开浏览器
-
-# 4. 查看模型信息
-python -c "
-import onnx
-model = onnx.load('model.onnx')
-print('输入:', [(i.name, i.type) for i in model.graph.input])
-print('输出:', [(o.name, o.type) for o in model.graph.output])
-"
-```
-
-### Rust 端
-
-```toml
-# Cargo.toml
-[dependencies]
-ort = { version = "2.0.0-rc.10", optional = true }
-
-[features]
-ai = ["ort"]
-```
-
-**使用示例** (已在 `src/ai/inference.rs`):
-
-```rust
-use ort::{Session, Value};
-
-// 加载模型
-let session = Session::builder()?
-    .with_optimization_level(GraphOptimizationLevel::Level3)?
-    .commit_from_file("models/local/model.onnx")?;
-
-// 推理
-let input = ndarray::Array::from_shape_vec((1, 100), features)?;
-let outputs = session.run(ort::inputs!["features" => input.view()]?)?;
-let result: f32 = outputs["complexity"].try_extract_scalar()?;
-```
-
-## 📚 完整训练流程
-
-### 步骤 1: 环境准备
+### Step 2: Prepare Training Data
 
 ```bash
 cd training
-./setup_env.sh  # 自动安装依赖
+
+# Extract features from feedback data
+python scripts/extract_features.py
+
+# Verify feature data
+cat features/*.jsonl | head -5
 ```
 
-### 步骤 2: 数据收集
+### Step 3: Train Model
 
 ```bash
-cd ..
-cargo run -- --learn https://example.com https://github.com
+# Train HTML parser model
+python scripts/train_html_parser_v2.py --epochs 10
+
+# Train CSS parser model
+python scripts/train_css_parser.py --epochs 10
+
+# Train JS deobfuscator model
+python scripts/train_js_deobfuscator.py --epochs 10
 ```
 
-反馈数据保存到 `training/data/feedback_*.json`
+### Step 4: Export to ONNX
 
-### 步骤 3: 训练模型
+Models are automatically exported to ONNX format during training:
 
 ```bash
-cd training/scripts
-
-# HTML 复杂度
-python train_html_complexity.py \
-    --data ../data/feedback_*.json \
-    --epochs 100 \
-    --output ../models/html_complexity_v1.onnx
-
-# CSS 优化
-python train_css_optimizer.py \
-    --data ../data/feedback_*.json \
-    --epochs 100 \
-    --output ../models/css_optimizer_v1.onnx
+ls -lh training/models/*.onnx
 ```
 
-### 步骤 4: 验证模型
+### Step 5: Deploy Models
 
 ```bash
-python validate_model.py ../models/html_complexity_v1.onnx --benchmark
-```
-
-输出：
-```
-✅ ONNX 格式验证通过
-✅ 平均推理时间: 0.234 ms
-✅ 吞吐量: 4273.5 次/秒
-```
-
-### 步骤 5: 部署模型
-
-```bash
-cd ../..
-
-# 复制模型
+# Copy trained models to deployment directory
 cp training/models/*.onnx models/local/
 
-# 更新配置
-cat >> models/model_config.toml << EOF
+# Update model configuration
+cat > models/model_config.toml << 'EOF'
 [[models]]
-name = "html_complexity_v1"
+name = "html_parser_v2"
 model_type = "HtmlParser"
-path = "html_complexity_v1.onnx"
-version = "1.0.0"
-enabled = true
+path = "html_parser_v2.onnx"
+description = "HTML complexity analyzer v2"
+version = "2.0.0"
+priority = 100
+EOF
+```
+
+### Step 6: Test Deployed Models
+
+```bash
+# Build with AI features enabled
+cargo build --features ai
+
+# Test model inference
+cargo run -- --ai-report
+
+# Test on real websites
+cargo run -- --learn https://example.com
+```
+
+## 📈 Model Performance
+
+### Monitoring
+
+```bash
+# View model health status
+cargo run -- --ai-report
+
+# Check inference metrics
+grep "model_inference" training/data/feedback_*.json | jq .
+```
+
+### Optimization Tips
+
+1. **Batch Size**: Increase for faster training (with more memory)
+2. **Learning Rate**: Adjust based on loss convergence
+3. **Model Architecture**: Simplify for faster inference
+4. **Data Quality**: Clean and diverse training data improves accuracy
+5. **Validation**: Always validate on separate test set
+
+## 🔍 Model Architecture
+
+### HTML Parser Model
+
+```python
+class HtmlComplexityModel(nn.Module):
+    def __init__(self, vocab_size=1000, embed_dim=64):
+        super().__init__()
+        self.embedding = nn.Embedding(vocab_size, embed_dim)
+        self.lstm = nn.LSTM(embed_dim, 128, batch_first=True)
+        self.fc = nn.Linear(128, 1)
+        self.sigmoid = nn.Sigmoid()
+    
+    def forward(self, x):
+        embedded = self.embedding(x)
+        _, (hidden, _) = self.lstm(embedded)
+        output = self.sigmoid(self.fc(hidden[-1]))
+        return output
+```
+
+### CSS Parser Model
+
+```python
+class CssDeduplicationModel(nn.Module):
+    def __init__(self, vocab_size=500, embed_dim=32):
+        super().__init__()
+        self.embedding = nn.Embedding(vocab_size, embed_dim)
+        self.lstm = nn.LSTM(embed_dim, 64, batch_first=True)
+        self.fc = nn.Linear(64, 1)
+        self.sigmoid = nn.Sigmoid()
+    
+    def forward(self, x):
+        embedded = self.embedding(x)
+        _, (hidden, _) = self.lstm(embedded)
+        return self.sigmoid(self.fc(hidden[-1]))
+```
+
+### JS Deobfuscator Model
+
+```python
+class JsObfuscationDetector(nn.Module):
+    def __init__(self, vocab_size=2000, embed_dim=128):
+        super().__init__()
+        self.embedding = nn.Embedding(vocab_size, embed_dim)
+        self.lstm = nn.LSTM(embed_dim, 256, num_layers=2, batch_first=True)
+        self.fc = nn.Linear(256, 3)  # 3 obfuscation types
+        self.softmax = nn.Softmax(dim=1)
+    
+    def forward(self, x):
+        embedded = self.embedding(x)
+        _, (hidden, _) = self.lstm(embedded)
+        return self.softmax(self.fc(hidden[-1]))
+```
+
+## 🛠️ Troubleshooting
+
+### Issue: ONNX Export Fails
+- Check PyTorch and ONNX versions compatibility
+- Ensure model uses supported operations
+- Verify input/output shapes
+
+### Issue: Rust Inference Fails
+- Verify ONNX model file exists
+- Check model configuration syntax
+- Ensure ort crate version matches
+
+### Issue: Poor Model Performance
+- Collect more diverse training data
+- Increase model complexity (more layers/units)
+- Tune hyperparameters (learning rate, epochs)
+- Add validation and early stopping
+
+## 📚 See Also
+
+- [Training Quick Start](../../training/QUICKSTART.md) - Quick training guide
+- [Learning Guide](LEARNING_GUIDE.md) - Data collection guide
+- [Implementation Guide](IMPLEMENTATION_GUIDE.md) - Technical details
