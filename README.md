@@ -27,15 +27,25 @@ cargo run -- --learn https://example.com
 
 - 🎓 **Autonomous Learning**: Learn from real websites automatically
 - 🧠 **AI-Enhanced Parsing**: ML-powered HTML/CSS/JS parsing
+- 🔨 **Code Generation**: Intelligent HTML/CSS/JS code generation with templates
+- 🔓 **JS Deobfuscation**: Advanced multi-technique JavaScript deobfuscation
+- 🔄 **Continuous Learning**: Automated learn-infer-generate loop
 - 📊 **Performance Monitoring**: Real-time inference metrics
-- 🔄 **Continuous Improvement**: Online learning and model optimization
+- 🎯 **Multi-Strategy**: Progressive and adaptive processing
 
 ### Documentation
 
 - [Full Documentation](docs/en/README.md)
+- [Enhancement Guide](docs/ENHANCEMENTS.md) - NEW!
+- [Optimization Summary](docs/OPTIMIZATION_SUMMARY.md) - NEW!
+- [Intelligent Rendering Architecture](docs/INTELLIGENT_RENDERING_ARCHITECTURE.md) - NEW!
+- [Real Network Testing Guide](docs/REAL_NETWORK_TESTING.md) - **NEW!**
+- [Comprehensive Testing](docs/COMPREHENSIVE_TESTING.md) - NEW!
+- [Real Test Results](docs/REAL_TEST_RESULTS.md) - NEW!
 - [Quick Reference](docs/en/QUICKREF.md)
 - [Getting Started](docs/en/GETTING_STARTED.md)
 - [Training Guide](training/README.md)
+- [Model Zoo](models/MODEL_ZOO.md) - NEW!
 
 ### Technology Stack
 
@@ -70,15 +80,25 @@ cargo run -- --learn https://example.com
 
 - 🎓 **自主学习系统**: 自动从真实网站学习
 - 🧠 **AI 增强解析**: ML 驱动的 HTML/CSS/JS 解析
+- 🔨 **代码生成**: 智能 HTML/CSS/JS 代码生成，支持模板
+- 🔓 **JS 去混淆**: 高级多技术 JavaScript 去混淆
+- 🔄 **持续学习**: 自动化学习-推理-生成循环
 - 📊 **性能监控**: 实时推理指标
-- 🔄 **持续改进**: 在线学习和模型优化
+- 🎯 **多策略**: 渐进式和自适应处理
 
 ### 文档
 
 - [完整文档](docs/zh-CN/README.md)
+- [增强功能指南](docs/ENHANCEMENTS.md) - 新增!
+- [优化总结](docs/OPTIMIZATION_SUMMARY.md) - 新增!
+- [智能渲染架构](docs/INTELLIGENT_RENDERING_ARCHITECTURE.md) - 新增!
+- [真实网络测试指南](docs/REAL_NETWORK_TESTING.md) - **新增!**
+- [全面测试文档](docs/COMPREHENSIVE_TESTING.md) - 新增!
+- [真实测试结果](docs/REAL_TEST_RESULTS.md) - 新增!
 - [快速参考](docs/zh-CN/QUICKREF.md)
 - [入门指南](docs/zh-CN/GETTING_STARTED.md)
 - [训练指南](training/README.md)
+- [模型库](models/MODEL_ZOO.md) - 新增!
 
 ### 技术栈
 

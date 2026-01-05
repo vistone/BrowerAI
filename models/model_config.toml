@@ -1,19 +1,68 @@
+# BrowerAI Professional Model Zoo Configuration
+# 专业模型库配置 - 小而精致，CPU 优化，浏览器技术专用
+
+# ============== HTML 系列 ==============
+
+[[models]]
+name = "html_structure_analyzer_v1"
+model_type = "HtmlAnalyzer"
+path = "html_structure_analyzer_v1.onnx"
+description = "HTML 结构分析器 - 1.2M 参数，2-5ms CPU 推理"
+version = "1.0.0"
+priority = 100
+enabled = true
+parameters = "1.2M"
+inference_time_cpu_ms = "2-5"
+task = "structure_analysis"
+
 [[models]]
 name = "html_complexity_v1"
 model_type = "HtmlParser"
 path = "html_complexity_v1.onnx"
-description = "HTML complexity prediction model trained on 36 samples"
-version = "1.0.0"
-priority = 100
-
-[[models]]
-name = "code_understanding_v1"
-model_type = "CodeUnderstanding"
-path = "code_understanding_v1.onnx"
-description = "深度学习代码理解模型 - 15K参数，站点/技术栈分类"
+description = "HTML 复杂度预测模型 - 轻量级"
 version = "1.0.0"
 priority = 90
 enabled = true
+
+# ============== CSS 系列 ==============
+
+[[models]]
+name = "css_selector_optimizer_v1"
+model_type = "CssOptimizer"
+path = "css_selector_optimizer_v1.onnx"
+description = "CSS 选择器优化器 - 0.9M 参数，1-4ms CPU 推理"
+version = "1.0.0"
+priority = 100
+enabled = true
+parameters = "0.9M"
+inference_time_cpu_ms = "1-4"
+task = "selector_optimization"
+
+# ============== JavaScript 系列 ==============
+
+[[models]]
+name = "js_syntax_analyzer_v1"
+model_type = "JsAnalyzer"
+path = "js_syntax_analyzer_v1.onnx"
+description = "JS 语法分析器 - 2.3M 参数，5-8ms CPU 推理"
+version = "1.0.0"
+priority = 100
+enabled = true
+parameters = "2.3M"
+inference_time_cpu_ms = "5-8"
+task = "syntax_analysis"
+
+[[models]]
+name = "js_deobfuscator_lite_v1"
+model_type = "JsDeobfuscator"
+path = "js_deobfuscator_lite_v1.onnx"
+description = "JS 去混淆器轻量版 - 2.8M 参数，8-10ms CPU 推理"
+version = "1.0.0"
+priority = 95
+enabled = true
+parameters = "2.8M"
+inference_time_cpu_ms = "8-10"
+task = "deobfuscation"
 
 [[models]]
 name = "js_deobfuscator_v1"
@@ -23,3 +72,25 @@ description = "Seq2Seq JS去混淆模型 - LSTM编码器/解码器，vocab 160"
 version = "1.0.0"
 priority = 80
 enabled = true
+
+# ============== 跨领域系列 ==============
+
+[[models]]
+name = "code_understanding_v1"
+model_type = "CodeUnderstanding"
+path = "code_understanding_v1.onnx"
+description = "代码理解模型 - 15K参数，站点/技术栈分类"
+version = "1.0.0"
+priority = 90
+enabled = true
+
+[[models]]
+name = "web_component_classifier_v1"
+model_type = "ComponentClassifier"
+path = "web_component_classifier_v1.onnx"
+description = "Web 组件分类器 - 1.3M 参数，识别 30+ 组件类型"
+version = "1.0.0"
+priority = 85
+enabled = false
+parameters = "1.3M"
+task = "component_classification"
