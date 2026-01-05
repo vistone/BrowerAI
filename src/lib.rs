@@ -9,7 +9,10 @@ pub mod plugins;
 pub mod renderer;
 pub mod testing;
 
-pub use ai::{AdvancedPerformanceMonitor, HotReloadManager, InferenceEngine, ModelManager};
+pub use ai::{
+    AdvancedPerformanceMonitor, AiConfig, AiStats, FallbackReason, FallbackTracker,
+    HotReloadManager, InferenceEngine, ModelManager,
+};
 pub use devtools::{DOMInspector, NetworkMonitor, PerformanceProfiler};
 pub use dom::{Document, DomElement, DomNode, DomApiExtensions, ElementHandle, JsSandbox};
 pub use learning::{

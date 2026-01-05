@@ -1,5 +1,7 @@
 use std::path::PathBuf;
+use std::sync::Arc;
 
+use crate::ai::config::{AiConfig, FallbackTracker};
 use crate::ai::model_manager::{ModelConfig, ModelType};
 use crate::ai::performance_monitor::PerformanceMonitor;
 use crate::ai::feedback_pipeline::FeedbackPipeline;
@@ -13,6 +15,8 @@ pub struct AiRuntime {
     engine: InferenceEngine,
     models: Option<ModelManager>,
     feedback: FeedbackPipeline,
+    config: Arc<AiConfig>,
+    fallback_tracker: Arc<FallbackTracker>,
 }
 
 impl AiRuntime {
@@ -22,6 +26,8 @@ impl AiRuntime {
             engine,
             models: None,
             feedback: FeedbackPipeline::default(),
+            config: Arc::new(AiConfig::default()),
+            fallback_tracker: Arc::new(FallbackTracker::default()),
         }
     }
 
@@ -31,6 +37,19 @@ impl AiRuntime {
             engine,
             models: Some(model_manager),
             feedback: FeedbackPipeline::default(),
+            config: Arc::new(AiConfig::default()),
+            fallback_tracker: Arc::new(FallbackTracker::default()),
+        }
+    }
+
+    /// Create a runtime with custom configuration.
+    pub fn with_config(engine: InferenceEngine, config: AiConfig) -> Self {
+        Self {
+            engine,
+            models: None,
+            feedback: FeedbackPipeline::default(),
+            config: Arc::new(config),
+            fallback_tracker: Arc::new(FallbackTracker::default()),
         }
     }
 
@@ -64,5 +83,20 @@ impl AiRuntime {
     /// Get the feedback pipeline for recording events.
     pub fn feedback(&self) -> &FeedbackPipeline {
         &self.feedback
+    }
+
+    /// Get the AI configuration.
+    pub fn config(&self) -> &AiConfig {
+        &self.config
+    }
+
+    /// Get the fallback tracker.
+    pub fn fallback_tracker(&self) -> &FallbackTracker {
+        &self.fallback_tracker
+    }
+
+    /// Check if AI is enabled.
+    pub fn is_ai_enabled(&self) -> bool {
+        self.config.enable_ai
     }
 }
