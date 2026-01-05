@@ -14,17 +14,16 @@ use ai::performance_monitor::PerformanceMonitor;
 use learning::WebsiteLearner;
 
 fn main() -> Result<()> {
-    // 初始化日志
+    // Initialize logger
     env_logger::Builder::from_default_env()
         .filter_level(log::LevelFilter::Info)
         .init();
 
     log::info!("╔════════════════════════════════════════════════════════════════╗");
-    log::info!("║          BrowerAI - AI自主学习浏览器                          ║");
-    log::info!("║          AI-Powered Self-Learning Browser                     ║");
+    log::info!("║          BrowerAI - AI-Powered Self-Learning Browser         ║");
     log::info!("╚════════════════════════════════════════════════════════════════╝");
 
-    // 解析命令行参数
+    // Parse command line arguments
     let args: Vec<String> = std::env::args().collect();
     let mode = if args.len() > 1 {
         args[1].as_str()
@@ -34,15 +33,15 @@ fn main() -> Result<()> {
 
     match mode {
         "--ai-report" => {
-            // AI 报告模式
+            // AI report mode
             run_ai_report()?;
         }
         "--learn" => {
-            // 学习模式：访问真实网站
+            // Learning mode: visit real websites
             let urls = if args.len() > 2 {
                 args[2..].iter().map(|s| s.as_str()).collect()
             } else {
-                // 默认测试网站
+                // Default test websites
                 vec![
                     "https://example.com",
                     "https://httpbin.org/html",
@@ -51,7 +50,7 @@ fn main() -> Result<()> {
             run_learning_mode(&urls)?;
         }
         "--export-feedback" => {
-            // 导出反馈数据
+            // Export feedback data
             let output = if args.len() > 2 {
                 &args[2]
             } else {
@@ -60,7 +59,7 @@ fn main() -> Result<()> {
             run_export_feedback(output)?;
         }
         _ => {
-            // 演示模式
+            // Demo mode
             run_demo_mode()?;
         }
     }
@@ -68,20 +67,20 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-/// AI 报告模式
+/// AI report mode
 fn run_ai_report() -> Result<()> {
-    log::info!("🔍 生成 AI 系统报告...\n");
+    log::info!("🔍 Generating AI system report...\n");
 
     let model_dir = PathBuf::from("./models/local");
     let mut model_manager = ModelManager::new(model_dir)?;
     
-    // 尝试加载模型配置
+    // Try to load model configuration
     let config_path = PathBuf::from("./models/model_config.toml");
     if config_path.exists() {
         model_manager.load_config(&config_path)?;
-        log::info!("✅ 已加载模型配置");
+        log::info!("✅ Model configuration loaded");
     } else {
-        log::warn!("⚠️  模型配置文件不存在: {}", config_path.display());
+        log::warn!("⚠️  Model configuration file not found: {}", config_path.display());
     }
 
     let perf_monitor = PerformanceMonitor::new(true);
@@ -96,11 +95,11 @@ fn run_ai_report() -> Result<()> {
     Ok(())
 }
 
-/// 学习模式：访问真实网站
+/// Learning mode: visit real websites
 fn run_learning_mode(urls: &[&str]) -> Result<()> {
-    log::info!("🎓 进入学习模式...\n");
+    log::info!("🎓 Entering learning mode...\n");
 
-    // 初始化 AI 运行时
+    // Initialize AI runtime
     let model_dir = PathBuf::from("./models/local");
     let mut model_manager = ModelManager::new(model_dir)?;
     
@@ -113,31 +112,31 @@ fn run_learning_mode(urls: &[&str]) -> Result<()> {
     let inference_engine = InferenceEngine::with_monitor(perf_monitor)?;
     let runtime = AiRuntime::with_models(inference_engine, model_manager);
 
-    // 创建网站学习器
+    // Create website learner
     let learner = WebsiteLearner::new(runtime.clone())?;
 
-    // 批量访问网站
-    log::info!("🌐 开始批量访问 {} 个网站...\n", urls.len());
+    // Batch visit websites
+    log::info!("🌐 Starting batch visit of {} websites...\n", urls.len());
     let reports = learner.batch_visit(urls);
 
-    // 生成学习报告
+    // Generate learning report
     log::info!("\n{}", "═".repeat(64));
-    log::info!("📊 学习报告摘要");
+    log::info!("📊 Learning Report Summary");
     log::info!("{}", "═".repeat(64));
     
     for report in &reports {
         log::info!("\n{}", report.format());
     }
 
-    // 输出反馈统计
+    // Output feedback statistics
     log::info!("\n{}", runtime.feedback().generate_summary());
 
-    // 自动导出反馈数据
-    // 使用当前目录保存反馈文件
+    // Auto-export feedback data
+    // Use current directory to save feedback file
     let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S");
     let feedback_file = format!("feedback_{}.json", timestamp);
     
-    // 如果training/data目录存在则使用，否则使用当前目录
+    // Use training/data directory if exists, otherwise use current directory
     let feedback_path = if std::path::Path::new("./training/data").exists() {
         format!("./training/data/feedback_{}.json", timestamp)
     } else {
@@ -145,17 +144,17 @@ fn run_learning_mode(urls: &[&str]) -> Result<()> {
     };
     learner.export_feedback(&feedback_path)?;
 
-    log::info!("\n✅ 学习完成！下一步:");
-    log::info!("  1. 查看反馈数据: {}", feedback_file);
-    log::info!("  2. 运行 'cargo run --bin browerai -- --ai-report' 查看 AI 状态");
-    log::info!("  3. 使用反馈数据训练模型（参考 training/QUICKSTART.md）");
+    log::info!("\n✅ Learning completed! Next steps:");
+    log::info!("  1. View feedback data: {}", feedback_file);
+    log::info!("  2. Run 'cargo run --bin browerai -- --ai-report' to check AI status");
+    log::info!("  3. Train models using feedback data (see training/QUICKSTART.md)");
 
     Ok(())
 }
 
-/// 导出反馈数据
+/// Export feedback data
 fn run_export_feedback(output: &str) -> Result<()> {
-    log::info!("💾 导出反馈数据到: {}", output);
+    log::info!("💾 Exporting feedback data to: {}", output);
     
     let perf_monitor = PerformanceMonitor::new(true);
     let inference_engine = InferenceEngine::with_monitor(perf_monitor)?;
@@ -164,64 +163,64 @@ fn run_export_feedback(output: &str) -> Result<()> {
     let json = runtime.feedback().export_training_samples()?;
     std::fs::write(output, json)?;
 
-    log::info!("✅ 导出完成！");
+    log::info!("✅ Export completed!");
     Ok(())
 }
 
-/// 演示模式
+/// Demo mode
 fn run_demo_mode() -> Result<()> {
     use parser::{CssParser, HtmlParser, JsParser};
     use renderer::RenderEngine;
 
-    log::info!("🎬 演示模式\n");
-    log::info!("提示：使用以下参数运行：");
-    log::info!("  --ai-report          生成 AI 系统报告");
-    log::info!("  --learn [urls...]    访问真实网站并学习");
-    log::info!("  --export-feedback    导出反馈数据\n");
+    log::info!("🎬 Demo Mode\n");
+    log::info!("Hint: Run with the following options:");
+    log::info!("  --ai-report          Generate AI system report");
+    log::info!("  --learn [urls...]    Visit real websites and learn");
+    log::info!("  --export-feedback    Export feedback data\n");
 
-    // 初始化 AI 运行时
+    // Initialize AI runtime
     let model_dir = PathBuf::from("./models/local");
     let model_manager = ModelManager::new(model_dir)?;
     let perf_monitor = PerformanceMonitor::new(true);
     let inference_engine = InferenceEngine::with_monitor(perf_monitor)?;
     let runtime = AiRuntime::with_models(inference_engine, model_manager);
 
-    // 初始化解析器（使用 AI 运行时）
+    // Initialize parsers (with AI runtime)
     let html_parser = HtmlParser::with_ai_runtime(runtime.clone());
     let css_parser = CssParser::with_ai_runtime(runtime.clone());
     let js_parser = JsParser::with_ai_runtime(runtime.clone());
 
-    // 初始化渲染引擎
+    // Initialize render engine
     let mut render_engine = RenderEngine::new();
 
-    // 示例：解析 HTML
+    // Example: Parse HTML
     let sample_html = r#"
         <!DOCTYPE html>
         <html>
             <head>
-                <title>BrowerAI 测试页面</title>
+                <title>BrowerAI Test Page</title>
             </head>
             <body>
-                <h1>欢迎使用 BrowerAI</h1>
-                <p>这是一个具有 AI 自主学习能力的浏览器，可以自动解析和渲染网页内容。</p>
+                <h1>Welcome to BrowerAI</h1>
+                <p>This is an AI-powered self-learning browser that can automatically parse and render web content.</p>
                 <div>
-                    <h2>核心特性</h2>
+                    <h2>Core Features</h2>
                     <ul>
-                        <li>AI 驱动的 HTML/CSS/JS 解析</li>
-                        <li>在线学习和模型优化</li>
-                        <li>性能监控和反馈收集</li>
+                        <li>AI-driven HTML/CSS/JS parsing</li>
+                        <li>Online learning and model optimization</li>
+                        <li>Performance monitoring and feedback collection</li>
                     </ul>
                 </div>
             </body>
         </html>
     "#;
 
-    log::info!("🔍 解析 HTML 文档...");
+    log::info!("🔍 Parsing HTML document...");
     let dom = html_parser.parse(sample_html)?;
     let text = html_parser.extract_text(&dom);
-    log::info!("📝 提取的文本内容 ({} 字符):\n{}", text.trim().len(), text.trim());
+    log::info!("📝 Extracted text content ({} characters):\n{}", text.trim().len(), text.trim());
 
-    // 示例：解析 CSS
+    // Example: Parse CSS
     let sample_css = r#"
         body {
             font-family: Arial, sans-serif;
@@ -238,40 +237,40 @@ fn run_demo_mode() -> Result<()> {
         }
     "#;
 
-    log::info!("\n🎨 解析 CSS...");
+    log::info!("\n🎨 Parsing CSS...");
     let css_rules = css_parser.parse(sample_css)?;
-    log::info!("✅ 解析了 {} 条 CSS 规则", css_rules.len());
+    log::info!("✅ Parsed {} CSS rules", css_rules.len());
 
-    // 示例：解析 JavaScript
+    // Example: Parse JavaScript
     let sample_js = r#"
         function greet(name) {
-            return "你好, " + name + "!";
+            return "Hello, " + name + "!";
         }
         
         const result = greet("BrowerAI");
         console.log(result);
         
-        // 计算斐波那契数列
+        // Calculate Fibonacci sequence
         function fibonacci(n) {
             if (n <= 1) return n;
             return fibonacci(n - 1) + fibonacci(n - 2);
         }
     "#;
 
-    log::info!("\n⚙️  解析 JavaScript...");
+    log::info!("\n⚙️  Parsing JavaScript...");
     let js_ast = js_parser.parse(sample_js)?;
-    log::info!("✅ 解析了 {} 条 JavaScript 语句", js_ast.statement_count);
+    log::info!("✅ Parsed {} JavaScript statements", js_ast.statement_count);
 
-    // 示例：渲染
-    log::info!("\n🖼️  渲染 HTML + CSS...");
+    // Example: Rendering
+    log::info!("\n🖼️  Rendering HTML + CSS...");
     let render_tree = render_engine.render(&dom, &css_rules)?;
-    log::info!("✅ 创建了包含 {} 个节点的渲染树", render_tree.nodes.len());
+    log::info!("✅ Created render tree with {} nodes", render_tree.nodes.len());
 
-    // 显示反馈统计
+    // Display feedback statistics
     log::info!("\n{}", runtime.feedback().generate_summary());
 
-    log::info!("\n✅ 演示完成！");
-    log::info!("📖 下一步：运行 'cargo run --bin browerai -- --learn' 开始学习真实网站");
+    log::info!("\n✅ Demo completed!");
+    log::info!("📖 Next step: Run 'cargo run --bin browerai -- --learn' to start learning from real websites");
 
     Ok(())
 }
