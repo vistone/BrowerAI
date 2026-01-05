@@ -27,12 +27,17 @@ cargo run -- --learn https://example.com
 
 - 🎓 **Autonomous Learning**: Learn from real websites automatically
 - 🧠 **AI-Enhanced Parsing**: ML-powered HTML/CSS/JS parsing
+- 🔨 **Code Generation**: Intelligent HTML/CSS/JS code generation with templates
+- 🔓 **JS Deobfuscation**: Advanced multi-technique JavaScript deobfuscation
+- 🔄 **Continuous Learning**: Automated learn-infer-generate loop
 - 📊 **Performance Monitoring**: Real-time inference metrics
-- 🔄 **Continuous Improvement**: Online learning and model optimization
+- 🎯 **Multi-Strategy**: Progressive and adaptive processing
 
 ### Documentation
 
 - [Full Documentation](docs/en/README.md)
+- [Enhancement Guide](docs/ENHANCEMENTS.md) - **NEW!**
+- [Optimization Summary](docs/OPTIMIZATION_SUMMARY.md) - **NEW!**
 - [Quick Reference](docs/en/QUICKREF.md)
 - [Getting Started](docs/en/GETTING_STARTED.md)
 - [Training Guide](training/README.md)
@@ -70,12 +75,17 @@ cargo run -- --learn https://example.com
 
 - 🎓 **自主学习系统**: 自动从真实网站学习
 - 🧠 **AI 增强解析**: ML 驱动的 HTML/CSS/JS 解析
+- 🔨 **代码生成**: 智能 HTML/CSS/JS 代码生成，支持模板
+- 🔓 **JS 去混淆**: 高级多技术 JavaScript 去混淆
+- 🔄 **持续学习**: 自动化学习-推理-生成循环
 - 📊 **性能监控**: 实时推理指标
-- 🔄 **持续改进**: 在线学习和模型优化
+- 🎯 **多策略**: 渐进式和自适应处理
 
 ### 文档
 
 - [完整文档](docs/zh-CN/README.md)
+- [增强功能指南](docs/ENHANCEMENTS.md) - **新增!**
+- [优化总结](docs/OPTIMIZATION_SUMMARY.md) - **新增!**
 - [快速参考](docs/zh-CN/QUICKREF.md)
 - [入门指南](docs/zh-CN/GETTING_STARTED.md)
 - [训练指南](training/README.md)
