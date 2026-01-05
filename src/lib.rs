@@ -1,6 +1,7 @@
 pub mod ai;
 pub mod devtools;
 pub mod dom;
+pub mod intelligent_rendering;
 pub mod learning;
 pub mod network;
 pub mod parser;
