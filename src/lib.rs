@@ -11,7 +11,7 @@ pub mod testing;
 
 pub use ai::{
     AdvancedPerformanceMonitor, AiConfig, AiStats, FallbackReason, FallbackTracker,
-    HotReloadManager, InferenceEngine, ModelManager,
+    HotReloadManager, InferenceEngine, ModelHealth, ModelHealthSummary, ModelManager,
 };
 pub use devtools::{DOMInspector, NetworkMonitor, PerformanceProfiler};
 pub use dom::{Document, DomElement, DomNode, DomApiExtensions, ElementHandle, JsSandbox};
