@@ -123,7 +123,7 @@ impl BenchmarkRunner {
 
         let mut results = Vec::new();
 
-        for (_idx, sample) in self.config.test_samples.iter().enumerate() {
+        for sample in self.config.test_samples.iter() {
             let test_name = format!("html_parse_size_{}", sample.len());
             log::info!("Running benchmark: {}", test_name);
 
@@ -283,7 +283,7 @@ impl BenchmarkRunner {
                 "  Throughput: {:.2} MB/s\n",
                 result.throughput_mb_per_sec
             ));
-            report.push_str("\n");
+            report.push('\n');
         }
 
         // Baseline vs AI comparison
@@ -295,7 +295,7 @@ impl BenchmarkRunner {
             report.push_str(&format!("  AI-Enhanced: {} μs\n", comp.ai_enhanced_avg_us));
             report.push_str(&format!("  Overhead: {:.1}%\n", comp.overhead_percent));
             report.push_str(&format!("  Speedup: {:.2}x\n", comp.speedup_factor));
-            report.push_str("\n");
+            report.push('\n');
         }
 
         report.push_str("========================================\n");

@@ -219,7 +219,7 @@ impl ControlFlowAnalyzer {
 
         for edge in &graph.edges {
             adj.entry(edge.from.clone())
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(edge.to.clone());
         }
 

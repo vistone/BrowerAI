@@ -283,7 +283,7 @@ impl ContinuousLearningLoop {
     fn generate_sample_code(&self) -> Result<GeneratedCode> {
         use std::collections::HashMap;
 
-        let code_types = vec![CodeType::Html, CodeType::Css, CodeType::JavaScript];
+        let code_types = [CodeType::Html, CodeType::Css, CodeType::JavaScript];
         let code_type = code_types[self.stats.iterations % code_types.len()].clone();
 
         let mut constraints = HashMap::new();

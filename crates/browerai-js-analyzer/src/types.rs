@@ -35,8 +35,10 @@ pub struct JsAstMetadata {
 
 /// 代码长度分类
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum CodeSizeCategory {
     /// < 100行
+    #[default]
     Tiny,
     /// 100-1000行
     Small,
@@ -46,11 +48,6 @@ pub enum CodeSizeCategory {
     Large,
 }
 
-impl Default for CodeSizeCategory {
-    fn default() -> Self {
-        CodeSizeCategory::Tiny
-    }
-}
 
 // ============================================================================
 // Phase 2: Location Information

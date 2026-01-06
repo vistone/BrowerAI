@@ -65,7 +65,7 @@ impl AnalysisPipeline {
 
         // Check cache
         let source_hash = super::performance_optimizer::hash_string(source);
-        let cache_key = format!("full_analysis");
+        let cache_key = "full_analysis".to_string();
 
         if let Some(_cached) = self.optimizer.cache(&cache_key, source_hash) {
             self.optimizer.record_cache_hit();

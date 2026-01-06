@@ -54,6 +54,7 @@ pub struct CallNode {
 
 /// Call frequency estimation
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum CallFrequency {
     /// Rarely called
     Low,
@@ -62,14 +63,10 @@ pub enum CallFrequency {
     /// Frequently called (in loops or hot paths)
     High,
     /// Unknown frequency
+    #[default]
     Unknown,
 }
 
-impl Default for CallFrequency {
-    fn default() -> Self {
-        CallFrequency::Unknown
-    }
-}
 
 /// Call edge with context
 #[derive(Debug, Clone)]
@@ -165,7 +162,7 @@ impl EnhancedCallGraphAnalyzer {
             for callee_id in callees {
                 reverse_call_map
                     .entry(callee_id.clone())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(caller_id.clone());
             }
         }
