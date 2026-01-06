@@ -396,8 +396,8 @@ mod tests {
     #[test]
     fn test_analyzer_creation() {
         let analyzer = SemanticAnalyzer::new();
-        assert!(!analyzer.frameworks.is_empty());
-        assert!(!analyzer.event_patterns.is_empty());
+        assert!(!analyzer._frameworks.is_empty());
+        assert!(!analyzer._event_patterns.is_empty());
     }
 
     #[test]

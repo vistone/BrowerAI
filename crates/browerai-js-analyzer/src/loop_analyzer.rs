@@ -186,6 +186,9 @@ impl Default for LoopAnalyzer {
 mod tests {
     use super::*;
     use crate::extractor::AstExtractor;
+    use crate::scope_analyzer::ScopeAnalyzer;
+    use crate::dataflow_analyzer::DataFlowAnalyzer;
+    use crate::controlflow_analyzer::ControlFlowAnalyzer;
 
     fn extract_ast(code: &str) -> ExtractedAst {
         AstExtractor::new().extract_from_source(code).unwrap()

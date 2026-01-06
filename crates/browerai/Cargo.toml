@@ -20,7 +20,7 @@ browerai-js-parser = { workspace = true }
 browerai-js-analyzer = { workspace = true }
 browerai-ai-core = { workspace = true, optional = true }
 browerai-ai-integration = { workspace = true, optional = true }
-browerai-ml = { workspace = true }
+browerai-ml = { workspace = true, optional = true }
 browerai-renderer-core = { workspace = true }
 browerai-renderer-predictive = { workspace = true }
 browerai-intelligent-rendering = { workspace = true }
@@ -39,6 +39,8 @@ default = []
 ai = ["browerai-ai-core", "browerai-ai-core/onnx", "browerai-ai-integration"]
 # Enable Candle-based GGUF LLMs (e.g., Qwen2.5-Coder) with browerai-ai-core
 ai-candle = ["browerai-ai-core", "browerai-ai-core/candle"]
+# Enable ML toolkit with tch-rs (PyTorch bindings)
+ml = ["browerai-ml"]
 
 [dev-dependencies]
 tempfile = { workspace = true }

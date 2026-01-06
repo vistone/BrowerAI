@@ -466,8 +466,8 @@ mod tests {
 
     #[test]
     fn test_enhanced_call_graph_creation() {
-        let mut analyzer = EnhancedCallGraphAnalyzer::new();
-        assert_eq!(analyzer.next_id, 0);
+        let analyzer = EnhancedCallGraphAnalyzer::new();
+        assert_eq!(analyzer._next_id, 0);
     }
 
     #[test]

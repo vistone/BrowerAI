@@ -1,5 +1,7 @@
 use anyhow::Result;
 use cssparser::{Parser, ParserInput, Token};
+#[cfg(feature = "ai")]
+use std::path::PathBuf;
 
 
 #[cfg(feature = "ai")]
@@ -83,8 +85,26 @@ impl CssParser {
 
         log::info!("Successfully parsed CSS with {} rules", rules.len());
         Ok(rules)
+    }
+
+    /// Validate CSS syntax
+    pub fn validate(&self, css: &str) -> Result<bool> {
+        let result = self.parse(css);
+        Ok(result.is_ok())
+    }
+
+    /// Check if AI enhancement is enabled
+    pub fn is_ai_enabled(&self) -> bool {
+        #[cfg(feature = "ai")]
+        {
+            self.inference_engine.is_some()
+        }
+        #[cfg(not(feature = "ai"))]
+        {
+            false
         }
     }
+}
 
 impl Default for CssParser {
     fn default() -> Self {

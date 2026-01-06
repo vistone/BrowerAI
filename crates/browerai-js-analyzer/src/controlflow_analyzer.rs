@@ -298,7 +298,7 @@ impl Default for ControlFlowAnalyzer {
 mod tests {
     use super::*;
     use crate::types::{
-        JsAstMetadata, JsClassInfo, JsFunctionInfo, JsParameter, JsSemanticInfo,
+        JsAstMetadata, JsFunctionInfo, JsParameter, JsSemanticInfo,
     };
     use crate::extractor::ExtractedAst;
 

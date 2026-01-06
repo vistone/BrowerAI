@@ -9,6 +9,7 @@ use browerai_ai_core::{AiReporter, AiRuntime, FeedbackPipeline, InferenceEngine,
 use browerai_css_parser::CssParser;
 use browerai_html_parser::HtmlParser;
 use browerai_js_parser::JsParser;
+#[cfg(feature = "ml")]
 use browerai_ml::MlSession;
 use browerai_renderer_core::RenderEngine;
 
@@ -101,6 +102,7 @@ fn run_ai_report() -> Result<()> {
 }
 
 /// Learning mode: visit real websites
+#[cfg(feature = "ml")]
 fn run_learning_mode(urls: &[&str]) -> Result<()> {
     log::info!("🎓 Entering learning mode (Rust/tch-rs)...\n");
 
@@ -113,6 +115,12 @@ fn run_learning_mode(urls: &[&str]) -> Result<()> {
     log::info!("💡 Next: wire real data pipeline to tch models (training/inference)");
 
     Ok(())
+}
+
+#[cfg(not(feature = "ml"))]
+fn run_learning_mode(urls: &[&str]) -> Result<()> {
+    log::info!("🌐 URLs provided: {:?}", urls);
+    Err(anyhow!("ML feature is disabled. Rebuild with --features ml to enable learning mode with tch-rs."))
 }
 
 /// Export feedback data
