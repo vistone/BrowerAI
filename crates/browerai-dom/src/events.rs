@@ -154,7 +154,7 @@ impl Default for EventListeners {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use browerai_dom::Document;
+    use crate::Document;
 
     #[test]
     fn test_event_creation() {

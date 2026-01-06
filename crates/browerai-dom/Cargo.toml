@@ -20,4 +20,5 @@ boa_engine = { workspace = true }
 boa_interner = { workspace = true }
 
 [dev-dependencies]
+browerai-html-parser = { workspace = true }
 env_logger = { workspace = true }

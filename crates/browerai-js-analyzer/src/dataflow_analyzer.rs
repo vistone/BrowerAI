@@ -233,7 +233,7 @@ impl Default for DataFlowAnalyzer {
 mod tests {
     use super::*;
     use crate::types::{
-        JsAstMetadata, JsClassInfo, JsFunctionInfo, JsParameter, ScopeTree,
+        JsAstMetadata, JsFunctionInfo, JsParameter, ScopeTree,
     };
 
     fn create_test_ast() -> ExtractedAst {

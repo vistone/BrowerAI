@@ -53,6 +53,10 @@ pub use browerai_devtools as devtools;
 pub use browerai_testing as testing;
 pub use browerai_plugins as plugins;
 
+// Re-export ML toolkit (conditional)
+#[cfg(feature = "ml")]
+pub use browerai_ml as ml;
+
 /// Prelude module for convenient imports
 pub mod prelude {
     // Core
