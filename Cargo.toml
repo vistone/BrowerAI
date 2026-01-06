@@ -1,64 +1,107 @@
-[package]
-name = "browerai"
-version = "0.1.0"
+[workspace]
+resolver = "2"
+members = [
+    "crates/browerai-core",
+    "crates/browerai-dom",
+    "crates/browerai-html-parser",
+    "crates/browerai-css-parser",
+    "crates/browerai-js-parser",
+    "crates/browerai-js-analyzer",
+    "crates/browerai-ai-core",
+    "crates/browerai-ai-integration",
+    "crates/browerai-renderer-core",
+    "crates/browerai-renderer-predictive",
+    "crates/browerai-intelligent-rendering",
+    "crates/browerai-learning",
+    "crates/browerai-network",
+    "crates/browerai-devtools",
+    "crates/browerai-testing",
+    "crates/browerai-plugins",
+    "crates/browerai-ml",
+    "crates/browerai",
+]
+
+[workspace.package]
 edition = "2021"
 authors = ["BrowerAI Contributors"]
-description = "AI-powered browser with autonomous HTML/CSS/JS parsing and rendering"
 license = "MIT"
+repository = "https://github.com/vistone/BrowerAI"
 
-[features]
-default = []
-ai = ["ort"]
+[workspace.dependencies]
+# Core dependencies
+anyhow = "1.0"
+thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+log = "0.4"
+env_logger = "0.11"
 
-[dependencies]
-# ONNX Runtime for AI inference (optional)
-ort = { version = "2.0.0-rc.10", optional = true }
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
 
-# HTML/CSS/JS parsing
+# HTTP client (use rustls instead of openssl)
+reqwest = { version = "0.11", features = ["blocking", "rustls-tls"], default-features = false }
+url = "2.5"
+
+# Timestamp
+chrono = "0.4"
+
+# Regular expressions
+regex = "1.10"
+
+# HTML/CSS parsing
 html5ever = "0.27"
 markup5ever_rcdom = "0.3"
 cssparser = "0.33"
 selectors = "0.25"
 
-# Native Rust JavaScript parser and engine (instead of V8)
-# Using boa_parser - pure Rust ECMAScript parser from boa engine
-# Using boa_engine - pure Rust JavaScript execution engine
+# JavaScript parsing and execution
 boa_parser = "0.20"
 boa_ast = "0.20"
 boa_interner = "0.20"
 boa_engine = "0.20"
-
-# Serialization for model configs
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-toml = "0.8"
-
-# Error handling
-anyhow = "1.0"
-thiserror = "1.0"
-
-# Async runtime
-tokio = { version = "1.35", features = ["full"] }
-
-# Logging
-log = "0.4"
-env_logger = "0.11"
-
-# HTTP client for website learning
-reqwest = { version = "0.11", features = ["blocking"] }
-
-# URL parsing for deep crawling
-url = "2.5"
-
-# Timestamp for feedback data
-chrono = "0.4"
-
-# Regular expressions for deobfuscation
-regex = "1.10"
-
-# Swc - Fast TypeScript/JavaScript compiler (Phase 2)
-# 用于完整的 AST 解析，支持 JSX 和 TypeScript
 swc_core = "0.88"
 
-[dev-dependencies]
+# Tch (PyTorch bindings for Rust)
+tch = { version = "0.14", features = ["download-libtorch"] }
+
+# Force vendored OpenSSL for crates that still require native TLS (e.g., tch download helper)
+openssl = { version = "0.10", features = ["vendored"] }
+openssl-sys = { version = "0.9.111", features = ["vendored"] }
+
+# ONNX Runtime (optional)
+ort = "2.0.0-rc.10"
+
+# Dev dependencies
 tempfile = "3.8"
+
+# Internal workspace crates
+browerai-core = { path = "crates/browerai-core" }
+browerai-dom = { path = "crates/browerai-dom" }
+browerai-html-parser = { path = "crates/browerai-html-parser" }
+browerai-css-parser = { path = "crates/browerai-css-parser" }
+browerai-js-parser = { path = "crates/browerai-js-parser" }
+browerai-js-analyzer = { path = "crates/browerai-js-analyzer" }
+browerai-ai-core = { path = "crates/browerai-ai-core" }
+browerai-ai-integration = { path = "crates/browerai-ai-integration" }
+browerai-renderer-core = { path = "crates/browerai-renderer-core" }
+browerai-renderer-predictive = { path = "crates/browerai-renderer-predictive" }
+browerai-intelligent-rendering = { path = "crates/browerai-intelligent-rendering" }
+browerai-learning = { path = "crates/browerai-learning" }
+browerai-ml = { path = "crates/browerai-ml" }
+browerai-network = { path = "crates/browerai-network" }
+browerai-devtools = { path = "crates/browerai-devtools" }
+browerai-testing = { path = "crates/browerai-testing" }
+browerai-plugins = { path = "crates/browerai-plugins" }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+

@@ -1,0 +1,21 @@
+[package]
+name = "browerai-js-parser"
+version = "0.1.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "JavaScript parser for BrowerAI"
+
+[dependencies]
+browerai-core = { workspace = true }
+anyhow = { workspace = true }
+log = { workspace = true }
+boa_parser = { workspace = true }
+boa_ast = { workspace = true }
+boa_interner = { workspace = true }
+boa_engine = { workspace = true }
+
+[dev-dependencies]
+env_logger = { workspace = true }
+tempfile = { workspace = true }
