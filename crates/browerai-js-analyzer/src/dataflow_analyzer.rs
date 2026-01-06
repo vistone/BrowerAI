@@ -12,8 +12,7 @@ use std::collections::HashMap;
 
 use crate::extractor::ExtractedAst;
 use crate::types::{
-    DataFlowGraph, DataFlowNode, DataFlowNodeType, JsSemanticInfo,
-    LocationInfo, ScopeTree,
+    DataFlowGraph, DataFlowNode, DataFlowNodeType, JsSemanticInfo, LocationInfo, ScopeTree,
 };
 
 /// Data flow analyzer for JavaScript code
@@ -183,9 +182,10 @@ impl DataFlowAnalyzer {
             if (node.node_type == DataFlowNodeType::Definition
                 || node.node_type == DataFlowNodeType::Parameter)
                 && !used_vars.contains(&node.variable)
-                && !graph.unused_variables.contains(&node.variable) {
-                    graph.unused_variables.push(node.variable.clone());
-                }
+                && !graph.unused_variables.contains(&node.variable)
+            {
+                graph.unused_variables.push(node.variable.clone());
+            }
         }
     }
 
@@ -230,9 +230,7 @@ impl Default for DataFlowAnalyzer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{
-        JsAstMetadata, JsFunctionInfo, JsParameter, ScopeTree,
-    };
+    use crate::types::{JsAstMetadata, JsFunctionInfo, JsParameter, ScopeTree};
 
     fn create_test_ast() -> ExtractedAst {
         ExtractedAst {

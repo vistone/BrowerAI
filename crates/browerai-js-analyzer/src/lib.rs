@@ -1,6 +1,6 @@
 pub mod analysis_pipeline; // Phase 3 Week 3 Task 4
 pub mod call_graph;
-pub mod controlflow_analyzer;  // Phase 3 Week 2
+pub mod controlflow_analyzer; // Phase 3 Week 2
 pub mod dataflow_analyzer;
 pub mod enhanced_call_graph; // Phase 3 Week 3
 pub mod extractor;
@@ -13,12 +13,14 @@ pub mod types;
 
 pub use analysis_pipeline::{AnalysisPipeline, FullAnalysisResult, PipelineStats}; // Phase 3 Week 3 Task 4 导出
 pub use call_graph::CallGraphBuilder;
-pub use controlflow_analyzer::ControlFlowAnalyzer;  // Phase 3 Week 2 导出
+pub use controlflow_analyzer::ControlFlowAnalyzer; // Phase 3 Week 2 导出
 pub use dataflow_analyzer::DataFlowAnalyzer;
 pub use enhanced_call_graph::EnhancedCallGraphAnalyzer; // Phase 3 Week 3 导出
 pub use extractor::{AstExtractor, ExtractedAst};
 pub use loop_analyzer::LoopAnalyzer; // Phase 3 Week 3 Task 2 导出
-pub use performance_optimizer::{AnalysisCache, IncrementalAnalyzer, OptimizedAnalyzer, PerformanceMetrics}; // Phase 3 Week 3 Task 3 导出
+pub use performance_optimizer::{
+    AnalysisCache, IncrementalAnalyzer, OptimizedAnalyzer, PerformanceMetrics,
+}; // Phase 3 Week 3 Task 3 导出
 pub use scope_analyzer::ScopeAnalyzer; // Phase 3 Week 1 导出
 pub use semantic::{AnalysisResult, SemanticAnalyzer};
 pub use swc_extractor::{

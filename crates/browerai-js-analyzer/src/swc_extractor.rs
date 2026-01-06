@@ -53,8 +53,7 @@ pub struct TypeScriptInfo {
 }
 
 /// 增强的 AST 结构 - 结合 Phase 1 的数据和新的 Swc 数据
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct EnhancedAst {
     /// Phase 1 的基础元数据（保持兼容性）
     pub metadata: JsAstMetadata,
@@ -80,7 +79,6 @@ pub struct EnhancedAst {
     /// 源代码评估：是否为有效的现代 JavaScript
     pub is_modern_js: bool,
 }
-
 
 /// Swc 解析结果中间结构
 #[derive(Debug, Clone, Default)]

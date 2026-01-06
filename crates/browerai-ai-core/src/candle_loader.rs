@@ -154,10 +154,7 @@ impl CandleCodeLlm {
         // Generate remaining tokens
         for idx in 0..max_new_tokens.saturating_sub(1) {
             let input = candle_core::Tensor::new(&[next_token], &self.device)?.unsqueeze(0)?;
-            let mut logits = self
-                .model
-                .forward(&input, prompt_len + idx)?
-                .squeeze(0)?;
+            let mut logits = self.model.forward(&input, prompt_len + idx)?.squeeze(0)?;
 
             if repeat_penalty != 1.0 {
                 let start_at = tokens.len().saturating_sub(repeat_last_n);

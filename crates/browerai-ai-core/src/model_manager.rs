@@ -40,8 +40,7 @@ pub struct ModelManager {
 }
 
 /// Health status for a model record
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 pub enum ModelHealth {
     /// Model is ready to use
     Ready,
@@ -57,7 +56,6 @@ pub enum ModelHealth {
     #[default]
     Unknown,
 }
-
 
 impl ModelManager {
     /// Create a new ModelManager with the specified model directory

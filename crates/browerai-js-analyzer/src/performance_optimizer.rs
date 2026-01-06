@@ -122,10 +122,7 @@ impl IncrementalAnalyzer {
     }
 
     pub fn add_dependency(&mut self, func_a: String, func_b: String) {
-        self.dependencies
-            .entry(func_a)
-            .or_default()
-            .push(func_b);
+        self.dependencies.entry(func_a).or_default().push(func_b);
     }
 
     pub fn needs_analysis(&self, func_name: &str, current_hash: u64) -> bool {
@@ -345,7 +342,7 @@ mod tests {
     fn test_cache_hash_validation() {
         let mut cache = AnalysisCache::new();
         cache.put("key".to_string(), Arc::<str>::from("data"), 111);
-        
+
         let retrieved = cache.get("key", 222);
         assert!(retrieved.is_none());
     }
@@ -366,7 +363,7 @@ mod tests {
     fn test_incremental_needs_analysis() {
         let mut analyzer = IncrementalAnalyzer::new();
         analyzer.mark_analyzed("func1".to_string(), 123);
-        
+
         assert!(!analyzer.needs_analysis("func1", 123));
         assert!(analyzer.needs_analysis("func1", 456));
     }

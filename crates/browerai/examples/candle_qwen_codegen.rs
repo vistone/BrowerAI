@@ -1,22 +1,12 @@
-#![cfg_attr(not(feature = "ai-candle"), allow(dead_code, unused_imports))]
+#![cfg(feature = "ai-candle")]
 
 use anyhow::{Context, Result};
 use std::path::PathBuf;
 
-#[cfg(feature = "ai-candle")]
 use browerai_ai_core::CandleCodeLlm;
 
 fn main() -> Result<()> {
-    #[cfg(not(feature = "ai-candle"))]
-    {
-        // Build with: cargo run --example candle_qwen_codegen --features "ai-candle"
-        compile_error!("Enable the `ai-candle` feature to run this example (Candle GGUF LLM)");
-    }
-
-    #[cfg(feature = "ai-candle")]
-    run_codegen_demo()?;
-
-    Ok(())
+    run_codegen_demo()
 }
 
 #[cfg(feature = "ai-candle")]
@@ -40,10 +30,13 @@ fn run_codegen_demo() -> Result<()> {
     }
 
     // Default paths (downloaded by scripts/download_qwen2_5_coder_gguf.sh)
-    let model_path = PathBuf::from("models/local/qwen2_5_coder_7b_gguf/qwen2.5-coder-7b-instruct-q5_k_m.gguf");
+    let model_path =
+        PathBuf::from("models/local/qwen2_5_coder_7b_gguf/qwen2.5-coder-7b-instruct-q5_k_m.gguf");
     let tokenizer_path = PathBuf::from("models/local/qwen2_5_coder_7b_gguf/tokenizer.json");
 
-    let prefer_gpu = std::env::var("PREFER_GPU").map(|v| v == "1" || v.eq_ignore_ascii_case("true")).unwrap_or(true);
+    let prefer_gpu = std::env::var("PREFER_GPU")
+        .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+        .unwrap_or(true);
 
     log::info!("🚀 Loading Qwen2.5-Coder-7B (GGUF) via Candle ...");
     let mut llm = CandleCodeLlm::new(&model_path, &tokenizer_path, prefer_gpu)

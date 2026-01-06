@@ -8,8 +8,7 @@ use anyhow::Result;
 use ort::ExecutionProviderDispatch;
 
 /// GPU execution provider configuration
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum GpuProvider {
     /// NVIDIA CUDA provider
     Cuda { device_id: i32 },
@@ -21,7 +20,6 @@ pub enum GpuProvider {
     #[default]
     Cpu,
 }
-
 
 /// GPU configuration and detection
 pub struct GpuConfig {
