@@ -48,6 +48,7 @@ jobs:
         cargo run --release --example benchmark_demo | tee benchmark_results/benchmark_${{ matrix.os }}.txt
     
     - name: Extract key metrics
+      shell: bash
       run: |
         echo "## Benchmark Results (${{ matrix.os }})" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
