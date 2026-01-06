@@ -22,7 +22,12 @@ pub use learning::{
     OnlineLearner, PersonalizationEngine, SelfOptimizer, VersionManager,
 };
 pub use network::{HttpClient, ResourceCache};
-pub use parser::{CssParser, HtmlParser, JsParser};
+pub use parser::{
+    AnalysisConfig, AnalysisOutput, AstExtractor, CallGraphBuilder, CssParser, EventBindingMethod,
+    HtmlParser, JsAstMetadata, JsCallGraph, JsCallNode, JsClassInfo, JsDeepAnalyzer,
+    JsEventHandler, JsExportInfo, JsImportInfo, JsMethod, JsModuleInfo, JsParameter, JsParser,
+    JsProperty, JsSemanticInfo, ModuleType, SemanticAnalyzer,
+};
 pub use plugins::{Plugin, PluginLoader, PluginRegistry};
 pub use renderer::{
     AiLayoutHint, LayoutValidator, PredictiveRenderer, RenderEngine, ValidationReport,

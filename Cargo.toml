@@ -56,5 +56,9 @@ chrono = "0.4"
 # Regular expressions for deobfuscation
 regex = "1.10"
 
+# Swc - Fast TypeScript/JavaScript compiler (Phase 2)
+# 用于完整的 AST 解析，支持 JSX 和 TypeScript
+swc_core = "0.88"
+
 [dev-dependencies]
 tempfile = "3.8"
