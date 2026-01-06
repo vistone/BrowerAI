@@ -1,7 +1,6 @@
 /// Predictive rendering system for optimized page loads
-/// 
+///
 /// Uses AI to predict and pre-render content before it's needed
-
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 
@@ -39,17 +38,17 @@ impl RenderElement {
 
     pub fn calculate_priority_score(&self) -> i32 {
         let mut score = self.priority as i32 * 100;
-        
+
         if self.viewport_visible {
             score += 500;
         }
         if self.predicted_visible_soon {
             score += 200;
         }
-        
+
         // Penalize slow-to-render elements
         score -= (self.estimated_render_time_ms / 10.0) as i32;
-        
+
         score
     }
 }
@@ -80,14 +79,15 @@ impl PredictiveRenderer {
     pub fn queue_element(&mut self, mut element: RenderElement) {
         // Predict if element will be visible soon based on scroll patterns
         element.predicted_visible_soon = self.predict_visibility(&element);
-        
+
         // Insert in priority order
         let score = element.calculate_priority_score();
-        
-        let insert_pos = self.render_queue.iter().position(|existing| {
-            score > existing.calculate_priority_score()
-        });
-        
+
+        let insert_pos = self
+            .render_queue
+            .iter()
+            .position(|existing| score > existing.calculate_priority_score());
+
         match insert_pos {
             Some(pos) => self.render_queue.insert(pos, element),
             None => self.render_queue.push_back(element),
@@ -109,13 +109,13 @@ impl PredictiveRenderer {
     pub fn process_batch(&mut self, time_budget_ms: f64) -> Vec<RenderElement> {
         let mut processed = Vec::new();
         let mut time_used = 0.0;
-        
+
         while time_used < time_budget_ms {
             if let Some(element) = self.render_queue.front() {
                 if time_used + element.estimated_render_time_ms > time_budget_ms {
                     break;
                 }
-                
+
                 if let Some(element) = self.process_next() {
                     time_used += element.estimated_render_time_ms;
                     processed.push(element);
@@ -126,7 +126,7 @@ impl PredictiveRenderer {
                 break;
             }
         }
-        
+
         processed
     }
 
@@ -143,15 +143,15 @@ impl PredictiveRenderer {
         if self.scroll_history.len() < 2 {
             return false;
         }
-        
+
         // Simple prediction: if scrolling down quickly, predict elements below viewport
         let recent: Vec<_> = self.scroll_history.iter().rev().take(5).collect();
         if recent.len() < 2 {
             return false;
         }
-        
+
         let velocity = recent[0] - recent[recent.len() - 1];
-        
+
         // If scrolling down with significant velocity, predict visibility
         velocity > 50.0
     }
@@ -161,7 +161,9 @@ impl PredictiveRenderer {
         RenderStats {
             queue_size: self.render_queue.len(),
             rendered_count: self.rendered.len(),
-            high_priority_queued: self.render_queue.iter()
+            high_priority_queued: self
+                .render_queue
+                .iter()
                 .filter(|e| e.priority >= RenderPriority::High)
                 .count(),
         }
@@ -212,7 +214,7 @@ mod tests {
     fn test_render_element_priority_score() {
         let mut element = RenderElement::new("elem1".to_string(), "div".to_string());
         let base_score = element.calculate_priority_score();
-        
+
         element.viewport_visible = true;
         let visible_score = element.calculate_priority_score();
         assert!(visible_score > base_score);
@@ -230,7 +232,7 @@ mod tests {
     fn test_queue_element() {
         let mut renderer = PredictiveRenderer::new();
         let element = RenderElement::new("elem1".to_string(), "div".to_string());
-        
+
         renderer.queue_element(element);
         let stats = renderer.get_stats();
         assert_eq!(stats.queue_size, 1);
@@ -239,16 +241,16 @@ mod tests {
     #[test]
     fn test_queue_priority_order() {
         let mut renderer = PredictiveRenderer::new();
-        
+
         let mut low = RenderElement::new("low".to_string(), "div".to_string());
         low.priority = RenderPriority::Low;
-        
+
         let mut high = RenderElement::new("high".to_string(), "div".to_string());
         high.priority = RenderPriority::Critical;
-        
+
         renderer.queue_element(low);
         renderer.queue_element(high);
-        
+
         let next = renderer.process_next().unwrap();
         assert_eq!(next.element_id, "high");
     }
@@ -257,10 +259,10 @@ mod tests {
     fn test_process_next() {
         let mut renderer = PredictiveRenderer::new();
         let element = RenderElement::new("elem1".to_string(), "div".to_string());
-        
+
         renderer.queue_element(element);
         let processed = renderer.process_next();
-        
+
         assert!(processed.is_some());
         assert_eq!(processed.unwrap().element_id, "elem1");
         assert!(renderer.is_rendered("elem1"));
@@ -269,13 +271,13 @@ mod tests {
     #[test]
     fn test_process_batch() {
         let mut renderer = PredictiveRenderer::new();
-        
+
         for i in 0..5 {
             let mut element = RenderElement::new(format!("elem{}", i), "div".to_string());
             element.estimated_render_time_ms = 10.0;
             renderer.queue_element(element);
         }
-        
+
         let processed = renderer.process_batch(30.0);
         assert_eq!(processed.len(), 3); // 3 elements at 10ms each = 30ms
     }
@@ -283,10 +285,10 @@ mod tests {
     #[test]
     fn test_update_scroll_position() {
         let mut renderer = PredictiveRenderer::new();
-        
+
         renderer.update_scroll_position(0.0);
         renderer.update_scroll_position(100.0);
-        
+
         assert_eq!(renderer.scroll_history.len(), 2);
     }
 
@@ -294,12 +296,12 @@ mod tests {
     fn test_is_rendered() {
         let mut renderer = PredictiveRenderer::new();
         let element = RenderElement::new("elem1".to_string(), "div".to_string());
-        
+
         assert!(!renderer.is_rendered("elem1"));
-        
+
         renderer.queue_element(element);
         renderer.process_next();
-        
+
         assert!(renderer.is_rendered("elem1"));
     }
 
@@ -307,10 +309,10 @@ mod tests {
     fn test_get_rendered() {
         let mut renderer = PredictiveRenderer::new();
         let element = RenderElement::new("elem1".to_string(), "div".to_string());
-        
+
         renderer.queue_element(element);
         renderer.process_next();
-        
+
         let rendered = renderer.get_rendered("elem1");
         assert!(rendered.is_some());
         assert_eq!(rendered.unwrap().element_id, "elem1");
@@ -320,10 +322,10 @@ mod tests {
     fn test_clear_queue() {
         let mut renderer = PredictiveRenderer::new();
         let element = RenderElement::new("elem1".to_string(), "div".to_string());
-        
+
         renderer.queue_element(element);
         renderer.clear_queue();
-        
+
         let stats = renderer.get_stats();
         assert_eq!(stats.queue_size, 0);
     }
@@ -331,12 +333,12 @@ mod tests {
     #[test]
     fn test_render_stats() {
         let mut renderer = PredictiveRenderer::new();
-        
+
         let mut high = RenderElement::new("high".to_string(), "div".to_string());
         high.priority = RenderPriority::High;
-        
+
         renderer.queue_element(high);
-        
+
         let stats = renderer.get_stats();
         assert_eq!(stats.high_priority_queued, 1);
     }

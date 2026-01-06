@@ -1,10 +1,10 @@
 // Simple real demonstration showing actual generated output
 // Creates HTML files you can open in a browser
 
-use browerai::intelligent_rendering::site_understanding::*;
-use browerai::intelligent_rendering::reasoning::*;
 use browerai::intelligent_rendering::generation::*;
+use browerai::intelligent_rendering::reasoning::*;
 use browerai::intelligent_rendering::renderer::*;
+use browerai::intelligent_rendering::site_understanding::*;
 use browerai::learning::code_generator::*;
 use browerai::learning::deobfuscation::*;
 use std::fs;
@@ -16,13 +16,13 @@ fn main() -> anyhow::Result<()> {
 
     // Create output directory
     fs::create_dir_all("/tmp/browerai_demo")?;
-    
+
     // Demo 1: Code Generation
     println!("📝 DEMO 1: AI Code Generation");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    
+
     let generator = CodeGenerator::with_defaults();
-    
+
     // Generate HTML
     let html_result = generator.generate(&GenerationRequest {
         code_type: CodeType::Html,
@@ -30,37 +30,40 @@ fn main() -> anyhow::Result<()> {
         constraints: vec![
             ("title".to_string(), "My Products".to_string()),
             ("content".to_string(), "Featured items".to_string()),
-        ].into_iter().collect(),
+        ]
+        .into_iter()
+        .collect(),
     })?;
-    
+
     println!("✅ Generated HTML ({} bytes)", html_result.code.len());
     println!("   Confidence: {:.2}", html_result.metadata.confidence);
     println!("   Time: {:?}", html_result.metadata.generation_time);
-    
+
     // Generate CSS
     let css_result = generator.generate(&GenerationRequest {
         code_type: CodeType::Css,
         description: String::from("modern card layout"),
-        constraints: vec![
-            ("primary_color".to_string(), "#667eea".to_string()),
-        ].into_iter().collect(),
+        constraints: vec![("primary_color".to_string(), "#667eea".to_string())]
+            .into_iter()
+            .collect(),
     })?;
-    
+
     println!("✅ Generated CSS ({} bytes)", css_result.code.len());
-    
+
     // Generate JavaScript
     let js_result = generator.generate(&GenerationRequest {
         code_type: CodeType::Javascript,
         description: String::from("interactive shopping cart"),
-        constraints: vec![
-            ("functionality".to_string(), "addToCart".to_string()),
-        ].into_iter().collect(),
+        constraints: vec![("functionality".to_string(), "addToCart".to_string())]
+            .into_iter()
+            .collect(),
     })?;
-    
+
     println!("✅ Generated JavaScript ({} bytes)", js_result.code.len());
-    
+
     // Create complete page
-    let complete_page = format!(r#"<!DOCTYPE html>
+    let complete_page = format!(
+        r#"<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -76,54 +79,69 @@ fn main() -> anyhow::Result<()> {
 {}
 </script>
 </body>
-</html>"#, css_result.code, html_result.code, js_result.code);
-    
+</html>"#,
+        css_result.code, html_result.code, js_result.code
+    );
+
     fs::write("/tmp/browerai_demo/generated_page.html", &complete_page)?;
     println!("✅ Saved complete page to /tmp/browerai_demo/generated_page.html\n");
 
     // Demo 2: JS Deobfuscation
     println!("🔓 DEMO 2: JavaScript Deobfuscation");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    
+
     let obfuscated_code = r#"var _0x1234="\x48\x65\x6c\x6c\x6f\x20\x57\x6f\x72\x6c\x64";
 function _0xa(){var b="\x48\x69";console.log(_0x1234);if(false){var dead="code";}return b;}
 var c=_0xa();"#;
-    
+
     println!("📥 Original obfuscated code:");
     println!("{}", obfuscated_code);
-    
+
     let deobfuscator = JsDeobfuscator::new();
-    
+
     // Analyze obfuscation
     let analysis = deobfuscator.analyze_obfuscation(obfuscated_code)?;
     println!("\n🔍 Obfuscation Analysis:");
-    println!("   Score: {:.2} (higher = more obfuscated)", analysis.obfuscation_score);
-    println!("   Techniques detected: {} types", analysis.techniques.len());
+    println!(
+        "   Score: {:.2} (higher = more obfuscated)",
+        analysis.obfuscation_score
+    );
+    println!(
+        "   Techniques detected: {} types",
+        analysis.techniques.len()
+    );
     for tech in &analysis.techniques {
         println!("     - {:?}", tech);
     }
-    
+
     // Deobfuscate
-    let deobfuscated = deobfuscator.deobfuscate(
-        obfuscated_code,
-        DeobfuscationStrategy::Comprehensive
-    )?;
-    
+    let deobfuscated =
+        deobfuscator.deobfuscate(obfuscated_code, DeobfuscationStrategy::Comprehensive)?;
+
     println!("\n📤 Deobfuscated code:");
     println!("{}", deobfuscated.deobfuscated_code);
     println!("\n✅ Improvements:");
-    println!("   Readability score: {:.2}", deobfuscated.improvement_metrics.readability_improvement);
-    println!("   Passes performed: {}", deobfuscated.improvement_metrics.passes_performed);
-    
+    println!(
+        "   Readability score: {:.2}",
+        deobfuscated.improvement_metrics.readability_improvement
+    );
+    println!(
+        "   Passes performed: {}",
+        deobfuscated.improvement_metrics.passes_performed
+    );
+
     // Save both versions
     fs::write("/tmp/browerai_demo/obfuscated.js", obfuscated_code)?;
-    fs::write("/tmp/browerai_demo/deobfuscated.js", &deobfuscated.deobfuscated_code)?;
+    fs::write(
+        "/tmp/browerai_demo/deobfuscated.js",
+        &deobfuscated.deobfuscated_code,
+    )?;
     println!("✅ Saved to /tmp/browerai_demo/obfuscated.js and deobfuscated.js\n");
 
     // Demo 3: Intelligent Rendering
     println!("🎨 DEMO 3: Intelligent Rendering System");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    
+
     let sample_html = r#"<!DOCTYPE html>
 <html>
 <head><title>Shop</title></head>
@@ -151,39 +169,49 @@ var c=_0xa();"#;
     </script>
 </body>
 </html>"#;
-    
+
     // Learning phase
     println!("🧠 Learning Phase: Analyzing website structure...");
     let understanding = SiteUnderstanding::learn_from_content(
         sample_html.to_string(),
         String::new(),
-        String::new()
+        String::new(),
     )?;
     println!("   ✅ Page type: {:?}", understanding.structure.page_type);
-    println!("   ✅ Identified {} functionalities", understanding.functionalities.len());
+    println!(
+        "   ✅ Identified {} functionalities",
+        understanding.functionalities.len()
+    );
     for func in &understanding.functionalities {
         println!("      - {}: {:?}", func.name, func.function_type);
     }
-    
+
     // Reasoning phase
     println!("\n🤔 Reasoning Phase: Analyzing best presentation...");
     let reasoning = IntelligentReasoning::new(understanding);
     let reasoning_result = reasoning.reason()?;
-    println!("   ✅ Core functions: {}", reasoning_result.core_functions.len());
+    println!(
+        "   ✅ Core functions: {}",
+        reasoning_result.core_functions.len()
+    );
     for func in &reasoning_result.core_functions {
         println!("      - {}: {:?}", func.name, func.function_type);
     }
-    println!("   ✅ Experience variants: {}", reasoning_result.experience_variants.len());
-    
+    println!(
+        "   ✅ Experience variants: {}",
+        reasoning_result.experience_variants.len()
+    );
+
     // Generation phase
     println!("\n⚙️  Generation Phase: Creating experiences...");
     let generation = IntelligentGeneration::new(reasoning_result);
     let variants = generation.generate()?;
     println!("   ✅ Generated {} variants", variants.len());
-    
+
     // Save each variant
     for (idx, variant) in variants.iter().enumerate() {
-        let html_output = format!(r#"<!DOCTYPE html>
+        let html_output = format!(
+            r#"<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -199,26 +227,33 @@ var c=_0xa();"#;
 {}
 </script>
 </body>
-</html>"#, variant.variant_id, variant.css, variant.html, variant.bridge_js);
-        
+</html>"#,
+            variant.variant_id, variant.css, variant.html, variant.bridge_js
+        );
+
         let filename = format!("/tmp/browerai_demo/variant_{}.html", idx + 1);
         fs::write(&filename, &html_output)?;
-        println!("      ✅ Variant {}: {} ({} bytes)", 
-            idx + 1, variant.variant_id, html_output.len());
+        println!(
+            "      ✅ Variant {}: {} ({} bytes)",
+            idx + 1,
+            variant.variant_id,
+            html_output.len()
+        );
     }
-    
+
     // Rendering phase
     println!("\n🎨 Rendering Phase: Creating final output...");
     let renderer = IntelligentRenderer::new(variants);
     let render_result = renderer.render()?;
     println!("   ✅ Rendered successfully");
-    println!("   ✅ Stats: {} bytes HTML, {} bytes CSS, {} bytes JS",
-        render_result.stats.html_size,
-        render_result.stats.css_size,
-        render_result.stats.js_size);
-    
+    println!(
+        "   ✅ Stats: {} bytes HTML, {} bytes CSS, {} bytes JS",
+        render_result.stats.html_size, render_result.stats.css_size, render_result.stats.js_size
+    );
+
     // Save final rendered output
-    let final_output = format!(r#"<!DOCTYPE html>
+    let final_output = format!(
+        r#"<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -234,8 +269,10 @@ var c=_0xa();"#;
 {}
 </script>
 </body>
-</html>"#, render_result.final_css, render_result.final_html, render_result.final_js);
-    
+</html>"#,
+        render_result.final_css, render_result.final_html, render_result.final_js
+    );
+
     fs::write("/tmp/browerai_demo/final_rendered.html", &final_output)?;
     println!("   ✅ Saved to /tmp/browerai_demo/final_rendered.html\n");
 
@@ -408,11 +445,14 @@ var c=_0xa();"#;
 </html>"#,
         variants.len(),
         variants.len(),
-        (1..=variants.len()).map(|i| 
-            format!("                <li>✨ <a href=\"variant_{}.html\" target=\"_blank\">variant_{}.html</a> - Experience variant #{}</li>\n", i, i, i)
-        ).collect::<String>()
+        (1..=variants.len())
+            .map(|i| format!(
+                "                <li>✨ <a href=\"variant_{}.html\" target=\"_blank\">variant_{}.html</a> - Experience variant #{}</li>\n",
+                i, i, i
+            ))
+            .collect::<String>()
     );
-    
+
     fs::write("/tmp/browerai_demo/index.html", &index_html)?;
 
     println!("╔══════════════════════════════════════════════════════════╗");
@@ -430,9 +470,9 @@ var c=_0xa();"#;
         println!("   • variant_{}.html - Experience variant #{}", i, i);
     }
     println!("   • final_rendered.html - Final rendering output\n");
-    
+
     println!("✅ These are REAL, working HTML files - not simulations!");
     println!("✅ Open them in any web browser to verify!");
-    
+
     Ok(())
 }

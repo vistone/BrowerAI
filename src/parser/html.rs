@@ -63,8 +63,8 @@ impl HtmlParser {
 
     /// Parse HTML content into a DOM tree
     pub fn parse(&self, html: &str) -> Result<RcDom> {
-        use std::time::Instant;
         use crate::ai::config::FallbackReason;
+        use std::time::Instant;
 
         let input = Cursor::new(html.as_bytes());
         let dom = parse_document(RcDom::default(), Default::default())
@@ -110,26 +110,27 @@ impl HtmlParser {
             model_path,
             monitor,
         ) {
-            Ok(mut integration) => {
-                match integration.validate_structure(html) {
-                    Ok((valid, complexity)) => {
-                        let elapsed_ms = start_time.elapsed().as_millis() as u64;
-                        tracker.record_success(elapsed_ms);
-                        log::info!(
-                            "AI HTML validation (model={}, {}ms): valid={} complexity={:.3}",
-                            model_name, elapsed_ms, valid, complexity
-                        );
-                    }
-                    Err(err) => {
-                        tracker.record_fallback(FallbackReason::InferenceFailed(err.to_string()));
-                        log::warn!(
-                            "AI HTML validation failed (model={}): {}; using baseline output",
-                            model_name,
-                            err
-                        );
-                    }
+            Ok(mut integration) => match integration.validate_structure(html) {
+                Ok((valid, complexity)) => {
+                    let elapsed_ms = start_time.elapsed().as_millis() as u64;
+                    tracker.record_success(elapsed_ms);
+                    log::info!(
+                        "AI HTML validation (model={}, {}ms): valid={} complexity={:.3}",
+                        model_name,
+                        elapsed_ms,
+                        valid,
+                        complexity
+                    );
                 }
-            }
+                Err(err) => {
+                    tracker.record_fallback(FallbackReason::InferenceFailed(err.to_string()));
+                    log::warn!(
+                        "AI HTML validation failed (model={}): {}; using baseline output",
+                        model_name,
+                        err
+                    );
+                }
+            },
             Err(err) => {
                 tracker.record_fallback(FallbackReason::ModelLoadFailed(err.to_string()));
                 log::warn!(

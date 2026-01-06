@@ -1,0 +1,14 @@
+/usr/local/python/3.12.1/lib/python3.12/site-packages/torch/_subclasses/functional_tensor.py:279: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:84.)
+  cpu = _conversion_method_template(device=torch.device("cpu"))
+2026-01-05 17:36:36,044 - __main__ - INFO - Configuration loaded from configs/website_learner_quick.yaml
+2026-01-05 17:36:36,044 - __main__ - INFO - Using device: cpu
+Traceback (most recent call last):
+  File "/workspaces/BrowerAI/training/scripts/train_holistic_website.py", line 466, in <module>
+    main()
+  File "/workspaces/BrowerAI/training/scripts/train_holistic_website.py", line 436, in main
+    trainer = HolisticWebsiteTrainer(config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/BrowerAI/training/scripts/train_holistic_website.py", line 53, in __init__
+    self.model = HolisticWebsiteLearner(
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: HolisticWebsiteLearner.__init__() got an unexpected keyword argument 'vocab_size'

@@ -1,10 +1,10 @@
-use anyhow::Result;
 #[cfg(feature = "ai")]
 use anyhow::Context;
-use std::path::Path;
-use std::mem::size_of;
-use std::time::Instant;
+use anyhow::Result;
 use std::collections::HashMap;
+use std::mem::size_of;
+use std::path::Path;
+use std::time::Instant;
 
 #[cfg(feature = "ai")]
 use ort::{session::input::SessionInputValue, session::Session, value::Value};
@@ -37,7 +37,11 @@ pub struct HtmlModelIntegration {
 
 impl HtmlModelIntegration {
     /// Create a new HTML model integration
-    pub fn new(engine: &InferenceEngine, model_path: Option<&Path>, monitor: Option<PerformanceMonitor>) -> Result<Self> {
+    pub fn new(
+        engine: &InferenceEngine,
+        model_path: Option<&Path>,
+        monitor: Option<PerformanceMonitor>,
+    ) -> Result<Self> {
         #[cfg(feature = "ai")]
         {
             let session = if let Some(path) = model_path {
@@ -63,7 +67,10 @@ impl HtmlModelIntegration {
         #[cfg(not(feature = "ai"))]
         {
             let _ = (engine, model_path, monitor);
-            Ok(Self { enabled: false, monitor: None })
+            Ok(Self {
+                enabled: false,
+                monitor: None,
+            })
         }
     }
 
@@ -87,7 +94,7 @@ impl HtmlModelIntegration {
         }
 
         // Tokenize HTML (simple character-level tokenization)
-        let tokens = self.tokenize_html(html, 100);  // Changed from 512 to 100 to match model
+        let tokens = self.tokenize_html(html, 100); // Changed from 512 to 100 to match model
 
         let session = self.session.as_mut().unwrap();
 
@@ -100,22 +107,23 @@ impl HtmlModelIntegration {
 
         // Run inference - wrap in SessionInputValue and pass as array
         let inputs = [SessionInputValue::from(input_tensor)];
-        let outputs = session
-            .run(inputs)
-            .map_err(|e| {
-                log::error!("ONNX inference detailed error: {:?}", e);
-                anyhow::anyhow!("Failed to run inference: {}", e)
-            })?;
+        let outputs = session.run(inputs).map_err(|e| {
+            log::error!("ONNX inference detailed error: {:?}", e);
+            anyhow::anyhow!("Failed to run inference: {}", e)
+        })?;
 
         // Parse outputs - extract as 1D array first, then reshape
         let output_tensor = outputs[0]
             .try_extract_tensor::<f32>()
             .context("Failed to extract output tensor")?;
-        
+
         let output_data: Vec<f32> = output_tensor.1.iter().copied().collect();
-        
+
         if output_data.len() < 2 {
-            log::warn!("Unexpected output size: {}, expected at least 2", output_data.len());
+            log::warn!(
+                "Unexpected output size: {}, expected at least 2",
+                output_data.len()
+            );
             return Ok((true, 0.5)); // Fallback
         }
 
@@ -183,7 +191,11 @@ pub struct CssModelIntegration {
 
 impl CssModelIntegration {
     #[allow(dead_code)]
-    pub fn new(engine: &InferenceEngine, model_path: Option<&Path>, monitor: Option<PerformanceMonitor>) -> Result<Self> {
+    pub fn new(
+        engine: &InferenceEngine,
+        model_path: Option<&Path>,
+        monitor: Option<PerformanceMonitor>,
+    ) -> Result<Self> {
         #[cfg(feature = "ai")]
         {
             let session = if let Some(path) = model_path {
@@ -209,7 +221,10 @@ impl CssModelIntegration {
         #[cfg(not(feature = "ai"))]
         {
             let _ = (engine, model_path, monitor);
-            Ok(Self { enabled: false, monitor: None })
+            Ok(Self {
+                enabled: false,
+                monitor: None,
+            })
         }
     }
 
@@ -258,7 +273,11 @@ pub struct JsModelIntegration {
 
 impl JsModelIntegration {
     #[allow(dead_code)]
-    pub fn new(engine: &InferenceEngine, model_path: Option<&Path>, monitor: Option<PerformanceMonitor>) -> Result<Self> {
+    pub fn new(
+        engine: &InferenceEngine,
+        model_path: Option<&Path>,
+        monitor: Option<PerformanceMonitor>,
+    ) -> Result<Self> {
         #[cfg(feature = "ai")]
         {
             let session = if let Some(path) = model_path {
@@ -271,7 +290,7 @@ impl JsModelIntegration {
             } else {
                 None
             };
-            
+
             let enabled = session.is_some();
 
             Ok(Self {
@@ -284,7 +303,10 @@ impl JsModelIntegration {
         #[cfg(not(feature = "ai"))]
         {
             let _ = (engine, model_path, monitor);
-            Ok(Self { enabled: false, monitor: None })
+            Ok(Self {
+                enabled: false,
+                monitor: None,
+            })
         }
     }
 
@@ -298,7 +320,7 @@ impl JsModelIntegration {
     pub fn analyze_patterns(&self, _js: &str) -> Result<Vec<String>> {
         let start = Instant::now();
         // Placeholder: return basic patterns
-        let patterns = ["function_declaration", "variable_assignment"]; 
+        let patterns = ["function_declaration", "variable_assignment"];
 
         if let Some(m) = &self.monitor {
             m.record_inference(crate::ai::performance_monitor::InferenceMetrics {
@@ -336,7 +358,10 @@ impl CodeUnderstandingIntegration {
                 if path.exists() {
                     Some(engine.load_model(path)?)
                 } else {
-                    log::warn!("Code understanding model not found at {:?}, running without AI", path);
+                    log::warn!(
+                        "Code understanding model not found at {:?}, running without AI",
+                        path
+                    );
                     None
                 }
             } else {
@@ -398,7 +423,10 @@ impl CodeUnderstandingIntegration {
 
         #[cfg(feature = "ai")]
         {
-            let session = self.session.as_mut().ok_or_else(|| anyhow::anyhow!("Code understanding model session missing"))?;
+            let session = self
+                .session
+                .as_mut()
+                .ok_or_else(|| anyhow::anyhow!("Code understanding model session missing"))?;
 
             let input_tensor = Value::from_array((shape.clone(), input_data.clone()))
                 .context("Failed to create input tensor")?;
@@ -487,32 +515,177 @@ impl JsTokenizer {
             .enumerate()
             .map(|(i, token)| (token.clone(), i as i64))
             .collect();
-        
+
         Self { vocab, token_to_id }
     }
 
     fn build_vocab() -> Vec<String> {
         vec![
             // Special tokens
-            "<PAD>", "<SOS>", "<EOS>", "<UNK>",
+            "<PAD>",
+            "<SOS>",
+            "<EOS>",
+            "<UNK>",
             // Keywords
-            "as", "async", "await", "break", "case", "catch", "class", "const", "constructor",
-            "continue", "default", "do", "else", "export", "extends", "finally", "for", "from",
-            "function", "if", "import", "let", "new", "promise", "return", "super", "switch",
-            "then", "this", "try", "var", "while",
+            "as",
+            "async",
+            "await",
+            "break",
+            "case",
+            "catch",
+            "class",
+            "const",
+            "constructor",
+            "continue",
+            "default",
+            "do",
+            "else",
+            "export",
+            "extends",
+            "finally",
+            "for",
+            "from",
+            "function",
+            "if",
+            "import",
+            "let",
+            "new",
+            "promise",
+            "return",
+            "super",
+            "switch",
+            "then",
+            "this",
+            "try",
+            "var",
+            "while",
             // Operators
-            "!", "!=", "!==", "%", "&", "&&", "*", "**", "+", "++", ",", "-", "--", ".", "/",
-            ":", ";", "<", "<<", "<=", "=", "==", "===", "=>", ">", ">=", ">>", "?", "^", "|", "||", "~",
-            "(", ")", "{", "}", "[", "]",
+            "!",
+            "!=",
+            "!==",
+            "%",
+            "&",
+            "&&",
+            "*",
+            "**",
+            "+",
+            "++",
+            ",",
+            "-",
+            "--",
+            ".",
+            "/",
+            ":",
+            ";",
+            "<",
+            "<<",
+            "<=",
+            "=",
+            "==",
+            "===",
+            "=>",
+            ">",
+            ">=",
+            ">>",
+            "?",
+            "^",
+            "|",
+            "||",
+            "~",
+            "(",
+            ")",
+            "{",
+            "}",
+            "[",
+            "]",
             // Variables
-            "var0", "var1", "var2", "var3", "var4", "var5", "var6", "var7", "var8", "var9",
-            "tmp0", "tmp1", "tmp2", "tmp3", "tmp4", "tmp5", "tmp6", "tmp7", "tmp8", "tmp9",
-            "val0", "val1", "val2", "val3", "val4", "val5", "val6", "val7", "val8", "val9",
-            "data0", "data1", "data2", "data3", "data4", "data5", "data6", "data7", "data8", "data9",
-            "result0", "result1", "result2", "result3", "result4", "result5", "result6", "result7", "result8", "result9",
-            "item0", "item1", "item2", "item3", "item4", "item5", "item6", "item7", "item8", "item9",
+            "var0",
+            "var1",
+            "var2",
+            "var3",
+            "var4",
+            "var5",
+            "var6",
+            "var7",
+            "var8",
+            "var9",
+            "tmp0",
+            "tmp1",
+            "tmp2",
+            "tmp3",
+            "tmp4",
+            "tmp5",
+            "tmp6",
+            "tmp7",
+            "tmp8",
+            "tmp9",
+            "val0",
+            "val1",
+            "val2",
+            "val3",
+            "val4",
+            "val5",
+            "val6",
+            "val7",
+            "val8",
+            "val9",
+            "data0",
+            "data1",
+            "data2",
+            "data3",
+            "data4",
+            "data5",
+            "data6",
+            "data7",
+            "data8",
+            "data9",
+            "result0",
+            "result1",
+            "result2",
+            "result3",
+            "result4",
+            "result5",
+            "result6",
+            "result7",
+            "result8",
+            "result9",
+            "item0",
+            "item1",
+            "item2",
+            "item3",
+            "item4",
+            "item5",
+            "item6",
+            "item7",
+            "item8",
+            "item9",
             // Single letters
-            "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "g",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l",
+            "m",
+            "n",
+            "o",
+            "p",
+            "q",
+            "r",
+            "s",
+            "t",
+            "u",
+            "v",
+            "w",
+            "x",
+            "y",
+            "z",
         ]
         .iter()
         .map(|s| s.to_string())
@@ -523,7 +696,7 @@ impl JsTokenizer {
     pub fn tokenize(&self, code: &str) -> Vec<String> {
         let mut tokens = Vec::new();
         let mut current = String::new();
-        
+
         for ch in code.chars() {
             if ch.is_whitespace() {
                 if !current.is_empty() {
@@ -540,11 +713,11 @@ impl JsTokenizer {
                 current.push(ch);
             }
         }
-        
+
         if !current.is_empty() {
             tokens.push(current);
         }
-        
+
         tokens
     }
 
@@ -552,9 +725,7 @@ impl JsTokenizer {
     pub fn encode(&self, tokens: &[String]) -> Vec<i64> {
         tokens
             .iter()
-            .map(|token| {
-                *self.token_to_id.get(token).unwrap_or(&UNK_ID)
-            })
+            .map(|token| *self.token_to_id.get(token).unwrap_or(&UNK_ID))
             .collect()
     }
 
@@ -582,14 +753,21 @@ pub struct JsDeobfuscatorIntegration {
 }
 
 impl JsDeobfuscatorIntegration {
-    pub fn new(engine: &InferenceEngine, model_path: Option<&Path>, monitor: Option<PerformanceMonitor>) -> Result<Self> {
+    pub fn new(
+        engine: &InferenceEngine,
+        model_path: Option<&Path>,
+        monitor: Option<PerformanceMonitor>,
+    ) -> Result<Self> {
         #[cfg(feature = "ai")]
         {
             let session = if let Some(path) = model_path {
                 if path.exists() {
                     Some(engine.load_model(path)?)
                 } else {
-                    log::warn!("JS deobfuscator model not found at {:?}, running without AI", path);
+                    log::warn!(
+                        "JS deobfuscator model not found at {:?}, running without AI",
+                        path
+                    );
                     None
                 }
             } else {
@@ -610,8 +788,8 @@ impl JsDeobfuscatorIntegration {
         #[cfg(not(feature = "ai"))]
         {
             let _ = (engine, model_path);
-            Ok(Self { 
-                enabled: false, 
+            Ok(Self {
+                enabled: false,
                 tokenizer: JsTokenizer::new(),
                 monitor,
             })
@@ -656,11 +834,15 @@ impl JsDeobfuscatorIntegration {
 
         #[cfg(feature = "ai")]
         {
-            let session = self.session.as_mut().ok_or_else(|| anyhow::anyhow!("JS deobfuscator session missing"))?;
+            let session = self
+                .session
+                .as_mut()
+                .ok_or_else(|| anyhow::anyhow!("JS deobfuscator session missing"))?;
 
             // Create input tensor [1, seq_len]
-            let input_tensor = Value::from_array((vec![1, JS_DEOBFUSCATOR_MAX_LEN as i64], token_ids.clone()))
-                .context("Failed to create input tensor")?;
+            let input_tensor =
+                Value::from_array((vec![1, JS_DEOBFUSCATOR_MAX_LEN as i64], token_ids.clone()))
+                    .context("Failed to create input tensor")?;
 
             let outputs = session
                 .run([SessionInputValue::from(input_tensor)])

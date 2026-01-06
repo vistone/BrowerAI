@@ -1,7 +1,6 @@
 /// Plugin loader for loading and managing plugins
-/// 
+///
 /// Handles plugin discovery, loading, and lifecycle management
-
 use super::{Plugin, PluginError, PluginMetadata};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -104,14 +103,16 @@ mod tests {
         loader.add_search_path(PathBuf::from("/custom/plugins"));
 
         assert_eq!(loader.search_paths.len(), 2);
-        assert!(loader.search_paths.contains(&PathBuf::from("/custom/plugins")));
+        assert!(loader
+            .search_paths
+            .contains(&PathBuf::from("/custom/plugins")));
     }
 
     #[test]
     fn test_add_duplicate_search_path() {
         let mut loader = PluginLoader::new();
         let path = PathBuf::from("/custom/plugins");
-        
+
         loader.add_search_path(path.clone());
         loader.add_search_path(path.clone());
 

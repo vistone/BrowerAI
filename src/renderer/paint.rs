@@ -62,14 +62,23 @@ pub enum PaintOperation {
 pub struct PaintEngine {
     operations: Vec<PaintOperation>,
     background_color: Color,
+    viewport_width: f32,
+    viewport_height: f32,
 }
 
 impl PaintEngine {
-    /// Create a new paint engine
+    /// Create a new paint engine with viewport dimensions
     pub fn new() -> Self {
+        Self::with_viewport(800.0, 600.0)
+    }
+
+    /// Create a new paint engine with custom viewport
+    pub fn with_viewport(width: f32, height: f32) -> Self {
         Self {
             operations: Vec::new(),
             background_color: Color::white(),
+            viewport_width: width,
+            viewport_height: height,
         }
     }
 
@@ -83,8 +92,8 @@ impl PaintEngine {
     pub fn paint_layout_tree(&mut self, layout_box: &LayoutBox) -> Result<()> {
         log::info!("Painting layout tree");
 
-        // Paint background
-        let viewport_rect = Rect::new(0.0, 0.0, 1000.0, 1000.0); // TODO: Use actual viewport
+        // Paint background using actual viewport dimensions
+        let viewport_rect = Rect::new(0.0, 0.0, self.viewport_width, self.viewport_height);
         self.operations.push(PaintOperation::SolidRect {
             rect: viewport_rect,
             color: self.background_color,

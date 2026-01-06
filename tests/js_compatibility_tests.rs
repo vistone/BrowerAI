@@ -3,8 +3,8 @@
 
 #[cfg(test)]
 mod tests {
-    use browerai::{JsParser, JsSandbox};
     use browerai::dom::ResourceLimits;
+    use browerai::{JsParser, JsSandbox};
 
     #[test]
     fn test_es_modules_import_detection() {
@@ -46,7 +46,7 @@ mod tests {
         let mut parser = JsParser::new();
         parser.set_enforce_compatibility(true);
         assert!(parser.is_enforcing_compatibility());
-        
+
         // Should fail with enforcement enabled
         let result = parser.parse("import foo from 'bar';");
         assert!(result.is_err());
@@ -134,12 +134,14 @@ mod tests {
     #[test]
     fn test_sandbox_function_execution() {
         let mut sandbox = JsSandbox::with_defaults();
-        let result = sandbox.execute(r#"
+        let result = sandbox.execute(
+            r#"
             function add(a, b) {
                 return a + b;
             }
             add(2, 3)
-        "#);
+        "#,
+        );
         assert!(result.is_ok());
     }
 

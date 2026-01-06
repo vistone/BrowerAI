@@ -9,8 +9,8 @@ mod renderer;
 use anyhow::Result;
 use std::path::PathBuf;
 
-use ai::{AiReporter, AiRuntime, FeedbackPipeline, InferenceEngine, ModelManager};
 use ai::performance_monitor::PerformanceMonitor;
+use ai::{AiReporter, AiRuntime, FeedbackPipeline, InferenceEngine, ModelManager};
 use learning::WebsiteLearner;
 
 fn main() -> Result<()> {
@@ -42,10 +42,7 @@ fn main() -> Result<()> {
                 args[2..].iter().map(|s| s.as_str()).collect()
             } else {
                 // Default test websites
-                vec![
-                    "https://example.com",
-                    "https://httpbin.org/html",
-                ]
+                vec!["https://example.com", "https://httpbin.org/html"]
             };
             run_learning_mode(&urls)?;
         }
@@ -73,14 +70,17 @@ fn run_ai_report() -> Result<()> {
 
     let model_dir = PathBuf::from("./models/local");
     let mut model_manager = ModelManager::new(model_dir)?;
-    
+
     // Try to load model configuration
     let config_path = PathBuf::from("./models/model_config.toml");
     if config_path.exists() {
         model_manager.load_config(&config_path)?;
         log::info!("✅ Model configuration loaded");
     } else {
-        log::warn!("⚠️  Model configuration file not found: {}", config_path.display());
+        log::warn!(
+            "⚠️  Model configuration file not found: {}",
+            config_path.display()
+        );
     }
 
     let perf_monitor = PerformanceMonitor::new(true);
@@ -89,7 +89,7 @@ fn run_ai_report() -> Result<()> {
 
     let reporter = AiReporter::new(runtime, perf_monitor);
     let report = reporter.generate_full_report();
-    
+
     println!("{}", report);
 
     Ok(())
@@ -102,7 +102,7 @@ fn run_learning_mode(urls: &[&str]) -> Result<()> {
     // Initialize AI runtime
     let model_dir = PathBuf::from("./models/local");
     let mut model_manager = ModelManager::new(model_dir)?;
-    
+
     let config_path = PathBuf::from("./models/model_config.toml");
     if config_path.exists() {
         model_manager.load_config(&config_path)?;
@@ -123,7 +123,7 @@ fn run_learning_mode(urls: &[&str]) -> Result<()> {
     log::info!("\n{}", "═".repeat(64));
     log::info!("📊 Learning Report Summary");
     log::info!("{}", "═".repeat(64));
-    
+
     for report in &reports {
         log::info!("\n{}", report.format());
     }
@@ -135,7 +135,7 @@ fn run_learning_mode(urls: &[&str]) -> Result<()> {
     // Use current directory to save feedback file
     let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S");
     let feedback_file = format!("feedback_{}.json", timestamp);
-    
+
     // Use training/data directory if exists, otherwise use current directory
     let feedback_path = if std::path::Path::new("./training/data").exists() {
         format!("./training/data/feedback_{}.json", timestamp)
@@ -155,7 +155,7 @@ fn run_learning_mode(urls: &[&str]) -> Result<()> {
 /// Export feedback data
 fn run_export_feedback(output: &str) -> Result<()> {
     log::info!("💾 Exporting feedback data to: {}", output);
-    
+
     let perf_monitor = PerformanceMonitor::new(true);
     let inference_engine = InferenceEngine::with_monitor(perf_monitor)?;
     let runtime = AiRuntime::new(inference_engine);
@@ -218,7 +218,11 @@ fn run_demo_mode() -> Result<()> {
     log::info!("🔍 Parsing HTML document...");
     let dom = html_parser.parse(sample_html)?;
     let text = html_parser.extract_text(&dom);
-    log::info!("📝 Extracted text content ({} characters):\n{}", text.trim().len(), text.trim());
+    log::info!(
+        "📝 Extracted text content ({} characters):\n{}",
+        text.trim().len(),
+        text.trim()
+    );
 
     // Example: Parse CSS
     let sample_css = r#"
@@ -264,7 +268,10 @@ fn run_demo_mode() -> Result<()> {
     // Example: Rendering
     log::info!("\n🖼️  Rendering HTML + CSS...");
     let render_tree = render_engine.render(&dom, &css_rules)?;
-    log::info!("✅ Created render tree with {} nodes", render_tree.nodes.len());
+    log::info!(
+        "✅ Created render tree with {} nodes",
+        render_tree.nodes.len()
+    );
 
     // Display feedback statistics
     log::info!("\n{}", runtime.feedback().generate_summary());

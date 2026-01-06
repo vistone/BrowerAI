@@ -1,7 +1,6 @@
 /// Model versioning system for tracking and managing model versions
-/// 
+///
 /// Enables rolling back to previous versions and comparing model performance
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -151,7 +150,10 @@ impl VersionManager {
     /// Register a new model version
     pub fn register_version(&mut self, model: VersionedModel) {
         let name = model.name.clone();
-        self.versions.entry(name).or_insert_with(Vec::new).push(model);
+        self.versions
+            .entry(name)
+            .or_insert_with(Vec::new)
+            .push(model);
     }
 
     /// Get all versions for a model
@@ -169,10 +171,7 @@ impl VersionManager {
 
     /// Get the active version for a model
     pub fn get_active_version(&self, model_name: &str) -> Option<&VersionedModel> {
-        self.versions
-            .get(model_name)?
-            .iter()
-            .find(|v| v.is_active)
+        self.versions.get(model_name)?.iter().find(|v| v.is_active)
     }
 
     /// Get a specific version
@@ -184,7 +183,11 @@ impl VersionManager {
     }
 
     /// Set active version for a model
-    pub fn set_active_version(&mut self, model_name: &str, version: &ModelVersion) -> Result<(), String> {
+    pub fn set_active_version(
+        &mut self,
+        model_name: &str,
+        version: &ModelVersion,
+    ) -> Result<(), String> {
         let versions = self
             .versions
             .get_mut(model_name)
@@ -218,7 +221,7 @@ impl VersionManager {
         let v2 = self.get_version(model_name, version2)?;
 
         let mut comparison = HashMap::new();
-        
+
         // Get all metric names from both versions
         let mut metric_names: Vec<String> = v1.metrics.keys().cloned().collect();
         for name in v2.metrics.keys() {
@@ -288,13 +291,13 @@ mod tests {
     #[test]
     fn test_version_increment() {
         let mut version = ModelVersion::new(1, 2, 3);
-        
+
         version.increment_patch();
         assert_eq!(version, ModelVersion::new(1, 2, 4));
-        
+
         version.increment_minor();
         assert_eq!(version, ModelVersion::new(1, 3, 0));
-        
+
         version.increment_major();
         assert_eq!(version, ModelVersion::new(2, 0, 0));
     }
@@ -304,7 +307,7 @@ mod tests {
         let v1 = ModelVersion::new(1, 0, 0);
         let v2 = ModelVersion::new(2, 0, 0);
         let v3 = ModelVersion::new(1, 1, 0);
-        
+
         assert!(v1 < v2);
         assert!(v1 < v3);
         assert!(v3 < v2);
@@ -315,7 +318,7 @@ mod tests {
         let version = ModelVersion::new(1, 0, 0);
         let path = PathBuf::from("/models/test.onnx");
         let model = VersionedModel::new("test_model", version.clone(), path.clone());
-        
+
         assert_eq!(model.name, "test_model");
         assert_eq!(model.version, version);
         assert_eq!(model.path, path);
@@ -327,10 +330,10 @@ mod tests {
         let version = ModelVersion::new(1, 0, 0);
         let path = PathBuf::from("/models/test.onnx");
         let mut model = VersionedModel::new("test_model", version, path);
-        
+
         model.add_metric("accuracy", 0.95);
         model.add_metric("speed", 100.0);
-        
+
         assert_eq!(model.get_metric("accuracy"), Some(0.95));
         assert_eq!(model.get_metric("speed"), Some(100.0));
         assert_eq!(model.get_metric("nonexistent"), None);
@@ -339,15 +342,15 @@ mod tests {
     #[test]
     fn test_version_manager_register() {
         let mut manager = VersionManager::new();
-        
+
         let v1 = VersionedModel::new(
             "html_parser",
             ModelVersion::new(1, 0, 0),
             PathBuf::from("/models/v1.onnx"),
         );
-        
+
         manager.register_version(v1);
-        
+
         assert_eq!(manager.model_count(), 1);
         assert_eq!(manager.version_count(), 1);
     }
@@ -355,25 +358,25 @@ mod tests {
     #[test]
     fn test_version_manager_get_latest() {
         let mut manager = VersionManager::new();
-        
+
         manager.register_version(VersionedModel::new(
             "html_parser",
             ModelVersion::new(1, 0, 0),
             PathBuf::from("/models/v1.onnx"),
         ));
-        
+
         manager.register_version(VersionedModel::new(
             "html_parser",
             ModelVersion::new(2, 0, 0),
             PathBuf::from("/models/v2.onnx"),
         ));
-        
+
         manager.register_version(VersionedModel::new(
             "html_parser",
             ModelVersion::new(1, 5, 0),
             PathBuf::from("/models/v1.5.onnx"),
         ));
-        
+
         let latest = manager.get_latest_version("html_parser").unwrap();
         assert_eq!(latest.version, ModelVersion::new(2, 0, 0));
     }
@@ -381,22 +384,22 @@ mod tests {
     #[test]
     fn test_version_manager_set_active() {
         let mut manager = VersionManager::new();
-        
+
         manager.register_version(VersionedModel::new(
             "html_parser",
             ModelVersion::new(1, 0, 0),
             PathBuf::from("/models/v1.onnx"),
         ));
-        
+
         manager.register_version(VersionedModel::new(
             "html_parser",
             ModelVersion::new(2, 0, 0),
             PathBuf::from("/models/v2.onnx"),
         ));
-        
+
         let version = ModelVersion::new(1, 0, 0);
         manager.set_active_version("html_parser", &version).unwrap();
-        
+
         let active = manager.get_active_version("html_parser").unwrap();
         assert_eq!(active.version, version);
     }
@@ -404,7 +407,7 @@ mod tests {
     #[test]
     fn test_version_manager_compare() {
         let mut manager = VersionManager::new();
-        
+
         let mut v1 = VersionedModel::new(
             "html_parser",
             ModelVersion::new(1, 0, 0),
@@ -412,7 +415,7 @@ mod tests {
         );
         v1.add_metric("accuracy", 0.90);
         v1.add_metric("speed", 100.0);
-        
+
         let mut v2 = VersionedModel::new(
             "html_parser",
             ModelVersion::new(2, 0, 0),
@@ -420,10 +423,10 @@ mod tests {
         );
         v2.add_metric("accuracy", 0.95);
         v2.add_metric("speed", 120.0);
-        
+
         manager.register_version(v1);
         manager.register_version(v2);
-        
+
         let comparison = manager
             .compare_versions(
                 "html_parser",
@@ -431,7 +434,7 @@ mod tests {
                 &ModelVersion::new(2, 0, 0),
             )
             .unwrap();
-        
+
         assert_eq!(comparison.get("accuracy"), Some(&(0.90, 0.95)));
         assert_eq!(comparison.get("speed"), Some(&(100.0, 120.0)));
     }
@@ -439,19 +442,19 @@ mod tests {
     #[test]
     fn test_version_manager_list_models() {
         let mut manager = VersionManager::new();
-        
+
         manager.register_version(VersionedModel::new(
             "html_parser",
             ModelVersion::new(1, 0, 0),
             PathBuf::from("/models/v1.onnx"),
         ));
-        
+
         manager.register_version(VersionedModel::new(
             "css_parser",
             ModelVersion::new(1, 0, 0),
             PathBuf::from("/models/css_v1.onnx"),
         ));
-        
+
         let models = manager.list_models();
         assert_eq!(models.len(), 2);
         assert!(models.contains(&"html_parser".to_string()));

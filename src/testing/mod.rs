@@ -2,9 +2,12 @@
 ///
 /// This module provides utilities for testing BrowerAI against real-world websites,
 /// measuring accuracy, performance, and compatibility.
+pub mod benchmark;
 
 use crate::parser::{css::CssParser, html::HtmlParser, js::JsParser};
 use std::time::{Duration, Instant};
+
+pub use benchmark::{BenchmarkConfig, BenchmarkResult, BenchmarkRunner, ComparisonResult};
 
 /// Test result for a single website test
 #[derive(Debug, Clone)]
@@ -295,7 +298,10 @@ impl WebsiteTestSuite {
             ));
             report.push_str(&format!("  Elements: {}\n", result.elements_parsed));
             report.push_str(&format!("  CSS Rules: {}\n", result.css_rules_parsed));
-            report.push_str(&format!("  JS Statements: {}\n", result.js_statements_parsed));
+            report.push_str(&format!(
+                "  JS Statements: {}\n",
+                result.js_statements_parsed
+            ));
             if !result.errors.is_empty() {
                 report.push_str(&format!("  Errors: {:?}\n", result.errors));
             }

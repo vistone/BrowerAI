@@ -3,7 +3,6 @@
 /// - Configurable AI enable/disable switch
 /// - Fallback reason tracking
 /// - Model selection logging
-
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock};
 use std::time::Instant;
@@ -58,7 +57,10 @@ impl std::fmt::Display for FallbackReason {
             FallbackReason::ModelNotFound(name) => write!(f, "Model not found: {}", name),
             FallbackReason::ModelLoadFailed(err) => write!(f, "Model load failed: {}", err),
             FallbackReason::InferenceFailed(err) => write!(f, "Inference failed: {}", err),
-            FallbackReason::TimeoutExceeded { actual_ms, limit_ms } => {
+            FallbackReason::TimeoutExceeded {
+                actual_ms,
+                limit_ms,
+            } => {
                 write!(f, "Timeout exceeded: {}ms > {}ms", actual_ms, limit_ms)
             }
             FallbackReason::ModelUnhealthy(reason) => write!(f, "Model unhealthy: {}", reason),

@@ -1,8 +1,7 @@
 /// Plugin registry for managing active plugins
-/// 
+///
 /// Maintains registry of loaded plugins and handles plugin interactions
-
-use super::{Plugin, PluginCapability, PluginError, PluginHook, HookResult};
+use super::{HookResult, Plugin, PluginCapability, PluginError, PluginHook};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
@@ -30,9 +29,10 @@ impl PluginRegistry {
 
         // Check if plugin is already registered
         if self.plugins.contains_key(&name) {
-            return Err(PluginError::InitializationFailed(
-                format!("Plugin {} is already registered", name)
-            ));
+            return Err(PluginError::InitializationFailed(format!(
+                "Plugin {} is already registered",
+                name
+            )));
         }
 
         // Register by capabilities
@@ -52,7 +52,9 @@ impl PluginRegistry {
     /// Unregister a plugin
     pub fn unregister(&mut self, name: &str) -> Result<(), PluginError> {
         // Remove from registry
-        let plugin_arc = self.plugins.remove(name)
+        let plugin_arc = self
+            .plugins
+            .remove(name)
             .ok_or_else(|| PluginError::NotFound(name.to_string()))?;
 
         // Get capabilities before shutdown
@@ -83,7 +85,10 @@ impl PluginRegistry {
     }
 
     /// Get all plugins with a specific capability
-    pub fn get_by_capability(&self, capability: &PluginCapability) -> Vec<Arc<RwLock<Box<dyn Plugin>>>> {
+    pub fn get_by_capability(
+        &self,
+        capability: &PluginCapability,
+    ) -> Vec<Arc<RwLock<Box<dyn Plugin>>>> {
         let plugin_names = match self.by_capability.get(capability) {
             Some(names) => names,
             None => return Vec::new(),
@@ -139,8 +144,8 @@ impl Default for PluginRegistry {
 
 #[cfg(test)]
 mod tests {
+    use super::super::PluginMetadata;
     use super::*;
-    use super::super::{PluginMetadata};
 
     struct TestPlugin {
         metadata: PluginMetadata,
@@ -268,8 +273,12 @@ mod tests {
     #[test]
     fn test_list_plugins() {
         let mut registry = PluginRegistry::new();
-        registry.register(Box::new(TestPlugin::new("plugin1"))).unwrap();
-        registry.register(Box::new(TestPlugin::new("plugin2"))).unwrap();
+        registry
+            .register(Box::new(TestPlugin::new("plugin1")))
+            .unwrap();
+        registry
+            .register(Box::new(TestPlugin::new("plugin2")))
+            .unwrap();
 
         let plugins = registry.list_plugins();
         assert_eq!(plugins.len(), 2);
@@ -280,7 +289,9 @@ mod tests {
     #[test]
     fn test_is_registered() {
         let mut registry = PluginRegistry::new();
-        registry.register(Box::new(TestPlugin::new("test_plugin"))).unwrap();
+        registry
+            .register(Box::new(TestPlugin::new("test_plugin")))
+            .unwrap();
 
         assert!(registry.is_registered("test_plugin"));
         assert!(!registry.is_registered("other_plugin"));

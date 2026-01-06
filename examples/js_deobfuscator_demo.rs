@@ -8,7 +8,7 @@
 //! cargo run --example js_deobfuscator_demo --features ai
 //! ```
 
-use browerai::ai::{InferenceEngine, integration::JsDeobfuscatorIntegration};
+use browerai::ai::{integration::JsDeobfuscatorIntegration, InferenceEngine};
 use std::path::PathBuf;
 
 fn main() -> anyhow::Result<()> {
@@ -24,9 +24,9 @@ fn main() -> anyhow::Result<()> {
     let model_path = std::env::current_dir()
         .unwrap()
         .join("models/local/js_deobfuscator_v1.onnx");
-    
+
     println!("Looking for model at: {:?}", model_path);
-    
+
     if !model_path.exists() {
         println!("✗ Model not found at {:?}", model_path);
         println!("\nTo use this demo, train the model first:");
@@ -50,7 +50,7 @@ fn main() -> anyhow::Result<()> {
     for (name, obfuscated) in test_cases {
         println!("--- Test: {} ---", name);
         println!("Input:  {}", obfuscated);
-        
+
         match integration.deobfuscate(obfuscated) {
             Ok(deobfuscated) => {
                 println!("Output: {}", deobfuscated);
@@ -71,7 +71,9 @@ fn main() -> anyhow::Result<()> {
     println!("  Max sequence: 60 tokens");
     println!("\nNext Steps:");
     println!("  1. Collect more real JS samples (training/scripts/crawl_js_assets.py)");
-    println!("  2. Generate more obfuscation pairs (training/scripts/generate_obfuscation_pairs.py)");
+    println!(
+        "  2. Generate more obfuscation pairs (training/scripts/generate_obfuscation_pairs.py)"
+    );
     println!("  3. Retrain with larger dataset for better quality");
 
     Ok(())

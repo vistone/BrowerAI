@@ -1,7 +1,6 @@
 /// Advanced JavaScript deobfuscation module
-/// 
+///
 /// Provides multi-level obfuscation detection and progressive deobfuscation
-
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -128,22 +127,22 @@ impl JsDeobfuscator {
     /// Analyze obfuscation in JavaScript code
     pub fn analyze_obfuscation(&self, code: &str) -> ObfuscationAnalysis {
         let mut techniques = Vec::new();
-        
+
         // Detect name mangling
         if self.detect_name_mangling(code) {
             techniques.push(ObfuscationTechnique::NameMangling);
         }
-        
+
         // Detect string encoding
         if self.detect_string_encoding(code) {
             techniques.push(ObfuscationTechnique::StringEncoding);
         }
-        
+
         // Detect control flow flattening
         if self.detect_control_flow_flattening(code) {
             techniques.push(ObfuscationTechnique::ControlFlowFlattening);
         }
-        
+
         // Detect dead code
         if self.detect_dead_code(code) {
             techniques.push(ObfuscationTechnique::DeadCodeInjection);
@@ -153,12 +152,12 @@ impl JsDeobfuscator {
         if self.detect_expression_obfuscation(code) {
             techniques.push(ObfuscationTechnique::ExpressionObfuscation);
         }
-        
+
         let complexity = self.calculate_complexity(code);
         let obfuscation_score = self.calculate_obfuscation_score(&techniques, &complexity);
-        
+
         let suggestions = self.generate_suggestions(&techniques);
-        
+
         ObfuscationAnalysis {
             obfuscation_score,
             techniques,
@@ -168,13 +167,17 @@ impl JsDeobfuscator {
     }
 
     /// Deobfuscate JavaScript code
-    pub fn deobfuscate(&self, code: &str, strategy: DeobfuscationStrategy) -> Result<DeobfuscationResult> {
+    pub fn deobfuscate(
+        &self,
+        code: &str,
+        strategy: DeobfuscationStrategy,
+    ) -> Result<DeobfuscationResult> {
         let original_code = code.to_string();
         let mut current_code = code.to_string();
         let mut steps = Vec::new();
-        
+
         let readability_before = self.calculate_readability(&current_code);
-        
+
         match strategy {
             DeobfuscationStrategy::Basic => {
                 current_code = self.apply_basic_cleanup(&current_code);
@@ -196,14 +199,14 @@ impl JsDeobfuscator {
                 // Multi-pass comprehensive deobfuscation
                 for i in 0..self.max_iterations {
                     let prev_code = current_code.clone();
-                    
+
                     current_code = self.apply_basic_cleanup(&current_code);
                     current_code = self.apply_string_decoding(&current_code);
                     current_code = self.apply_variable_renaming(&current_code);
                     current_code = self.apply_control_flow_simplification(&current_code);
-                    
+
                     steps.push(format!("Comprehensive pass {}", i + 1));
-                    
+
                     // Stop if no significant change
                     if current_code == prev_code {
                         break;
@@ -211,18 +214,19 @@ impl JsDeobfuscator {
                 }
             }
         }
-        
+
         let readability_after = self.calculate_readability(&current_code);
         let complexity_before = self.calculate_complexity(&original_code);
         let complexity_after = self.calculate_complexity(&current_code);
-        
+
         let improvement = ImprovementMetrics {
             readability_before,
             readability_after,
             loc_reduction_percent: self.calculate_loc_reduction(&original_code, &current_code),
-            complexity_reduction: complexity_before.max_nesting_depth as f32 - complexity_after.max_nesting_depth as f32,
+            complexity_reduction: complexity_before.max_nesting_depth as f32
+                - complexity_after.max_nesting_depth as f32,
         };
-        
+
         Ok(DeobfuscationResult {
             code: current_code,
             original_code,
@@ -234,13 +238,15 @@ impl JsDeobfuscator {
 
     /// Detect name mangling (short variable names)
     fn detect_name_mangling(&self, code: &str) -> bool {
-        let single_char_vars = code.matches(|c: char| c.is_ascii_lowercase() && c.is_alphabetic()).count();
+        let single_char_vars = code
+            .matches(|c: char| c.is_ascii_lowercase() && c.is_alphabetic())
+            .count();
         let total_tokens = code.split_whitespace().count();
-        
+
         if total_tokens == 0 {
             return false;
         }
-        
+
         // High ratio of single-char identifiers suggests mangling
         (single_char_vars as f32 / total_tokens as f32) > 0.15
     }
@@ -255,11 +261,11 @@ impl JsDeobfuscator {
         // Look for switch statements with many cases (common in flattened control flow)
         let switch_count = code.matches("switch").count();
         let case_count = code.matches("case").count();
-        
+
         if switch_count == 0 {
             return false;
         }
-        
+
         // Many cases per switch suggests control flow flattening
         (case_count as f32 / switch_count as f32) > 10.0
     }
@@ -267,7 +273,9 @@ impl JsDeobfuscator {
     /// Detect dead code injection
     fn detect_dead_code(&self, code: &str) -> bool {
         // Look for unreachable code patterns
-        code.contains("if (false)") || code.contains("while (false)") || code.contains("return;") && code.contains("return;")
+        code.contains("if (false)")
+            || code.contains("while (false)")
+            || code.contains("return;") && code.contains("return;")
     }
 
     /// Detect expression obfuscation
@@ -275,7 +283,7 @@ impl JsDeobfuscator {
         // Look for complex mathematical expressions
         let operator_count = code.matches(|c| "+-*/%^&|".contains(c)).count();
         let line_count = code.lines().count().max(1);
-        
+
         // High operator density suggests expression obfuscation
         (operator_count as f32 / line_count as f32) > 5.0
     }
@@ -288,7 +296,7 @@ impl JsDeobfuscator {
         let max_nesting_depth = self.calculate_nesting_depth(code);
         let string_literal_count = code.matches('"').count() / 2;
         let encoded_literal_count = code.matches("0x").count() + code.matches("\\x").count();
-        
+
         ComplexityMetrics {
             variable_count,
             avg_var_name_length,
@@ -310,11 +318,11 @@ impl JsDeobfuscator {
             .split_whitespace()
             .filter(|w| w.chars().all(|c| c.is_alphanumeric() || c == '_'))
             .collect();
-        
+
         if var_names.is_empty() {
             return 0.0;
         }
-        
+
         var_names.iter().map(|n| n.len()).sum::<usize>() as f32 / var_names.len() as f32
     }
 
@@ -322,7 +330,7 @@ impl JsDeobfuscator {
     fn calculate_nesting_depth(&self, code: &str) -> usize {
         let mut max_depth: usize = 0;
         let mut current_depth: usize = 0;
-        
+
         for c in code.chars() {
             match c {
                 '{' => {
@@ -335,23 +343,27 @@ impl JsDeobfuscator {
                 _ => {}
             }
         }
-        
+
         max_depth
     }
 
     /// Calculate obfuscation score
-    fn calculate_obfuscation_score(&self, techniques: &[ObfuscationTechnique], complexity: &ComplexityMetrics) -> f32 {
+    fn calculate_obfuscation_score(
+        &self,
+        techniques: &[ObfuscationTechnique],
+        complexity: &ComplexityMetrics,
+    ) -> f32 {
         let technique_score = techniques.len() as f32 * 0.15;
         let complexity_score = (complexity.max_nesting_depth as f32 / 20.0).min(0.5);
         let var_name_score = (5.0 - complexity.avg_var_name_length).max(0.0) / 5.0 * 0.2;
-        
+
         (technique_score + complexity_score + var_name_score).min(1.0)
     }
 
     /// Generate deobfuscation suggestions
     fn generate_suggestions(&self, techniques: &[ObfuscationTechnique]) -> Vec<String> {
         let mut suggestions = Vec::new();
-        
+
         for technique in techniques {
             match technique {
                 ObfuscationTechnique::NameMangling => {
@@ -372,7 +384,7 @@ impl JsDeobfuscator {
                 _ => {}
             }
         }
-        
+
         suggestions
     }
 
@@ -389,82 +401,115 @@ impl JsDeobfuscator {
     /// Apply variable renaming
     fn apply_variable_renaming(&self, code: &str) -> String {
         use regex::Regex;
-        
+
         let mut result = code.to_string();
         let mut replacements = HashMap::new();
         let mut counter = 0;
-        
+
         // Reserved words that should not be renamed
         let reserved = [
-            "var", "let", "const", "function", "return", "if", "else", "for", "while",
-            "do", "switch", "case", "break", "continue", "class", "this", "new",
-            "typeof", "instanceof", "in", "of", "try", "catch", "finally", "throw",
-            "async", "await", "true", "false", "null", "undefined", "console", "log"
+            "var",
+            "let",
+            "const",
+            "function",
+            "return",
+            "if",
+            "else",
+            "for",
+            "while",
+            "do",
+            "switch",
+            "case",
+            "break",
+            "continue",
+            "class",
+            "this",
+            "new",
+            "typeof",
+            "instanceof",
+            "in",
+            "of",
+            "try",
+            "catch",
+            "finally",
+            "throw",
+            "async",
+            "await",
+            "true",
+            "false",
+            "null",
+            "undefined",
+            "console",
+            "log",
         ];
-        
+
         // Find single-letter and short variable names and rename them
         let var_pattern = Regex::new(r"\b[a-z]\b").unwrap();
-        
+
         for cap in var_pattern.captures_iter(code) {
             let var_name = cap.get(0).unwrap().as_str();
-            
+
             if !reserved.contains(&var_name) && !replacements.contains_key(var_name) {
                 let new_name = format!("var{}", counter);
                 replacements.insert(var_name.to_string(), new_name);
                 counter += 1;
             }
         }
-        
+
         // Apply replacements using word boundaries
         for (old, new) in replacements {
             let pattern = format!(r"\b{}\b", regex::escape(&old));
             let re = Regex::new(&pattern).unwrap();
             result = re.replace_all(&result, new.as_str()).to_string();
         }
-        
+
         result
     }
 
     /// Apply string decoding
     fn apply_string_decoding(&self, code: &str) -> String {
         use regex::Regex;
-        
+
         let mut result = code.to_string();
-        
+
         // Decode hex-encoded strings (\xHH format)
         let hex_pattern = Regex::new(r"\\x([0-9a-fA-F]{2})").unwrap();
-        
-        result = hex_pattern.replace_all(&result, |caps: &regex::Captures| {
-            let hex = &caps[1];
-            if let Ok(byte) = u8::from_str_radix(hex, 16) {
-                if byte.is_ascii_graphic() || byte == b' ' {
-                    // Convert back to readable character
-                    (byte as char).to_string()
+
+        result = hex_pattern
+            .replace_all(&result, |caps: &regex::Captures| {
+                let hex = &caps[1];
+                if let Ok(byte) = u8::from_str_radix(hex, 16) {
+                    if byte.is_ascii_graphic() || byte == b' ' {
+                        // Convert back to readable character
+                        (byte as char).to_string()
+                    } else {
+                        // Keep as-is if not printable
+                        format!("\\x{}", hex)
+                    }
                 } else {
-                    // Keep as-is if not printable
                     format!("\\x{}", hex)
                 }
-            } else {
-                format!("\\x{}", hex)
-            }
-        }).to_string();
-        
+            })
+            .to_string();
+
         // Decode unicode escapes (\uHHHH format)
         let unicode_pattern = Regex::new(r"\\u([0-9a-fA-F]{4})").unwrap();
-        
-        result = unicode_pattern.replace_all(&result, |caps: &regex::Captures| {
-            let hex = &caps[1];
-            if let Ok(code_point) = u32::from_str_radix(hex, 16) {
-                if let Some(ch) = char::from_u32(code_point) {
-                    ch.to_string()
+
+        result = unicode_pattern
+            .replace_all(&result, |caps: &regex::Captures| {
+                let hex = &caps[1];
+                if let Ok(code_point) = u32::from_str_radix(hex, 16) {
+                    if let Some(ch) = char::from_u32(code_point) {
+                        ch.to_string()
+                    } else {
+                        format!("\\u{}", hex)
+                    }
                 } else {
                     format!("\\u{}", hex)
                 }
-            } else {
-                format!("\\u{}", hex)
-            }
-        }).to_string();
-        
+            })
+            .to_string();
+
         log::debug!("String decoding applied");
         result
     }
@@ -472,25 +517,25 @@ impl JsDeobfuscator {
     /// Apply control flow simplification
     fn apply_control_flow_simplification(&self, code: &str) -> String {
         use regex::Regex;
-        
+
         let mut result = code.to_string();
-        
+
         // Remove if(false) blocks with their content
         let if_false_pattern = Regex::new(r"if\s*\(\s*false\s*\)\s*\{[^}]*\}").unwrap();
         result = if_false_pattern.replace_all(&result, "").to_string();
-        
+
         // Remove while(false) blocks
         let while_false_pattern = Regex::new(r"while\s*\(\s*false\s*\)\s*\{[^}]*\}").unwrap();
         result = while_false_pattern.replace_all(&result, "").to_string();
-        
+
         // Remove single-line if(false) statements
         let if_false_single = Regex::new(r"if\s*\(\s*false\s*\)[^;{]*;").unwrap();
         result = if_false_single.replace_all(&result, "").to_string();
-        
+
         // Simplify if(true) to just the body
         let if_true_pattern = Regex::new(r"if\s*\(\s*true\s*\)\s*\{([^}]*)\}").unwrap();
         result = if_true_pattern.replace_all(&result, "$1").to_string();
-        
+
         log::debug!("Control flow simplification applied");
         result
     }
@@ -503,12 +548,12 @@ impl JsDeobfuscator {
         } else {
             0.0
         };
-        
+
         // Simple readability score (higher is better)
         let var_name_score = (complexity.avg_var_name_length / 10.0).min(1.0);
         let nesting_score = (1.0 - (complexity.max_nesting_depth as f32 / 20.0)).max(0.0);
         let line_length_score = (1.0 - (avg_line_length / 200.0)).max(0.0);
-        
+
         (var_name_score + nesting_score + line_length_score) / 3.0
     }
 
@@ -516,11 +561,11 @@ impl JsDeobfuscator {
     fn calculate_loc_reduction(&self, original: &str, deobfuscated: &str) -> f32 {
         let original_loc = original.lines().count() as f32;
         let deobf_loc = deobfuscated.lines().count() as f32;
-        
+
         if original_loc == 0.0 {
             return 0.0;
         }
-        
+
         ((original_loc - deobf_loc) / original_loc * 100.0).max(0.0)
     }
 }
@@ -561,7 +606,7 @@ mod tests {
         let deobf = JsDeobfuscator::new();
         let code = "var a=1;var b=2;var c=a+b;console.log(c);";
         let analysis = deobf.analyze_obfuscation(code);
-        
+
         assert!(analysis.obfuscation_score >= 0.0);
         assert!(analysis.obfuscation_score <= 1.0);
         assert!(analysis.complexity.variable_count > 0);
@@ -571,8 +616,10 @@ mod tests {
     fn test_basic_deobfuscation() {
         let deobf = JsDeobfuscator::new();
         let code = "var   a  =  1  ;  var   b =  2 ;";
-        let result = deobf.deobfuscate(code, DeobfuscationStrategy::Basic).unwrap();
-        
+        let result = deobf
+            .deobfuscate(code, DeobfuscationStrategy::Basic)
+            .unwrap();
+
         assert!(result.success);
         assert!(!result.code.is_empty());
         assert_eq!(result.steps.len(), 1);
@@ -581,9 +628,10 @@ mod tests {
     #[test]
     fn test_complexity_calculation() {
         let deobf = JsDeobfuscator::new();
-        let code = "function test() {\n  if (true) {\n    if (true) {\n      return 1;\n    }\n  }\n}";
+        let code =
+            "function test() {\n  if (true) {\n    if (true) {\n      return 1;\n    }\n  }\n}";
         let complexity = deobf.calculate_complexity(code);
-        
+
         assert!(complexity.max_nesting_depth > 0);
         assert!(complexity.function_count > 0);
     }
@@ -593,10 +641,10 @@ mod tests {
         let deobf = JsDeobfuscator::new();
         let readable = "function calculateSum(a, b) { return a + b; }";
         let obfuscated = "function a(b,c){return b+c}";
-        
+
         let score_readable = deobf.calculate_readability(readable);
         let score_obfuscated = deobf.calculate_readability(obfuscated);
-        
+
         // Both should be valid scores
         assert!(score_readable >= 0.0 && score_readable <= 1.0);
         assert!(score_obfuscated >= 0.0 && score_obfuscated <= 1.0);

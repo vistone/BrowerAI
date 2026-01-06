@@ -1,10 +1,10 @@
 //! 网站理解模块 - 学习阶段
-//! 
+//!
 //! 从URL学习网站的结构、功能和交互模式
 
-use anyhow::{Result, Context};
+use crate::intelligent_rendering::{FunctionType, PageType};
+use anyhow::{Context, Result};
 use std::collections::HashMap;
-use crate::intelligent_rendering::{PageType, FunctionType};
 
 /// 网站理解
 pub struct SiteUnderstanding {
@@ -12,13 +12,13 @@ pub struct SiteUnderstanding {
     pub original_html: String,
     pub original_css: String,
     pub original_js: String,
-    
+
     /// 结构理解
     pub structure: SiteStructure,
-    
+
     /// 功能识别
     pub functionalities: Vec<Functionality>,
-    
+
     /// 交互模式
     pub interactions: Vec<InteractionPattern>,
 }
@@ -28,13 +28,13 @@ pub struct SiteUnderstanding {
 pub struct SiteStructure {
     /// 页面类型
     pub page_type: PageType,
-    
+
     /// 功能区域
     pub regions: Vec<FunctionalRegion>,
-    
+
     /// 导航结构
     pub navigation: NavigationStructure,
-    
+
     /// 内容层次
     pub content_hierarchy: ContentTree,
 }
@@ -135,16 +135,16 @@ impl SiteUnderstanding {
     pub fn learn_from_url(url: &str) -> Result<Self> {
         // 1. 模拟获取网站内容（实际应该是HTTP请求）
         let (html, css, js) = Self::fetch_site_resources(url)?;
-        
+
         // 2. 解析结构
         let structure = Self::analyze_structure(&html, &css)?;
-        
+
         // 3. 识别功能
         let functionalities = Self::identify_functionalities(&html, &js)?;
-        
+
         // 4. 分析交互
         let interactions = Self::analyze_interactions(&js)?;
-        
+
         Ok(Self {
             original_html: html,
             original_css: css,
@@ -154,13 +154,13 @@ impl SiteUnderstanding {
             interactions,
         })
     }
-    
+
     /// 从内容学习（用于测试）
     pub fn learn_from_content(html: String, css: String, js: String) -> Result<Self> {
         let structure = Self::analyze_structure(&html, &css)?;
         let functionalities = Self::identify_functionalities(&html, &js)?;
         let interactions = Self::analyze_interactions(&js)?;
-        
+
         Ok(Self {
             original_html: html,
             original_css: css,
@@ -170,16 +170,16 @@ impl SiteUnderstanding {
             interactions,
         })
     }
-    
+
     fn fetch_site_resources(url: &str) -> Result<(String, String, String)> {
         // 模拟获取资源
         let html = format!("<html><body><h1>Page from {}</h1></body></html>", url);
         let css = String::from("body { font-family: Arial; }");
         let js = String::from("console.log('Page loaded');");
-        
+
         Ok((html, css, js))
     }
-    
+
     fn analyze_structure(html: &str, _css: &str) -> Result<SiteStructure> {
         // 简化的结构分析
         let page_type = if html.contains("<h1>") {
@@ -187,17 +187,15 @@ impl SiteUnderstanding {
         } else {
             PageType::Unknown
         };
-        
+
         Ok(SiteStructure {
             page_type,
-            regions: vec![
-                FunctionalRegion {
-                    id: "main".to_string(),
-                    region_type: RegionType::MainContent,
-                    elements: vec!["h1".to_string()],
-                    importance: 1.0,
-                }
-            ],
+            regions: vec![FunctionalRegion {
+                id: "main".to_string(),
+                region_type: RegionType::MainContent,
+                elements: vec!["h1".to_string()],
+                importance: 1.0,
+            }],
             navigation: NavigationStructure {
                 primary_nav: vec![],
                 secondary_nav: vec![],
@@ -208,14 +206,14 @@ impl SiteUnderstanding {
                     node_type: "root".to_string(),
                     content: String::new(),
                     children: vec![],
-                }
+                },
             },
         })
     }
-    
+
     fn identify_functionalities(html: &str, js: &str) -> Result<Vec<Functionality>> {
         let mut functionalities = Vec::new();
-        
+
         // 识别搜索功能
         if html.contains("search") || html.contains("input") {
             functionalities.push(Functionality {
@@ -229,7 +227,7 @@ impl SiteUnderstanding {
                 },
             });
         }
-        
+
         // 识别导航功能
         if html.contains("nav") || html.contains("<a ") {
             functionalities.push(Functionality {
@@ -243,13 +241,13 @@ impl SiteUnderstanding {
                 },
             });
         }
-        
+
         Ok(functionalities)
     }
-    
+
     fn analyze_interactions(js: &str) -> Result<Vec<InteractionPattern>> {
         let mut interactions = Vec::new();
-        
+
         // 识别点击交互
         if js.contains("click") || js.contains("addEventListener") {
             interactions.push(InteractionPattern {
@@ -258,7 +256,7 @@ impl SiteUnderstanding {
                 triggers: vec!["click".to_string()],
             });
         }
-        
+
         Ok(interactions)
     }
 }
@@ -266,26 +264,28 @@ impl SiteUnderstanding {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_learn_from_content() {
         let html = "<html><body><h1>Test</h1><input type='search'/></body></html>".to_string();
         let css = "body { margin: 0; }".to_string();
         let js = "button.addEventListener('click', fn);".to_string();
-        
+
         let understanding = SiteUnderstanding::learn_from_content(html, css, js).unwrap();
-        
+
         assert!(!understanding.functionalities.is_empty());
         assert!(!understanding.interactions.is_empty());
     }
-    
+
     #[test]
     fn test_identify_search_functionality() {
         let html = "<input type='search' placeholder='Search...'>";
         let js = "";
-        
+
         let functionalities = SiteUnderstanding::identify_functionalities(html, js).unwrap();
-        
-        assert!(functionalities.iter().any(|f| f.function_type == FunctionType::Search));
+
+        assert!(functionalities
+            .iter()
+            .any(|f| f.function_type == FunctionType::Search));
     }
 }

@@ -1,11 +1,10 @@
 /// Demonstration of advanced JavaScript deobfuscation
-/// 
+///
 /// Shows how BrowerAI handles:
 /// - Modern framework bundling (Webpack, React, Vue)
 /// - Dynamic HTML injection via JavaScript
 /// - Event-driven content loading
 /// - Template extraction from obfuscated code
-
 use browerai::learning::{AdvancedDeobfuscator, FrameworkObfuscation};
 use std::fs;
 
@@ -67,9 +66,15 @@ function App() {
 
     let analysis = deob.analyze(react_code)?;
     println!("✓ Detected patterns: {:?}", analysis.framework_patterns);
-    println!("✓ Found {} injection points", analysis.dynamic_injection_points.len());
+    println!(
+        "✓ Found {} injection points",
+        analysis.dynamic_injection_points.len()
+    );
     for point in &analysis.dynamic_injection_points {
-        println!("  - Line {}: {} targeting '{}'", point.line, point.method, point.target);
+        println!(
+            "  - Line {}: {} targeting '{}'",
+            point.line, point.method, point.target
+        );
     }
     println!();
 
@@ -96,11 +101,17 @@ document.addEventListener('DOMContentLoaded', loadContent);
 
     let analysis = deob.analyze(dynamic_code)?;
     println!("✓ Detected patterns: {:?}", analysis.framework_patterns);
-    println!("✓ Found {} injection points", analysis.dynamic_injection_points.len());
+    println!(
+        "✓ Found {} injection points",
+        analysis.dynamic_injection_points.len()
+    );
     println!("✓ Found {} event loaders", analysis.event_loaders.len());
-    
+
     let result = deob.deobfuscate(dynamic_code)?;
-    println!("✓ Extracted {} HTML templates:", result.html_templates.len());
+    println!(
+        "✓ Extracted {} HTML templates:",
+        result.html_templates.len()
+    );
     for (i, template) in result.html_templates.iter().enumerate() {
         let preview = if template.len() > 60 {
             format!("{}...", &template[..60])
@@ -164,10 +175,13 @@ window.addEventListener('scroll', function() {
     let analysis = deob.analyze(event_code)?;
     println!("✓ Detected {} event loaders", analysis.event_loaders.len());
     for loader in &analysis.event_loaders {
-        println!("  - Event '{}' calls '{}'", loader.event_type, loader.function);
+        println!(
+            "  - Event '{}' calls '{}'",
+            loader.event_type, loader.function
+        );
         println!("    Condition: {}", loader.trigger_condition);
     }
-    
+
     let result = deob.deobfuscate(event_code)?;
     println!("✓ Extracted {} HTML snippets", result.html_templates.len());
     println!();
@@ -176,25 +190,19 @@ window.addEventListener('scroll', function() {
     let output_dir = "/tmp/browerai_advanced_deobfuscation";
     fs::create_dir_all(output_dir)?;
 
-    fs::write(
-        format!("{}/webpack_original.js", output_dir),
-        webpack_code
-    )?;
+    fs::write(format!("{}/webpack_original.js", output_dir), webpack_code)?;
     fs::write(
         format!("{}/webpack_deobfuscated.js", output_dir),
-        result.javascript.clone()
+        result.javascript.clone(),
     )?;
 
-    fs::write(
-        format!("{}/dynamic_original.js", output_dir),
-        dynamic_code
-    )?;
-    
+    fs::write(format!("{}/dynamic_original.js", output_dir), dynamic_code)?;
+
     // Save extracted templates
     for (i, template) in result.html_templates.iter().enumerate() {
         fs::write(
             format!("{}/extracted_template_{}.html", output_dir, i + 1),
-            template
+            template,
         )?;
     }
 

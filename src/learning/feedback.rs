@@ -1,7 +1,6 @@
 /// Feedback collection system for continuous learning
-/// 
+///
 /// Collects user feedback and system metrics to improve AI models
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -53,7 +52,7 @@ impl Feedback {
             .duration_since(UNIX_EPOCH)
             .unwrap_or_else(|_| std::time::Duration::from_secs(0))
             .as_secs();
-        
+
         Self {
             id: format!("fb_{}", timestamp),
             feedback_type,
@@ -132,10 +131,11 @@ impl FeedbackCollector {
     /// Add feedback to the collector
     pub fn add_feedback(&mut self, feedback: Feedback) {
         self.feedback.push(feedback);
-        
+
         // Remove oldest entries if we exceed max_entries
         if self.feedback.len() > self.max_entries {
-            self.feedback.drain(0..self.feedback.len() - self.max_entries);
+            self.feedback
+                .drain(0..self.feedback.len() - self.max_entries);
         }
     }
 
@@ -156,7 +156,12 @@ impl FeedbackCollector {
     pub fn get_feedback_by_model(&self, model_id: &str) -> Vec<&Feedback> {
         self.feedback
             .iter()
-            .filter(|f| f.model_id.as_ref().map(|id| id == model_id).unwrap_or(false))
+            .filter(|f| {
+                f.model_id
+                    .as_ref()
+                    .map(|id| id == model_id)
+                    .unwrap_or(false)
+            })
             .collect()
     }
 
@@ -239,8 +244,8 @@ mod tests {
 
     #[test]
     fn test_feedback_with_comment() {
-        let feedback = Feedback::new(FeedbackType::RenderingQuality, 0.9)
-            .with_comment("Excellent rendering");
+        let feedback =
+            Feedback::new(FeedbackType::RenderingQuality, 0.9).with_comment("Excellent rendering");
         assert_eq!(feedback.comment, Some("Excellent rendering".to_string()));
     }
 
@@ -249,8 +254,11 @@ mod tests {
         let feedback = Feedback::new(FeedbackType::Performance, 0.75)
             .with_context("url", "https://example.com")
             .with_model_id("html_parser_v1");
-        
-        assert_eq!(feedback.context.get("url"), Some(&"https://example.com".to_string()));
+
+        assert_eq!(
+            feedback.context.get("url"),
+            Some(&"https://example.com".to_string())
+        );
         assert_eq!(feedback.model_id, Some("html_parser_v1".to_string()));
     }
 
@@ -268,7 +276,7 @@ mod tests {
         let mut collector = FeedbackCollector::new();
         collector.add_feedback(Feedback::new(FeedbackType::ParsingAccuracy, 0.8));
         collector.add_feedback(Feedback::new(FeedbackType::RenderingQuality, 0.9));
-        
+
         assert_eq!(collector.get_all_feedback().len(), 2);
     }
 
@@ -278,7 +286,7 @@ mod tests {
         collector.add_feedback(Feedback::new(FeedbackType::ParsingAccuracy, 0.8));
         collector.add_feedback(Feedback::new(FeedbackType::ParsingAccuracy, 0.3));
         collector.add_feedback(Feedback::new(FeedbackType::RenderingQuality, 0.9));
-        
+
         let stats = collector.get_stats();
         assert_eq!(stats.total_count, 3);
         assert_eq!(stats.positive_count, 2); // 0.8 and 0.9 are positive
@@ -292,7 +300,7 @@ mod tests {
         collector.add_feedback(Feedback::new(FeedbackType::ParsingAccuracy, 0.8));
         collector.add_feedback(Feedback::new(FeedbackType::RenderingQuality, 0.9));
         collector.add_feedback(Feedback::new(FeedbackType::ParsingAccuracy, 0.7));
-        
+
         let parsing_feedback = collector.get_feedback_by_type(&FeedbackType::ParsingAccuracy);
         assert_eq!(parsing_feedback.len(), 2);
     }
@@ -301,14 +309,12 @@ mod tests {
     fn test_feedback_collector_by_model() {
         let mut collector = FeedbackCollector::new();
         collector.add_feedback(
-            Feedback::new(FeedbackType::ParsingAccuracy, 0.8)
-                .with_model_id("model_v1")
+            Feedback::new(FeedbackType::ParsingAccuracy, 0.8).with_model_id("model_v1"),
         );
         collector.add_feedback(
-            Feedback::new(FeedbackType::ParsingAccuracy, 0.9)
-                .with_model_id("model_v2")
+            Feedback::new(FeedbackType::ParsingAccuracy, 0.9).with_model_id("model_v2"),
         );
-        
+
         let model_v1_feedback = collector.get_feedback_by_model("model_v1");
         assert_eq!(model_v1_feedback.len(), 1);
     }
@@ -319,7 +325,7 @@ mod tests {
         for i in 0..10 {
             collector.add_feedback(Feedback::new(FeedbackType::Performance, i as f32 / 10.0));
         }
-        
+
         let recent = collector.get_recent_feedback(3);
         assert_eq!(recent.len(), 3);
     }
@@ -330,7 +336,7 @@ mod tests {
         for i in 0..10 {
             collector.add_feedback(Feedback::new(FeedbackType::Performance, i as f32 / 10.0));
         }
-        
+
         // Should only keep the last 5 entries
         assert_eq!(collector.get_all_feedback().len(), 5);
     }
@@ -340,12 +346,12 @@ mod tests {
         let mut collector = FeedbackCollector::new();
         collector.add_feedback(Feedback::new(FeedbackType::ParsingAccuracy, 0.8));
         collector.add_feedback(Feedback::new(FeedbackType::RenderingQuality, 0.9));
-        
+
         let json = collector.export_json().unwrap();
-        
+
         let mut new_collector = FeedbackCollector::new();
         new_collector.import_json(&json).unwrap();
-        
+
         assert_eq!(new_collector.get_all_feedback().len(), 2);
     }
 }

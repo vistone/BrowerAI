@@ -1,7 +1,6 @@
 /// Enhanced DOM API for JavaScript execution
-/// 
+///
 /// Provides JavaScript-compatible DOM manipulation methods
-
 use super::{Document, DomElement, DomNode};
 use std::sync::{Arc, RwLock};
 
@@ -9,10 +8,10 @@ use std::sync::{Arc, RwLock};
 pub trait DomApiExtensions {
     /// Get element by ID (JavaScript-style)
     fn get_element_by_id_js(&self, id: &str) -> Option<ElementHandle>;
-    
+
     /// Get elements by class name
     fn get_elements_by_class_name(&self, class_name: &str) -> Vec<ElementHandle>;
-    
+
     /// Get elements by tag name (JavaScript-style)
     fn get_elements_by_tag_name_js(&self, tag_name: &str) -> Vec<ElementHandle>;
 }
@@ -148,7 +147,10 @@ impl ElementHandle {
         };
 
         if let DomNode::Element(elem) = &*node_read {
-            elem.children.iter().map(|c| ElementHandle::new(c.clone())).collect()
+            elem.children
+                .iter()
+                .map(|c| ElementHandle::new(c.clone()))
+                .collect()
         } else {
             Vec::new()
         }
@@ -282,7 +284,7 @@ mod tests {
         let doc = Document::new();
         let parent = doc.create_element("div");
         let child = doc.create_element("span");
-        
+
         let parent_handle = ElementHandle::new(parent);
         let child_handle = ElementHandle::new(child);
 
@@ -327,7 +329,7 @@ mod tests {
         let doc = Document::new();
         let parent = doc.create_element("div");
         let child = doc.create_element("span");
-        
+
         let parent_handle = ElementHandle::new(parent);
         let child_handle = ElementHandle::new(child);
 

@@ -1,20 +1,20 @@
 //! 功能验证模块
-//! 
+//!
 //! 确保生成的体验保持所有原始功能
 
+use crate::intelligent_rendering::FunctionMapping;
 use anyhow::Result;
 use std::collections::HashMap;
-use crate::intelligent_rendering::FunctionMapping;
 
 /// 功能验证
 #[derive(Debug, Clone)]
 pub struct FunctionValidation {
     /// 所有核心功能是否存在
     pub all_functions_present: bool,
-    
+
     /// 功能映射表
     pub function_map: HashMap<String, FunctionMapping>,
-    
+
     /// 交互测试结果
     pub interaction_tests: Vec<InteractionTest>,
 }
@@ -30,7 +30,7 @@ pub struct InteractionTest {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_function_validation() {
         let validation = FunctionValidation {
@@ -38,7 +38,7 @@ mod tests {
             function_map: HashMap::new(),
             interaction_tests: vec![],
         };
-        
+
         assert!(validation.all_functions_present);
     }
 }

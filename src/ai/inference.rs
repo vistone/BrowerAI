@@ -2,11 +2,7 @@ use anyhow::Result;
 use std::path::Path;
 
 #[cfg(feature = "ai")]
-use ort::{
-    session::input::SessionInputValue,
-    session::Session,
-    value::Value,
-};
+use ort::{session::input::SessionInputValue, session::Session, value::Value};
 
 use crate::ai::performance_monitor::PerformanceMonitor;
 

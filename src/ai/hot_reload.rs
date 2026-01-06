@@ -1,7 +1,6 @@
 /// Model hot-reloading system for runtime model updates
-/// 
+///
 /// Enables updating AI models without restarting the browser
-
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -62,10 +61,13 @@ impl HotReloadManager {
     /// Request a model reload
     pub fn request_reload(&self, model_type: ModelType, new_path: PathBuf) -> Result<()> {
         let full_path = self.model_dir.join(&new_path);
-        
+
         // Verify the new model file exists
         if !full_path.exists() {
-            return Err(anyhow::anyhow!("Model file does not exist: {:?}", full_path));
+            return Err(anyhow::anyhow!(
+                "Model file does not exist: {:?}",
+                full_path
+            ));
         }
 
         let timestamp = SystemTime::now()
@@ -98,10 +100,14 @@ impl HotReloadManager {
             }
 
             if reload_info.attempt_count >= self.max_retries {
-                reload_info.status = ReloadStatus::Failed(
-                    format!("Max retry attempts ({}) exceeded", self.max_retries)
-                );
-                results.push((model_type.clone(), Err(anyhow::anyhow!("Max retries exceeded"))));
+                reload_info.status = ReloadStatus::Failed(format!(
+                    "Max retry attempts ({}) exceeded",
+                    self.max_retries
+                ));
+                results.push((
+                    model_type.clone(),
+                    Err(anyhow::anyhow!("Max retries exceeded")),
+                ));
                 continue;
             }
 
@@ -132,7 +138,7 @@ impl HotReloadManager {
     /// Perform the actual model reload (stub implementation)
     fn perform_reload(&self, _model_type: &ModelType, new_path: &Path) -> Result<()> {
         let full_path = self.model_dir.join(new_path);
-        
+
         // Verify file exists
         if !full_path.exists() {
             return Err(anyhow::anyhow!("Model file not found: {:?}", full_path));
@@ -168,12 +174,14 @@ impl HotReloadManager {
     /// Get reload statistics
     pub fn get_stats(&self) -> ReloadStats {
         let pending = self.pending_reloads.read().unwrap();
-        
+
         let total_pending = pending.len();
-        let active_reloads = pending.values()
+        let active_reloads = pending
+            .values()
             .filter(|info| info.status == ReloadStatus::Reloading)
             .count();
-        let failed_reloads = pending.values()
+        let failed_reloads = pending
+            .values()
             .filter(|info| matches!(info.status, ReloadStatus::Failed(_)))
             .count();
 
@@ -196,14 +204,14 @@ pub struct ReloadStats {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     #[test]
     fn test_hot_reload_manager_creation() {
         let temp_dir = tempdir().unwrap();
         let manager = HotReloadManager::new(temp_dir.path().to_path_buf());
-        
+
         let stats = manager.get_stats();
         assert_eq!(stats.total_pending, 0);
     }
@@ -212,12 +220,10 @@ mod tests {
     fn test_request_reload_nonexistent_file() {
         let temp_dir = tempdir().unwrap();
         let manager = HotReloadManager::new(temp_dir.path().to_path_buf());
-        
-        let result = manager.request_reload(
-            ModelType::HtmlParser,
-            PathBuf::from("nonexistent.onnx")
-        );
-        
+
+        let result =
+            manager.request_reload(ModelType::HtmlParser, PathBuf::from("nonexistent.onnx"));
+
         assert!(result.is_err());
     }
 
@@ -226,14 +232,12 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let model_path = temp_dir.path().join("test_model.onnx");
         fs::write(&model_path, b"test model data").unwrap();
-        
+
         let manager = HotReloadManager::new(temp_dir.path().to_path_buf());
-        
-        let result = manager.request_reload(
-            ModelType::HtmlParser,
-            PathBuf::from("test_model.onnx")
-        );
-        
+
+        let result =
+            manager.request_reload(ModelType::HtmlParser, PathBuf::from("test_model.onnx"));
+
         assert!(result.is_ok());
         assert!(manager.has_pending_reload(&ModelType::HtmlParser));
     }
@@ -243,13 +247,12 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let model_path = temp_dir.path().join("test_model.onnx");
         fs::write(&model_path, b"test model data").unwrap();
-        
+
         let manager = HotReloadManager::new(temp_dir.path().to_path_buf());
-        manager.request_reload(
-            ModelType::HtmlParser,
-            PathBuf::from("test_model.onnx")
-        ).unwrap();
-        
+        manager
+            .request_reload(ModelType::HtmlParser, PathBuf::from("test_model.onnx"))
+            .unwrap();
+
         let results = manager.execute_pending_reloads();
         assert_eq!(results.len(), 1);
         assert!(results[0].1.is_ok());
@@ -260,13 +263,12 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let model_path = temp_dir.path().join("test_model.onnx");
         fs::write(&model_path, b"test model data").unwrap();
-        
+
         let manager = HotReloadManager::new(temp_dir.path().to_path_buf());
-        manager.request_reload(
-            ModelType::CssParser,
-            PathBuf::from("test_model.onnx")
-        ).unwrap();
-        
+        manager
+            .request_reload(ModelType::CssParser, PathBuf::from("test_model.onnx"))
+            .unwrap();
+
         assert!(manager.has_pending_reload(&ModelType::CssParser));
         assert!(manager.cancel_reload(&ModelType::CssParser));
         assert!(!manager.has_pending_reload(&ModelType::CssParser));
@@ -277,13 +279,12 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let model_path = temp_dir.path().join("test_model.onnx");
         fs::write(&model_path, b"test model data").unwrap();
-        
+
         let manager = HotReloadManager::new(temp_dir.path().to_path_buf());
-        manager.request_reload(
-            ModelType::JsParser,
-            PathBuf::from("test_model.onnx")
-        ).unwrap();
-        
+        manager
+            .request_reload(ModelType::JsParser, PathBuf::from("test_model.onnx"))
+            .unwrap();
+
         let pending = manager.get_pending_reloads();
         assert_eq!(pending.len(), 1);
         assert_eq!(pending[0].model_type, ModelType::JsParser);
@@ -294,13 +295,12 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let model_path = temp_dir.path().join("test_model.onnx");
         fs::write(&model_path, b"test model data").unwrap();
-        
+
         let manager = HotReloadManager::new(temp_dir.path().to_path_buf());
-        manager.request_reload(
-            ModelType::LayoutOptimizer,
-            PathBuf::from("test_model.onnx")
-        ).unwrap();
-        
+        manager
+            .request_reload(ModelType::LayoutOptimizer, PathBuf::from("test_model.onnx"))
+            .unwrap();
+
         let stats = manager.get_stats();
         assert_eq!(stats.total_pending, 1);
     }
