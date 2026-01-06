@@ -101,10 +101,14 @@ impl AnalysisPipeline {
         let loop_count = control_flow.loops.len();
 
         // Loop analysis
-        let _loop_analyses = self.loop_analyzer.analyze(&ast, &scope_tree, &data_flow, &control_flow)?;
+        let _loop_analyses =
+            self.loop_analyzer
+                .analyze(&ast, &scope_tree, &data_flow, &control_flow)?;
 
         // Call graph analysis
-        let call_graph = self.call_graph_analyzer.analyze(&ast, &scope_tree, &data_flow, &control_flow)?;
+        let call_graph =
+            self.call_graph_analyzer
+                .analyze(&ast, &scope_tree, &data_flow, &control_flow)?;
         let call_edges = call_graph.edges.len();
 
         let time_ms = start.elapsed().as_secs_f64() * 1000.0;

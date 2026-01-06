@@ -94,7 +94,8 @@ impl LoopAnalyzer {
         let termination_conditions = self.extract_termination_conditions(loop_info);
         let iteration_count_estimate = self.estimate_iterations(loop_info, &induction_variables);
         let nested_loops = self.find_nested_loops(loop_info, cfg);
-        let complexity_score = self.calculate_complexity(loop_info, &induction_variables, &nested_loops);
+        let complexity_score =
+            self.calculate_complexity(loop_info, &induction_variables, &nested_loops);
         let is_potentially_infinite = self.check_infinite_loop(loop_info, &termination_conditions);
         let early_exits = self.detect_early_exits(loop_info, cfg);
 
@@ -112,7 +113,11 @@ impl LoopAnalyzer {
         })
     }
 
-    fn detect_induction_variables(&self, _loop_info: &LoopInfo, _cfg: &ControlFlowGraph) -> Vec<InductionVariable> {
+    fn detect_induction_variables(
+        &self,
+        _loop_info: &LoopInfo,
+        _cfg: &ControlFlowGraph,
+    ) -> Vec<InductionVariable> {
         Vec::new()
     }
 
@@ -124,7 +129,11 @@ impl LoopAnalyzer {
         Vec::new()
     }
 
-    fn estimate_iterations(&self, _loop_info: &LoopInfo, induction_variables: &[InductionVariable]) -> IterationEstimate {
+    fn estimate_iterations(
+        &self,
+        _loop_info: &LoopInfo,
+        induction_variables: &[InductionVariable],
+    ) -> IterationEstimate {
         if induction_variables.is_empty() {
             IterationEstimate::RuntimeDependent
         } else {
@@ -133,13 +142,19 @@ impl LoopAnalyzer {
     }
 
     fn find_nested_loops(&self, loop_info: &LoopInfo, cfg: &ControlFlowGraph) -> Vec<String> {
-        cfg.loops.iter()
+        cfg.loops
+            .iter()
             .filter(|l| l.header != loop_info.header && loop_info.body_nodes.contains(&l.header))
             .map(|l| l.header.clone())
             .collect()
     }
 
-    fn calculate_complexity(&self, loop_info: &LoopInfo, induction_variables: &[InductionVariable], nested_loops: &[String]) -> u32 {
+    fn calculate_complexity(
+        &self,
+        loop_info: &LoopInfo,
+        induction_variables: &[InductionVariable],
+        nested_loops: &[String],
+    ) -> u32 {
         let mut score = 10;
         score += (loop_info.body_nodes.len() as u32).min(30);
         score += (induction_variables.len() as u32 * 5).min(20);
@@ -147,7 +162,11 @@ impl LoopAnalyzer {
         score.min(100)
     }
 
-    fn check_infinite_loop(&self, _loop_info: &LoopInfo, termination_conditions: &[String]) -> bool {
+    fn check_infinite_loop(
+        &self,
+        _loop_info: &LoopInfo,
+        termination_conditions: &[String],
+    ) -> bool {
         termination_conditions.is_empty()
     }
 
@@ -185,10 +204,10 @@ impl Default for LoopAnalyzer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::controlflow_analyzer::ControlFlowAnalyzer;
+    use crate::dataflow_analyzer::DataFlowAnalyzer;
     use crate::extractor::AstExtractor;
     use crate::scope_analyzer::ScopeAnalyzer;
-    use crate::dataflow_analyzer::DataFlowAnalyzer;
-    use crate::controlflow_analyzer::ControlFlowAnalyzer;
 
     fn extract_ast(code: &str) -> ExtractedAst {
         AstExtractor::new().extract_from_source(code).unwrap()
@@ -208,7 +227,9 @@ mod tests {
         let data_flow = DataFlowAnalyzer::new().analyze(&ast, &scope_tree).unwrap();
         let control_flow = ControlFlowAnalyzer::new().analyze(&ast).unwrap();
         let mut analyzer = LoopAnalyzer::new();
-        let analyses = analyzer.analyze(&ast, &scope_tree, &data_flow, &control_flow).unwrap();
+        let analyses = analyzer
+            .analyze(&ast, &scope_tree, &data_flow, &control_flow)
+            .unwrap();
         assert!(!analyses.is_empty() || control_flow.loops.is_empty());
     }
 
@@ -220,7 +241,9 @@ mod tests {
         let data_flow = DataFlowAnalyzer::new().analyze(&ast, &scope_tree).unwrap();
         let control_flow = ControlFlowAnalyzer::new().analyze(&ast).unwrap();
         let mut analyzer = LoopAnalyzer::new();
-        let analyses = analyzer.analyze(&ast, &scope_tree, &data_flow, &control_flow).unwrap();
+        let analyses = analyzer
+            .analyze(&ast, &scope_tree, &data_flow, &control_flow)
+            .unwrap();
         assert!(analyses.len() >= 0);
     }
 
@@ -262,7 +285,12 @@ mod tests {
             step: Some("1".to_string()),
         }];
         let estimate = analyzer.estimate_iterations(&loop_info, &induction_vars);
-        assert!(matches!(estimate, IterationEstimate::Unbounded | IterationEstimate::Bounded(_, _) | IterationEstimate::RuntimeDependent));
+        assert!(matches!(
+            estimate,
+            IterationEstimate::Unbounded
+                | IterationEstimate::Bounded(_, _)
+                | IterationEstimate::RuntimeDependent
+        ));
     }
 
     #[test]

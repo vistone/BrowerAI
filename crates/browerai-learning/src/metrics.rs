@@ -253,10 +253,7 @@ impl MetricsDashboard {
         let mut metrics_by_type: HashMap<String, Vec<&Metric>> = HashMap::new();
         for metric in &self.metrics {
             let type_key = format!("{:?}", metric.metric_type);
-            metrics_by_type
-                .entry(type_key)
-                .or_default()
-                .push(metric);
+            metrics_by_type.entry(type_key).or_default().push(metric);
         }
 
         for (metric_type, metrics) in metrics_by_type {

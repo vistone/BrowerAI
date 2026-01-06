@@ -12,8 +12,7 @@ use std::collections::{HashSet, VecDeque};
 
 use crate::extractor::ExtractedAst;
 use crate::types::{
-    CFGEdge, CFGNode, CFGNodeType, ControlFlowGraph, EdgeType, JsFunctionInfo,
-    LoopInfo, LoopType,
+    CFGEdge, CFGNode, CFGNodeType, ControlFlowGraph, EdgeType, JsFunctionInfo, LoopInfo, LoopType,
 };
 
 /// Control flow analyzer for JavaScript code
@@ -93,7 +92,10 @@ impl ControlFlowAnalyzer {
         let stmt_node = CFGNode {
             id: stmt_id.clone(),
             node_type: CFGNodeType::Statement,
-            statement: Some(format!("function {}(...)", func.name.as_deref().unwrap_or("anonymous"))),
+            statement: Some(format!(
+                "function {}(...)",
+                func.name.as_deref().unwrap_or("anonymous")
+            )),
             line: func.start_line,
             column: 0,
             is_reachable: true,
@@ -297,10 +299,8 @@ impl Default for ControlFlowAnalyzer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{
-        JsAstMetadata, JsFunctionInfo, JsParameter, JsSemanticInfo,
-    };
     use crate::extractor::ExtractedAst;
+    use crate::types::{JsAstMetadata, JsFunctionInfo, JsParameter, JsSemanticInfo};
 
     fn create_test_ast() -> ExtractedAst {
         ExtractedAst {
@@ -384,7 +384,10 @@ mod tests {
 
         // Should have edges connecting entry to statements to exit
         assert!(!cfg.edges.is_empty());
-        assert!(cfg.edges.iter().any(|e| e.from == *cfg.entry.as_ref().unwrap()));
+        assert!(cfg
+            .edges
+            .iter()
+            .any(|e| e.from == *cfg.entry.as_ref().unwrap()));
     }
 
     #[test]

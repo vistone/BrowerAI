@@ -98,7 +98,9 @@ fn run_ai_report() -> Result<()> {
 
 #[cfg(not(feature = "ai"))]
 fn run_ai_report() -> Result<()> {
-    Err(anyhow!("AI feature is disabled. Rebuild with --features ai to generate reports."))
+    Err(anyhow!(
+        "AI feature is disabled. Rebuild with --features ai to generate reports."
+    ))
 }
 
 /// Learning mode: visit real websites
@@ -110,8 +112,14 @@ fn run_learning_mode(urls: &[&str]) -> Result<()> {
     let session = MlSession::new()?;
     let output = session.smoke_test()?;
 
-    log::info!("🌐 URLs provided (placeholder, not crawled here): {:?}", urls);
-    log::info!("✅ ML smoke test succeeded. Output shape: {:?}", output.size());
+    log::info!(
+        "🌐 URLs provided (placeholder, not crawled here): {:?}",
+        urls
+    );
+    log::info!(
+        "✅ ML smoke test succeeded. Output shape: {:?}",
+        output.size()
+    );
     log::info!("💡 Next: wire real data pipeline to tch models (training/inference)");
 
     Ok(())
@@ -120,7 +128,9 @@ fn run_learning_mode(urls: &[&str]) -> Result<()> {
 #[cfg(not(feature = "ml"))]
 fn run_learning_mode(urls: &[&str]) -> Result<()> {
     log::info!("🌐 URLs provided: {:?}", urls);
-    Err(anyhow!("ML feature is disabled. Rebuild with --features ml to enable learning mode with tch-rs."))
+    Err(anyhow!(
+        "ML feature is disabled. Rebuild with --features ml to enable learning mode with tch-rs."
+    ))
 }
 
 /// Export feedback data
@@ -141,7 +151,9 @@ fn run_export_feedback(output: &str) -> Result<()> {
 
 #[cfg(not(feature = "ai"))]
 fn run_export_feedback(_output: &str) -> Result<()> {
-    Err(anyhow!("AI feature is disabled. Rebuild with --features ai to export feedback."))
+    Err(anyhow!(
+        "AI feature is disabled. Rebuild with --features ai to export feedback."
+    ))
 }
 
 /// Demo mode

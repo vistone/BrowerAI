@@ -82,12 +82,11 @@ impl SemanticAnalyzer {
         // Phase 2 增强：利用 JSX 和 TypeScript 信息
 
         // 1. 改进 React 检测（如果有 JSX）
-        if enhanced.has_jsx
-            && !result.detected_frameworks.contains(&"React".to_string()) {
-                // JSX 的存在强烈表明使用 React 或类似框架
-                result.detected_frameworks.push("React".to_string());
-                semantic.detected_frameworks.push("React".to_string());
-            }
+        if enhanced.has_jsx && !result.detected_frameworks.contains(&"React".to_string()) {
+            // JSX 的存在强烈表明使用 React 或类似框架
+            result.detected_frameworks.push("React".to_string());
+            semantic.detected_frameworks.push("React".to_string());
+        }
 
         // 2. 改进 TypeScript 检测
         if enhanced.has_typescript {

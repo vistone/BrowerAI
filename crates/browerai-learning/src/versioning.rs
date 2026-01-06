@@ -145,10 +145,7 @@ impl VersionManager {
     /// Register a new model version
     pub fn register_version(&mut self, model: VersionedModel) {
         let name = model.name.clone();
-        self.versions
-            .entry(name)
-            .or_default()
-            .push(model);
+        self.versions.entry(name).or_default().push(model);
     }
 
     /// Get all versions for a model

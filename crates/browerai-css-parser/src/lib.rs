@@ -3,7 +3,6 @@ use cssparser::{Parser, ParserInput, Token};
 #[cfg(feature = "ai")]
 use std::path::PathBuf;
 
-
 #[cfg(feature = "ai")]
 use browerai_ai_core::model_manager::ModelType;
 #[cfg(feature = "ai")]

@@ -12,7 +12,6 @@ pub mod renderer;
 pub mod site_understanding;
 pub mod validation;
 
-
 /// 页面类型
 #[derive(Debug, Clone, PartialEq)]
 pub enum PageType {

@@ -71,8 +71,7 @@ impl JsParser {
             statement_count
         );
 
-
-            // AI enhancement removed; returning baseline AST
+        // AI enhancement removed; returning baseline AST
         Ok(JsAst {
             statement_count,
             is_valid: true,
@@ -133,7 +132,6 @@ impl JsParser {
             Err(_) => Ok(false),
         }
     }
-
 }
 
 impl Default for JsParser {
