@@ -1,0 +1,44 @@
+[package]
+name = "browerai"
+version = "0.1.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "AI-powered browser with autonomous HTML/CSS/JS parsing and rendering"
+
+[[bin]]
+name = "browerai"
+path = "src/main.rs"
+
+[dependencies]
+browerai-core = { workspace = true }
+browerai-dom = { workspace = true }
+browerai-html-parser = { workspace = true }
+browerai-css-parser = { workspace = true }
+browerai-js-parser = { workspace = true }
+browerai-js-analyzer = { workspace = true }
+browerai-ai-core = { workspace = true, optional = true }
+browerai-ai-integration = { workspace = true, optional = true }
+browerai-ml = { workspace = true }
+browerai-renderer-core = { workspace = true }
+browerai-renderer-predictive = { workspace = true }
+browerai-intelligent-rendering = { workspace = true }
+browerai-learning = { workspace = true }
+browerai-network = { workspace = true }
+browerai-devtools = { workspace = true }
+browerai-testing = { workspace = true }
+browerai-plugins = { workspace = true }
+
+anyhow = { workspace = true }
+log = { workspace = true }
+env_logger = { workspace = true }
+
+[features]
+default = []
+ai = ["browerai-ai-core", "browerai-ai-core/onnx", "browerai-ai-integration"]
+# Enable Candle-based GGUF LLMs (e.g., Qwen2.5-Coder) with browerai-ai-core
+ai-candle = ["browerai-ai-core", "browerai-ai-core/candle"]
+
+[dev-dependencies]
+tempfile = { workspace = true }

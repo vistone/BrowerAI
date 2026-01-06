@@ -1,0 +1,20 @@
+[package]
+name = "browerai-renderer-core"
+version = "0.1.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Renderer core for BrowerAI"
+
+[dependencies]
+browerai-core = { workspace = true }
+browerai-dom = { workspace = true }
+browerai-css-parser = { workspace = true }
+markup5ever_rcdom = { workspace = true }
+anyhow = { workspace = true }
+log = { workspace = true }
+
+[dev-dependencies]
+env_logger = { workspace = true }
+tempfile = { workspace = true }

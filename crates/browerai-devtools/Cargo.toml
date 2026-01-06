@@ -1,0 +1,21 @@
+[package]
+name = "browerai-devtools"
+version = "0.1.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Development tools for BrowerAI"
+
+[dependencies]
+browerai-core = { workspace = true }
+browerai-dom = { workspace = true }
+anyhow = { workspace = true }
+log = { workspace = true }
+markup5ever_rcdom = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+env_logger = { workspace = true }
+tempfile = { workspace = true }

@@ -1,0 +1,23 @@
+[package]
+name = "browerai-dom"
+version = "0.1.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "DOM (Document Object Model) implementation for BrowerAI"
+
+[dependencies]
+browerai-core = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+markup5ever_rcdom = { workspace = true }
+
+# JavaScript execution engine
+boa_engine = { workspace = true }
+boa_interner = { workspace = true }
+
+[dev-dependencies]
+env_logger = { workspace = true }

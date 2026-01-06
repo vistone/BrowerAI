@@ -1,6 +1,6 @@
 # BrowerAI Training Pipeline
 
-AI网站再生成训练 - 学习整体网站，输入原始代码输出简化版本
+AI 网站再生成训练：输入原始网站代码，输出等价的简化版本
 
 ## 🎯 核心思想
 
@@ -40,18 +40,18 @@ training/
 ## 🚀 快速开始
 
 ```bash
-# 1. 安装依赖
+# 1) 安装依赖
 pip install -r requirements.txt
 
-# 2. 生成配对数据
+# 2) 生成配对数据（原始→简化）
 python scripts/create_simplified_dataset.py \
   --input data/website_complete.jsonl \
   --output data/website_paired.jsonl
 
-# 3. 训练模型（30 epochs，2-3小时）
-python scripts/train_paired_website.py
+# 3) 训练模型（约 30 epochs）
+python scripts/train_paired_website_generator.py
 
-# 4. 导出ONNX
+# 4) 导出 ONNX 供 Rust 使用
 python scripts/export_to_onnx.py \
   --checkpoint checkpoints/paired_generator/epoch_30.pt \
   --output ../models/local/website_generator_v1.onnx

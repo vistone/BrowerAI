@@ -11,12 +11,16 @@ BrowerAI is an experimental AI-powered browser that uses machine learning models
 
 **Core Module Hierarchy** (see [src/lib.rs](src/lib.rs)):
 ```
-ai/          → Model management, ONNX inference, hot reload
-parser/      → HTML (html5ever), CSS (cssparser), JS (boa_parser)
-renderer/    → Layout engine, paint, predictive rendering
-learning/    → Feedback, A/B testing, online learning, personalization
+ai/          → Model management, ONNX inference, hot reload, GPU support
+parser/      → HTML (html5ever), CSS (cssparser), JS (boa_parser + boa_engine)
+  js_analyzer/ → Phase-based deep analysis (scope, dataflow, call graphs, deobfuscation)
+renderer/    → Layout engine, paint, predictive rendering, AI regeneration
+intelligent_rendering/ → Validation, reasoning, generation
+learning/    → Feedback, code generation, deobfuscation strategies, metrics
 dom/         → Document model, JS sandbox
-network/     → HTTP client, caching
+network/     → HTTP client, caching, crawling
+devtools/    → DOM inspector, network monitor, performance profiler
+testing/     → Benchmark runner, website tester
 plugins/     → Plugin system for extensibility
 ```
 
@@ -59,8 +63,23 @@ version = "1.0.0"
 
 ### Testing Strategy
 - Unit tests: `#[cfg(test)] mod tests` in each module
-- Integration tests: `tests/ai_integration_tests.rs`
+- Integration tests: `tests/*_tests.rs` with descriptive names
+  - `ai_integration_tests.rs`: Core AI functionality
+  - `phase*_tests.rs`: Phase-specific features (tracks development phases)
+  - `step4_rust_integration_tests.rs`: Cross-module integration
+  - `e2e_website_tests.rs`: End-to-end with real websites
 - No mocking - direct integration with optional AI features
+- Run specific test suites: `cargo test --test phase3_week3_enhanced_call_graph_tests`
+- Run module tests: `cargo test parser::js_analyzer`
+- See debug output: `cargo test -- --nocapture` or `RUST_LOG=debug cargo test`
+
+### Example Programs
+Located in `examples/` - demonstrate real-world usage patterns:
+- `basic_usage.rs`: Simple HTML/CSS/JS parsing examples
+- `comprehensive_demo.rs`: Full pipeline demonstration
+- `js_deobfuscator_demo.rs`: Deobfuscation with multiple strategies
+- `dual_rendering_demo.rs`: AI-powered website regeneration
+- Run with: `cargo run --example basic_usage`
 
 ## Project-Specific Conventions
 
@@ -100,14 +119,33 @@ ONNX Runtime is optional: `cargo build --features ai`
 ### Parser Dependencies
 - **HTML**: `html5ever` + `markup5ever_rcdom` for DOM tree
 - **CSS**: `cssparser` + `selectors` for rules/matching
-- **JS**: `boa_parser` (pure Rust, no V8 dependency)
+- **JS**: `boa_parser` (pure Rust, no V8 dependency) + `boa_engine` for execution
+  - Additional: `swc_core` for advanced TypeScript/JSX support (Phase 2)
+
+### JavaScript Analysis Pipeline
+`src/parser/js_analyzer/` uses phase-based architecture:
+- **Phase 1**: `scope_analyzer.rs` - Lexical scope tracking
+- **Phase 2**: `swc_extractor.rs` - TypeScript/JSX AST with `swc_core`
+- **Phase 3 Week 1**: `dataflow_analyzer.rs` - Variable flow tracking
+- **Phase 3 Week 2**: `controlflow_analyzer.rs` - Branch/loop analysis
+- **Phase 3 Week 3**: `enhanced_call_graph.rs` + `loop_analyzer.rs` + `performance_optimizer.rs`
+- **Phase 3 Week 3 Task 4**: `analysis_pipeline.rs` - Unified pipeline orchestration
+
+Use `JsDeepAnalyzer` as the main entry point:
+```rust
+let mut analyzer = JsDeepAnalyzer::new();
+let result = analyzer.analyze_source(js_code)?;
+println!("{} functions, {} variables", result.function_count(), result.variable_count());
+```
 
 ### Learning System
 Phase 5 features in `src/learning/`:
 - `feedback.rs`: User feedback collection
 - `online_learning.rs`: Model fine-tuning
+- `code_generator.rs`: HTML/CSS/JS code generation with constraints
+- `deobfuscator.rs`: Multi-strategy JS deobfuscation (string decode, control flow, variable rename)
 - `versioning.rs`: Semantic versioning for models
-- `ab_testing.rs`: Experiment framework
+- `metrics.rs`: MetricsDashboard for training/inference monitoring
 - `personalization.rs`: Privacy-preserving user preferences
 
 ## Common Patterns

@@ -1,0 +1,20 @@
+[package]
+name = "browerai-html-parser"
+version = "0.1.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "HTML5 parser for BrowerAI"
+
+[dependencies]
+browerai-core = { workspace = true }
+browerai-dom = { workspace = true }
+anyhow = { workspace = true }
+log = { workspace = true }
+html5ever = { workspace = true }
+markup5ever_rcdom = { workspace = true }
+
+[dev-dependencies]
+env_logger = { workspace = true }
+tempfile = { workspace = true }

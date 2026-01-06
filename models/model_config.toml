@@ -76,6 +76,17 @@ enabled = true
 # ============== 跨领域系列 ==============
 
 [[models]]
+name = "qwen2_5_coder_7b_gguf"
+model_type = "CodeLlm"
+path = "qwen2.5-coder-7b-instruct-q5_k_m.gguf"
+description = "Qwen2.5-Coder-7B (Q5_K_M 量化 GGUF, Candle 加载) - 适用于 JS/HTML/CSS 代码理解与生成"
+version = "1.0.0"
+priority = 70
+enabled = false
+parameters = "7B (MoE 2.4B active), quantized Q5_K_M"
+task = "codegen-js"
+
+[[models]]
 name = "code_understanding_v1"
 model_type = "CodeUnderstanding"
 path = "code_understanding_v1.onnx"
