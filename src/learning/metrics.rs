@@ -1,7 +1,6 @@
 /// Metrics dashboard for monitoring system performance
-/// 
+///
 /// Tracks and visualizes various performance and quality metrics
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -262,7 +261,7 @@ impl MetricsDashboard {
 
         for (metric_type, metrics) in metrics_by_type {
             report.push_str(&format!("## {}\n", metric_type));
-            
+
             let values: Vec<f64> = metrics.iter().map(|m| m.value).collect();
             let stats = MetricStats::from_values(&values);
 

@@ -10,18 +10,24 @@ pub mod renderer;
 pub mod testing;
 
 pub use ai::{
-    AdvancedPerformanceMonitor, AiConfig, AiStats, FallbackReason, FallbackTracker,
-    HotReloadManager, InferenceEngine, ModelHealth, ModelHealthSummary, ModelManager,
+    AdvancedPerformanceMonitor, AiConfig, AiStats, FallbackReason, FallbackTracker, GpuConfig,
+    GpuProvider, GpuStats, HotReloadManager, InferenceEngine, ModelHealth, ModelHealthSummary,
+    ModelManager,
 };
 pub use devtools::{DOMInspector, NetworkMonitor, PerformanceProfiler};
-pub use dom::{Document, DomElement, DomNode, DomApiExtensions, ElementHandle, JsSandbox};
+pub use dom::{Document, DomApiExtensions, DomElement, DomNode, ElementHandle, JsSandbox};
 pub use learning::{
-    FeedbackCollector, MetricsDashboard, OnlineLearner, PersonalizationEngine, SelfOptimizer,
-    VersionManager, CodeGenerator, GenerationRequest, CodeType, GeneratedCode,
-    JsDeobfuscator, ObfuscationAnalysis, DeobfuscationStrategy, ContinuousLearningLoop,
+    CodeGenerator, CodeType, ContinuousLearningLoop, DeobfuscationStrategy, FeedbackCollector,
+    GeneratedCode, GenerationRequest, JsDeobfuscator, MetricsDashboard, ObfuscationAnalysis,
+    OnlineLearner, PersonalizationEngine, SelfOptimizer, VersionManager,
 };
 pub use network::{HttpClient, ResourceCache};
 pub use parser::{CssParser, HtmlParser, JsParser};
 pub use plugins::{Plugin, PluginLoader, PluginRegistry};
-pub use renderer::{AiLayoutHint, LayoutValidator, PredictiveRenderer, RenderEngine, ValidationReport};
-pub use testing::{WebsiteTestResult, WebsiteTestSuite, WebsiteTester};
+pub use renderer::{
+    AiLayoutHint, LayoutValidator, PredictiveRenderer, RenderEngine, ValidationReport,
+};
+pub use testing::{
+    BenchmarkConfig, BenchmarkResult, BenchmarkRunner, ComparisonResult, WebsiteTestResult,
+    WebsiteTestSuite, WebsiteTester,
+};

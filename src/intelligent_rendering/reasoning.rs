@@ -1,11 +1,13 @@
 //! 智能推理模块 - 推理阶段
-//! 
+//!
 //! 分析网站并推理最佳呈现方案
 
+use super::site_understanding::{Functionality, SiteUnderstanding};
+use crate::intelligent_rendering::{
+    ColorScheme, FunctionType, LayoutScheme, SpacingSystem, Typography, VisualStyle,
+};
 use anyhow::Result;
 use std::collections::HashMap;
-use crate::intelligent_rendering::{FunctionType, LayoutScheme, VisualStyle, ColorScheme, Typography, SpacingSystem};
-use super::site_understanding::{SiteUnderstanding, Functionality};
 
 /// 智能推理
 pub struct IntelligentReasoning {
@@ -16,13 +18,13 @@ pub struct IntelligentReasoning {
 pub struct ReasoningResult {
     /// 核心功能点（不可移除）
     pub core_functions: Vec<CoreFunction>,
-    
+
     /// 可优化区域
     pub optimizable_regions: Vec<OptimizableRegion>,
-    
+
     /// 布局建议
     pub layout_suggestions: Vec<LayoutSuggestion>,
-    
+
     /// 体验变体
     pub experience_variants: Vec<ExperienceVariant>,
 }
@@ -66,13 +68,13 @@ pub struct LayoutSuggestion {
 pub struct ExperienceVariant {
     /// 变体名称
     pub name: String,
-    
+
     /// 视觉风格
     pub visual_style: VisualStyle,
-    
+
     /// 布局方案
     pub layout_scheme: LayoutScheme,
-    
+
     /// 保持的功能映射
     pub function_mapping: HashMap<String, String>,
 }
@@ -82,21 +84,21 @@ impl IntelligentReasoning {
     pub fn new(understanding: SiteUnderstanding) -> Self {
         Self { understanding }
     }
-    
+
     /// 推理最佳呈现方案
     pub fn reason(&self) -> Result<ReasoningResult> {
         // 1. 识别核心功能
         let core_functions = self.identify_core_functions()?;
-        
+
         // 2. 分析可优化区域
         let optimizable = self.find_optimizable_regions()?;
-        
+
         // 3. 生成布局建议
         let layouts = self.generate_layout_suggestions()?;
-        
+
         // 4. 创建体验变体
         let variants = self.create_experience_variants(&core_functions, &layouts)?;
-        
+
         Ok(ReasoningResult {
             core_functions,
             optimizable_regions: optimizable,
@@ -104,30 +106,31 @@ impl IntelligentReasoning {
             experience_variants: variants,
         })
     }
-    
+
     fn identify_core_functions(&self) -> Result<Vec<CoreFunction>> {
         let mut cores = Vec::new();
-        
+
         for func in &self.understanding.functionalities {
             // 所有功能都是核心功能（保持完整性）
             cores.push(CoreFunction {
                 name: func.name.clone(),
                 function_type: func.function_type.clone(),
                 required_elements: func.elements.clone(),
-                required_handlers: func.event_handlers
+                required_handlers: func
+                    .event_handlers
                     .iter()
                     .map(|h| h.handler_id.clone())
                     .collect(),
                 data_dependencies: func.data_flow.dependencies.clone(),
             });
         }
-        
+
         Ok(cores)
     }
-    
+
     fn find_optimizable_regions(&self) -> Result<Vec<OptimizableRegion>> {
         let mut regions = Vec::new();
-        
+
         for region in &self.understanding.structure.regions {
             regions.push(OptimizableRegion {
                 region_id: region.id.clone(),
@@ -135,10 +138,10 @@ impl IntelligentReasoning {
                 potential_improvement: 0.8,
             });
         }
-        
+
         Ok(regions)
     }
-    
+
     fn generate_layout_suggestions(&self) -> Result<Vec<LayoutSuggestion>> {
         Ok(vec![
             LayoutSuggestion {
@@ -158,26 +161,23 @@ impl IntelligentReasoning {
             },
         ])
     }
-    
+
     fn create_experience_variants(
         &self,
         core_functions: &[CoreFunction],
         layouts: &[LayoutSuggestion],
     ) -> Result<Vec<ExperienceVariant>> {
         let mut variants = Vec::new();
-        
+
         // 为每种布局创建变体
         for layout in layouts {
             let mut function_mapping = HashMap::new();
-            
+
             // 映射所有核心功能
             for func in core_functions {
-                function_mapping.insert(
-                    func.name.clone(),
-                    format!("new-{}", func.name),
-                );
+                function_mapping.insert(func.name.clone(), format!("new-{}", func.name));
             }
-            
+
             variants.push(ExperienceVariant {
                 name: format!("{:?}", layout.scheme),
                 visual_style: self.create_visual_style(&layout.scheme),
@@ -185,10 +185,10 @@ impl IntelligentReasoning {
                 function_mapping,
             });
         }
-        
+
         Ok(variants)
     }
-    
+
     fn create_visual_style(&self, scheme: &LayoutScheme) -> VisualStyle {
         match scheme {
             LayoutScheme::Minimal => VisualStyle {
@@ -235,33 +235,33 @@ impl IntelligentReasoning {
 mod tests {
     use super::*;
     use crate::intelligent_rendering::site_understanding::SiteUnderstanding;
-    
+
     #[test]
     fn test_reasoning_process() {
         let html = "<html><body><h1>Test</h1></body></html>".to_string();
         let css = "".to_string();
         let js = "".to_string();
-        
+
         let understanding = SiteUnderstanding::learn_from_content(html, css, js).unwrap();
         let reasoning = IntelligentReasoning::new(understanding);
-        
+
         let result = reasoning.reason().unwrap();
-        
+
         assert!(!result.experience_variants.is_empty());
         assert!(result.experience_variants.len() >= 3);
     }
-    
+
     #[test]
     fn test_core_function_identification() {
         let html = "<html><body><input type='search'/></body></html>".to_string();
         let css = "".to_string();
         let js = "".to_string();
-        
+
         let understanding = SiteUnderstanding::learn_from_content(html, css, js).unwrap();
         let reasoning = IntelligentReasoning::new(understanding);
-        
+
         let result = reasoning.reason().unwrap();
-        
+
         assert!(!result.core_functions.is_empty());
     }
 }

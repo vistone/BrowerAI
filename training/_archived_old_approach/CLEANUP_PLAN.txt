@@ -1,0 +1,62 @@
+# Training Directory Cleanup Plan
+
+## 主题思想（正确方向）
+- 整体网站学习（HTML+CSS+JS作为一个整体）
+- 配对训练：输入原始网站 → 输出简化版本
+- 用于双渲染模式：原始渲染 vs AI简化渲染
+
+## 保留文件（核心功能）
+scripts/
+  - train_paired_website_generator.py    ✓ 配对训练（原始→简化）
+  - create_simplified_dataset.py         ✓ 生成简化数据
+  - extract_website_complete.py          ✓ 提取完整网站
+  - export_to_onnx.py                    ✓ 导出ONNX模型
+  - batch_crawl_websites.py              ✓ 爬取网站数据
+
+data/
+  - website_complete.jsonl               ✓ 完整网站数据
+  - website_paired.jsonl                 ✓ 配对数据
+  
+checkpoints/
+  - paired_generator/                    ✓ 配对模型检查点
+
+文档:
+  - README.md                            ✓ 主文档（需更新）
+  - WEBSITE_GENERATION_PLAN.md           ✓ 正确的计划文档
+  - QUICKSTART.md                        ✓ 快速开始（需更新）
+
+配置:
+  - requirements.txt                     ✓
+  - setup_env.sh                         ✓
+
+## 删除文件（错误方向/无用）
+错误方向的训练脚本:
+  - train_js_deobfuscator.py             ✗ 单独技术点
+  - train_css_optimizer.py               ✗ 单独技术点
+  - train_html_parser.py                 ✗ 单独技术点
+  - incremental_learning.py              ✗ 框架分类
+  - train_classifier.py                  ✗ 框架分类
+  - train_holistic_website.py            ✗ 旧版本（已被train_paired替代）
+  - train_website_generator.py           ✗ 自编码器（错误方向）
+  - 其他30+个train_*.py                  ✗ 孤立技术点
+
+错误方向的文档:
+  - CORRECT_TRAINING_PLAN.md             ✗ 实际是错误的
+  - INCREMENTAL_VS_BATCH.md              ✗ 框架分类相关
+  - HOLISTIC_LEARNING_GUIDE.md           ✗ 旧版本
+  - 其他10+个*.md                        ✗ 不相关
+
+无用脚本:
+  - run_incremental_learning.sh          ✗
+  - train_js_deobfuscator.sh             ✗
+  - watch_js_training.sh                 ✗
+  - export_to_onnx.sh                    ✗ 旧版本
+  
+其他无用:
+  - node_modules/                        ✗
+  - package.json                         ✗ 没用到npm
+  - =0.1.0                               ✗ 错误文件
+  - test_*.py (10+个)                    ✗ 测试脚本
+  - train_unified.py                     ✗
+  - *.log, *.txt                         ✗ 日志文件
+

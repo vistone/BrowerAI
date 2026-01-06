@@ -1,0 +1,66 @@
+# JavaScript Deobfuscator Configuration
+
+# Model architecture (larger for complex task)
+model:
+  vocab_size: 15000  # Will be set from tokenizer
+  d_model: 384
+  num_heads: 12
+  num_encoder_layers: 8
+  num_decoder_layers: 8
+  d_ff: 1536
+  dropout: 0.1
+  max_len: 512
+
+# Training hyperparameters
+training:
+  epochs: 30
+  batch_size: 16  # Smaller due to larger model
+  log_every_n_steps: 10
+
+# Optimizer configuration
+optimizer:
+  type: adamw
+  lr: 0.0003  # Lower LR for larger model
+  weight_decay: 0.01
+  betas: [0.9, 0.999]
+  eps: 1e-8
+
+# Learning rate scheduler
+scheduler:
+  type: cosine
+  min_lr: 1e-6
+  warmup_steps: 1000
+
+# Data configuration
+data:
+  data_dir: data/obfuscation
+  train_file: obfuscation_pairs.jsonl
+  val_file: obfuscation_pairs_val.jsonl
+  max_samples: null
+
+# Advanced training features
+advanced:
+  use_amp: true
+  gradient_accumulation_steps: 2  # Effective batch size = 32
+  max_grad_norm: 1.0
+  label_smoothing: 0.1
+  
+  # Copy mechanism
+  use_copy_mechanism: true
+  copy_loss_weight: 0.5
+  
+  # Beam search for evaluation
+  beam_width: 5
+  
+# Curriculum learning
+curriculum:
+  enabled: true
+  start_difficulty: 0.3  # Start with easier examples
+  end_difficulty: 1.0
+  schedule: linear  # linear, exponential
+
+# Meta-learning for few-shot adaptation
+meta_learning:
+  enabled: false
+  adaptation_steps: 5
+  meta_lr: 0.001

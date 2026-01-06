@@ -107,10 +107,7 @@ impl JsParser {
 
         // Parse the JavaScript source
         let result = boa_parser::Parser::new(Source::from_bytes(js))
-            .parse_script(
-                &boa_ast::scope::Scope::new_global(),
-                &mut interner,
-            )
+            .parse_script(&boa_ast::scope::Scope::new_global(), &mut interner)
             .map_err(|e| anyhow::anyhow!("Parse error: {}", e))
             .context("Failed to parse JavaScript with Boa")?;
 
@@ -155,26 +152,24 @@ impl JsParser {
             });
         }
 
-        use std::time::Instant;
         use crate::ai::config::FallbackReason;
+        use std::time::Instant;
 
         let monitor = runtime.monitor();
         let model_path = self.model_path.as_deref();
         let model_name = self.model_name.as_deref().unwrap_or("js_model");
         let start_time = Instant::now();
 
-        match JsModelIntegration::new(
-            self.inference_engine.as_ref().unwrap(),
-            model_path,
-            monitor,
-        ) {
+        match JsModelIntegration::new(self.inference_engine.as_ref().unwrap(), model_path, monitor)
+        {
             Ok(integration) => match integration.analyze_patterns(js) {
                 Ok(patterns) => {
                     let elapsed_ms = start_time.elapsed().as_millis() as u64;
                     tracker.record_success(elapsed_ms);
                     log::info!(
                         "AI JS analysis (model={}, {}ms): detected {} patterns",
-                        model_name, elapsed_ms,
+                        model_name,
+                        elapsed_ms,
                         patterns.len()
                     );
                 }
@@ -219,7 +214,8 @@ impl JsParser {
         if js.contains("import(") {
             warnings.push(CompatibilityWarning {
                 feature: "dynamic import".to_string(),
-                detail: "Dynamic import is not supported; consider bundling or static imports.".to_string(),
+                detail: "Dynamic import is not supported; consider bundling or static imports."
+                    .to_string(),
             });
         }
 
@@ -303,9 +299,7 @@ mod tests {
     fn test_detects_module_syntax_warning() {
         let warnings = JsParser::detect_compatibility_issues("import { a } from 'x';");
         assert!(!warnings.is_empty());
-        assert!(warnings
-            .iter()
-            .any(|w| w.feature == "ES modules"));
+        assert!(warnings.iter().any(|w| w.feature == "ES modules"));
     }
 
     #[test]

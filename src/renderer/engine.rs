@@ -27,7 +27,7 @@ impl RenderEngine {
             inference_engine: None,
             enable_ai: false,
             layout_engine: LayoutEngine::new(width, height),
-            paint_engine: PaintEngine::new(),
+            paint_engine: PaintEngine::with_viewport(width, height),
         }
     }
 
@@ -91,9 +91,40 @@ impl RenderEngine {
 
     /// Recursively collect render nodes from layout tree
     fn collect_render_nodes(&self, layout_box: &LayoutBox, nodes: &mut Vec<RenderNode>) {
+        // Collect computed styles from layout box dimensions
+        let mut styles = Vec::new();
+
+        // Add dimensions as style properties
+        let dims = &layout_box.dimensions;
+        styles.push(format!("width: {}px", dims.content.width));
+        styles.push(format!("height: {}px", dims.content.height));
+        styles.push(format!(
+            "margin: {}px {}px {}px {}px",
+            dims.margin.top, dims.margin.right, dims.margin.bottom, dims.margin.left
+        ));
+        styles.push(format!(
+            "padding: {}px {}px {}px {}px",
+            dims.padding.top, dims.padding.right, dims.padding.bottom, dims.padding.left
+        ));
+        styles.push(format!(
+            "border-width: {}px {}px {}px {}px",
+            dims.border.top, dims.border.right, dims.border.bottom, dims.border.left
+        ));
+
+        // Add box type as display property
+        let display = match layout_box.box_type {
+            super::layout::BoxType::Block => "display: block",
+            super::layout::BoxType::Inline => "display: inline",
+            super::layout::BoxType::InlineBlock => "display: inline-block",
+            super::layout::BoxType::Flex => "display: flex",
+            super::layout::BoxType::Grid => "display: grid",
+            super::layout::BoxType::Anonymous => "display: block",
+        };
+        styles.push(display.to_string());
+
         nodes.push(RenderNode {
             element_type: layout_box.element_type.clone(),
-            styles: Vec::new(), // TODO: Collect actual styles
+            styles,
         });
 
         for child in &layout_box.children {

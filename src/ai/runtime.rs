@@ -2,9 +2,9 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use crate::ai::config::{AiConfig, FallbackTracker};
+use crate::ai::feedback_pipeline::FeedbackPipeline;
 use crate::ai::model_manager::{ModelConfig, ModelType};
 use crate::ai::performance_monitor::PerformanceMonitor;
-use crate::ai::feedback_pipeline::FeedbackPipeline;
 use crate::ai::InferenceEngine;
 use crate::ai::ModelManager;
 

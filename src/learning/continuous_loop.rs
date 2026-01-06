@@ -1,14 +1,13 @@
 /// Continuous learning loop for autonomous improvement
-/// 
+///
 /// Implements the "learn-infer-generate" cycle for continuous improvement
-
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 
 use super::{
-    CodeGenerator, CodeType, GeneratedCode, JsDeobfuscator, OnlineLearner,
-    FeedbackCollector, LearningConfig,
+    CodeGenerator, CodeType, FeedbackCollector, GeneratedCode, JsDeobfuscator, LearningConfig,
+    OnlineLearner,
 };
 
 /// Continuous learning loop configuration
@@ -144,7 +143,9 @@ impl ContinuousLearningLoop {
         self.stats.samples_processed += samples_collected;
 
         for _ in 0..samples_collected {
-            events.push(LearningEvent::SampleCollected("training_sample".to_string()));
+            events.push(LearningEvent::SampleCollected(
+                "training_sample".to_string(),
+            ));
         }
 
         // Phase 3: Model update if enough samples
@@ -255,10 +256,8 @@ impl ContinuousLearningLoop {
                 let input_features = self.extract_features(comment);
                 let output_features = input_features.clone(); // Placeholder
 
-                let sample = super::online_learning::TrainingSample::new(
-                    input_features,
-                    output_features,
-                );
+                let sample =
+                    super::online_learning::TrainingSample::new(input_features, output_features);
 
                 self.learner.add_sample(sample);
                 count += 1;

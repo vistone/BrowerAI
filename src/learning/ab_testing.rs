@@ -1,7 +1,6 @@
 /// A/B testing framework for comparing model performance
-/// 
+///
 /// Enables controlled experiments to compare different models or configurations
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -82,7 +81,11 @@ pub struct ABTest {
 
 impl ABTest {
     /// Create a new A/B test
-    pub fn new(id: impl Into<String>, name: impl Into<String>, description: impl Into<String>) -> Self {
+    pub fn new(
+        id: impl Into<String>,
+        name: impl Into<String>,
+        description: impl Into<String>,
+    ) -> Self {
         let start_time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_else(|_| std::time::Duration::from_secs(0))
@@ -203,7 +206,7 @@ impl ABTestManager {
             .tests
             .get_mut(test_id)
             .ok_or_else(|| format!("Test not found: {}", test_id))?;
-        
+
         test.complete();
         Ok(())
     }
@@ -243,7 +246,10 @@ mod tests {
             .with_config("model_id", "model_v1")
             .with_config("threshold", "0.8");
 
-        assert_eq!(variant.config.get("model_id"), Some(&"model_v1".to_string()));
+        assert_eq!(
+            variant.config.get("model_id"),
+            Some(&"model_v1".to_string())
+        );
     }
 
     #[test]
@@ -296,11 +302,11 @@ mod tests {
     #[test]
     fn test_ab_test_get_results() {
         let mut test = ABTest::new("test_1", "Test", "Description");
-        
+
         let mut var_a = TestVariant::new("var_a", "A", 0.5);
         var_a.record_metric("accuracy", 0.95);
         var_a.record_metric("accuracy", 0.97);
-        
+
         test.add_variant(var_a);
 
         let results = test.get_results();
@@ -312,13 +318,13 @@ mod tests {
     #[test]
     fn test_ab_test_get_winner() {
         let mut test = ABTest::new("test_1", "Test", "Description");
-        
+
         let mut var_a = TestVariant::new("var_a", "A", 0.5);
         var_a.record_metric("accuracy", 0.90);
-        
+
         let mut var_b = TestVariant::new("var_b", "B", 0.5);
         var_b.record_metric("accuracy", 0.95);
-        
+
         test.add_variant(var_a);
         test.add_variant(var_b);
 
@@ -331,7 +337,7 @@ mod tests {
     fn test_ab_test_manager_register() {
         let mut manager = ABTestManager::new();
         let test = ABTest::new("test_1", "Test", "Description");
-        
+
         manager.register_test(test);
         assert_eq!(manager.test_count(), 1);
     }
@@ -340,9 +346,9 @@ mod tests {
     fn test_ab_test_manager_get_test() {
         let mut manager = ABTestManager::new();
         let test = ABTest::new("test_1", "Test", "Description");
-        
+
         manager.register_test(test);
-        
+
         let retrieved = manager.get_test("test_1");
         assert!(retrieved.is_some());
         assert_eq!(retrieved.unwrap().name, "Test");
@@ -352,10 +358,10 @@ mod tests {
     fn test_ab_test_manager_complete() {
         let mut manager = ABTestManager::new();
         let test = ABTest::new("test_1", "Test", "Description");
-        
+
         manager.register_test(test);
         manager.complete_test("test_1").unwrap();
-        
+
         let test = manager.get_test("test_1").unwrap();
         assert!(!test.is_active);
     }
@@ -363,12 +369,12 @@ mod tests {
     #[test]
     fn test_ab_test_manager_active_count() {
         let mut manager = ABTestManager::new();
-        
+
         manager.register_test(ABTest::new("test_1", "Test 1", "Desc"));
         manager.register_test(ABTest::new("test_2", "Test 2", "Desc"));
-        
+
         assert_eq!(manager.active_test_count(), 2);
-        
+
         manager.complete_test("test_1").unwrap();
         assert_eq!(manager.active_test_count(), 1);
     }

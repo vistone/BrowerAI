@@ -109,7 +109,7 @@ impl PerformanceMonitor {
         let model_stats = stats
             .entry(metrics.model_name.clone())
             .or_insert_with(|| ModelStats::new(metrics.model_name.clone()));
-        
+
         model_stats.update(&metrics);
     }
 
@@ -162,17 +162,38 @@ impl PerformanceMonitor {
 
         for (model_name, model_stats) in stats.iter() {
             report.push_str(&format!("Model: {}\n", model_name));
-            report.push_str(&format!("  Total Inferences: {}\n", model_stats.total_inferences));
-            report.push_str(&format!("  Success Rate: {:.2}%\n", model_stats.success_rate()));
-            report.push_str(&format!("  Avg Inference Time: {:.2}ms\n", 
-                model_stats.avg_inference_time.as_secs_f64() * 1000.0));
-            report.push_str(&format!("  Min Inference Time: {:.2}ms\n", 
-                model_stats.min_inference_time.as_secs_f64() * 1000.0));
-            report.push_str(&format!("  Max Inference Time: {:.2}ms\n", 
-                model_stats.max_inference_time.as_secs_f64() * 1000.0));
-            report.push_str(&format!("  Throughput: {:.2} inf/sec\n", model_stats.throughput()));
-            report.push_str(&format!("  Total Input: {} bytes\n", model_stats.total_input_bytes));
-            report.push_str(&format!("  Total Output: {} bytes\n\n", model_stats.total_output_bytes));
+            report.push_str(&format!(
+                "  Total Inferences: {}\n",
+                model_stats.total_inferences
+            ));
+            report.push_str(&format!(
+                "  Success Rate: {:.2}%\n",
+                model_stats.success_rate()
+            ));
+            report.push_str(&format!(
+                "  Avg Inference Time: {:.2}ms\n",
+                model_stats.avg_inference_time.as_secs_f64() * 1000.0
+            ));
+            report.push_str(&format!(
+                "  Min Inference Time: {:.2}ms\n",
+                model_stats.min_inference_time.as_secs_f64() * 1000.0
+            ));
+            report.push_str(&format!(
+                "  Max Inference Time: {:.2}ms\n",
+                model_stats.max_inference_time.as_secs_f64() * 1000.0
+            ));
+            report.push_str(&format!(
+                "  Throughput: {:.2} inf/sec\n",
+                model_stats.throughput()
+            ));
+            report.push_str(&format!(
+                "  Total Input: {} bytes\n",
+                model_stats.total_input_bytes
+            ));
+            report.push_str(&format!(
+                "  Total Output: {} bytes\n\n",
+                model_stats.total_output_bytes
+            ));
         }
 
         report
@@ -210,7 +231,7 @@ impl InferenceTimer {
             let model_stats = stats
                 .entry(self.model_name.clone())
                 .or_insert_with(|| ModelStats::new(self.model_name.clone()));
-            
+
             model_stats.update(&metrics);
         }
     }
@@ -231,7 +252,7 @@ mod tests {
     #[test]
     fn test_record_inference() {
         let monitor = PerformanceMonitor::new(true);
-        
+
         let metrics = InferenceMetrics {
             model_name: "test_model".to_string(),
             inference_time: Duration::from_millis(10),
@@ -252,7 +273,7 @@ mod tests {
     #[test]
     fn test_inference_timer() {
         let monitor = PerformanceMonitor::new(true);
-        
+
         let timer = monitor.start_inference("timer_model");
         thread::sleep(Duration::from_millis(10));
         timer.complete(100, 50, true);
@@ -265,7 +286,7 @@ mod tests {
     #[test]
     fn test_multiple_inferences() {
         let monitor = PerformanceMonitor::new(true);
-        
+
         for i in 0..5 {
             let metrics = InferenceMetrics {
                 model_name: "multi_model".to_string(),
@@ -288,7 +309,7 @@ mod tests {
     #[test]
     fn test_model_stats_calculation() {
         let monitor = PerformanceMonitor::new(true);
-        
+
         monitor.record_inference(InferenceMetrics {
             model_name: "calc_model".to_string(),
             inference_time: Duration::from_millis(5),
@@ -318,7 +339,7 @@ mod tests {
     #[test]
     fn test_reset_stats() {
         let monitor = PerformanceMonitor::new(true);
-        
+
         monitor.record_inference(InferenceMetrics {
             model_name: "reset_model".to_string(),
             inference_time: Duration::from_millis(10),
@@ -336,7 +357,7 @@ mod tests {
     #[test]
     fn test_disabled_monitor() {
         let monitor = PerformanceMonitor::new(false);
-        
+
         monitor.record_inference(InferenceMetrics {
             model_name: "disabled_model".to_string(),
             inference_time: Duration::from_millis(10),
@@ -352,7 +373,7 @@ mod tests {
     #[test]
     fn test_generate_report() {
         let monitor = PerformanceMonitor::new(true);
-        
+
         monitor.record_inference(InferenceMetrics {
             model_name: "report_model".to_string(),
             inference_time: Duration::from_millis(10),

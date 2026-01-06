@@ -1,0 +1,144 @@
+# Holistic Website Learning Configuration
+
+# Model architecture
+model:
+  vocab_size: 20000  # Larger vocab for diverse websites
+  d_model: 512       # Larger model for complex understanding
+  num_heads: 16
+  num_layers: 8
+  d_ff: 2048
+  dropout: 0.1
+  max_len: 2048
+  
+  # Component-specific settings
+  html_layers: 4
+  css_layers: 3
+  js_layers: 6
+  
+  # Website-level settings
+  num_categories: 10
+  num_frameworks: 50
+  num_build_tools: 20
+  num_companies: 30
+
+# Training hyperparameters
+training:
+  epochs: 50       # Longer training for complex task
+  batch_size: 8    # Smaller due to memory requirements
+  log_every_n_steps: 10
+  
+  # Multi-task loss weights
+  task_weights:
+    category: 1.0           # Website intent classification
+    framework: 0.8          # Framework detection
+    build_tool: 0.5         # Build tool detection
+    company_style: 0.5      # Company style recognition
+    dependency: 0.7         # Dependency prediction
+    loading_order: 0.6      # Loading order prediction
+    adaptation: 0.4         # Device adaptation
+    
+# Optimizer configuration
+optimizer:
+  type: adamw
+  lr: 0.0002      # Lower for larger model
+  weight_decay: 0.01
+  betas: [0.9, 0.999]
+  eps: 1e-8
+
+# Learning rate scheduler
+scheduler:
+  type: cosine
+  min_lr: 1e-6
+  warmup_steps: 2000  # More warmup for complex task
+
+# Data configuration
+data:
+  data_dir: data/websites
+  train_file: websites_train.jsonl
+  val_file: websites_val.jsonl
+  
+  # Data collection settings
+  crawl_sites: 10000        # Number of sites to crawl
+  sites_per_category: 1000  # Balanced dataset
+  
+  # Preprocessing
+  max_html_len: 2048
+  max_css_len: 1024
+  max_js_len: 2048
+  
+  # Categories to collect
+  categories:
+    - ecommerce         # Amazon, eBay, Shopify stores
+    - news              # CNN, BBC, NYT
+    - education         # Coursera, Khan Academy, universities
+    - entertainment     # Netflix, YouTube, Twitch
+    - social            # Twitter, Facebook, LinkedIn
+    - business          # Corporate sites, SaaS
+    - government        # .gov sites
+    - personal          # Blogs, portfolios
+    - documentation     # MDN, docs sites
+    - tools             # Web apps, utilities
+
+# Advanced training features
+advanced:
+  use_amp: true
+  gradient_accumulation_steps: 4  # Effective batch size = 32
+  max_grad_norm: 1.0
+  label_smoothing: 0.1
+  
+  # Contrastive learning for style embeddings
+  contrastive_learning:
+    enabled: true
+    temperature: 0.07
+    negative_samples: 16
+  
+  # Curriculum learning
+  curriculum:
+    enabled: true
+    stages:
+      - name: "simple_sites"
+        epochs: 10
+        description: "Static HTML sites, single page"
+      - name: "framework_sites"
+        epochs: 15
+        description: "React/Vue apps, moderate complexity"
+      - name: "complex_sites"
+        epochs: 25
+        description: "Full applications, multiple dependencies"
+
+# Data augmentation
+augmentation:
+  enabled: true
+  techniques:
+    - minify_css: 0.3       # 30% chance to minify CSS
+    - minify_js: 0.3
+    - remove_comments: 0.4
+    - reorder_css: 0.2      # Simulate different loading orders
+    - inject_fingerprints: 0.5  # Add synthetic framework patterns
+    
+# Evaluation metrics
+evaluation:
+  metrics:
+    - category_accuracy
+    - framework_f1
+    - dependency_precision
+    - loading_order_kendall_tau  # Rank correlation
+    - style_retrieval_mrr        # Mean Reciprocal Rank
+    - website_clustering_nmi     # Normalized Mutual Information
+  
+  # Website similarity evaluation
+  similarity_tasks:
+    - same_framework       # Find sites using same framework
+    - same_company         # Find sites from same company
+    - same_template        # Detect template reuse
+    - same_category        # Category clustering
+
+# Model export
+export:
+  onnx_path: "../models/local/website_learner_v1.onnx"
+  export_components: true  # Export submodels separately
+  components:
+    - intent_classifier
+    - style_analyzer
+    - dependency_learner
+    - device_analyzer

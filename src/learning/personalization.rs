@@ -1,7 +1,6 @@
 /// User personalization system for customized browsing experience
-/// 
+///
 /// Learns user preferences and adapts rendering/parsing strategies
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -76,7 +75,9 @@ impl UserPreferences {
 
     /// Get learned patterns
     pub fn get_patterns(&self, pattern_type: &str) -> Option<&[String]> {
-        self.learned_patterns.get(pattern_type).map(|v| v.as_slice())
+        self.learned_patterns
+            .get(pattern_type)
+            .map(|v| v.as_slice())
     }
 
     /// Enable/disable privacy mode
@@ -137,7 +138,9 @@ impl PersonalizationEngine {
         if !self.users.contains_key(&user_id_str) {
             self.register_user(&user_id_str);
         }
-        self.users.get_mut(&user_id_str).expect("User should exist after registration")
+        self.users
+            .get_mut(&user_id_str)
+            .expect("User should exist after registration")
     }
 
     /// Apply personalization to rendering config
@@ -147,7 +150,7 @@ impl PersonalizationEngine {
             let quality_pref = user
                 .get_preference(&PreferenceCategory::Performance, "quality_weight")
                 .unwrap_or(0.5);
-            
+
             // Adjust quality based on preference (0.0 = speed, 1.0 = quality)
             base_quality * (0.5 + quality_pref * 0.5)
         } else {
@@ -162,7 +165,7 @@ impl PersonalizationEngine {
             let cache_aggressiveness = user
                 .get_preference(&PreferenceCategory::Performance, "cache_aggressiveness")
                 .unwrap_or(0.5);
-            
+
             if cache_aggressiveness > 0.7 {
                 "aggressive".to_string()
             } else if cache_aggressiveness < 0.3 {
@@ -181,20 +184,28 @@ impl PersonalizationEngine {
 
         if let Some(user) = self.get_user(user_id) {
             // Analyze preferences and suggest optimizations
-            if let Some(quality_pref) = user.get_preference(&PreferenceCategory::Performance, "quality_weight") {
+            if let Some(quality_pref) =
+                user.get_preference(&PreferenceCategory::Performance, "quality_weight")
+            {
                 if quality_pref > 0.8 {
-                    recommendations.push("Consider enabling high-quality rendering mode".to_string());
+                    recommendations
+                        .push("Consider enabling high-quality rendering mode".to_string());
                 } else if quality_pref < 0.2 {
                     recommendations.push("Consider enabling fast rendering mode".to_string());
                 }
             }
 
             if user.learned_patterns.len() > 10 {
-                recommendations.push("Sufficient browsing data collected for advanced personalization".to_string());
+                recommendations.push(
+                    "Sufficient browsing data collected for advanced personalization".to_string(),
+                );
             }
 
             if user.privacy_mode {
-                recommendations.push("Privacy mode is enabled - some personalization features are limited".to_string());
+                recommendations.push(
+                    "Privacy mode is enabled - some personalization features are limited"
+                        .to_string(),
+                );
             }
         }
 
@@ -213,8 +224,8 @@ impl PersonalizationEngine {
 
     /// Import user preferences
     pub fn import_user(&mut self, json: &str) -> Result<(), String> {
-        let prefs = UserPreferences::from_json(json)
-            .map_err(|e| format!("Failed to parse JSON: {}", e))?;
+        let prefs =
+            UserPreferences::from_json(json).map_err(|e| format!("Failed to parse JSON: {}", e))?;
         let user_id = prefs.user_id.clone();
         self.users.insert(user_id, prefs);
         Ok(())
@@ -251,7 +262,7 @@ mod tests {
     fn test_user_preferences_learn_pattern() {
         let mut prefs = UserPreferences::new("user123");
         prefs.set_privacy_mode(false); // Disable privacy mode to allow pattern learning
-        
+
         prefs.learn_pattern("visited_sites", "example.com");
         prefs.learn_pattern("visited_sites", "test.com");
 
@@ -305,12 +316,12 @@ mod tests {
     #[test]
     fn test_personalization_engine_get_or_create() {
         let mut engine = PersonalizationEngine::new();
-        
+
         let user = engine.get_or_create_user("user123");
         user.set_preference(PreferenceCategory::Performance, "quality_weight", 0.9);
 
         assert_eq!(engine.user_count(), 1);
-        
+
         let user = engine.get_or_create_user("user123");
         assert_eq!(
             user.get_preference(&PreferenceCategory::Performance, "quality_weight"),
@@ -328,7 +339,7 @@ mod tests {
 
         let quality = engine.personalize_rendering("user123", 0.8);
         assert_eq!(quality, 0.8); // quality_weight=1.0 => 0.8 * (0.5 + 1.0*0.5) = 0.8
-        
+
         // Test with lower quality preference
         {
             let user = engine.get_user_mut("user123").unwrap();

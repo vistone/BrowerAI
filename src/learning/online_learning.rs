@@ -1,7 +1,6 @@
 /// Online learning system for continuous model improvement
-/// 
+///
 /// Enables models to learn from new data without full retraining
-
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 
@@ -118,7 +117,7 @@ impl OnlineLearner {
         // 2. Compute gradients
         // 3. Update model weights
         // 4. Validate the update
-        
+
         self.update_count += 1;
         Ok(())
     }
@@ -200,7 +199,7 @@ mod tests {
     fn test_online_learner_add_sample() {
         let mut learner = OnlineLearner::with_defaults();
         let sample = TrainingSample::new(vec![1.0], vec![2.0]);
-        
+
         learner.add_sample(sample);
         assert_eq!(learner.buffer_size(), 1);
         assert_eq!(learner.total_samples, 1);
@@ -211,11 +210,11 @@ mod tests {
         let mut config = LearningConfig::default();
         config.max_samples = 5;
         let mut learner = OnlineLearner::new(config);
-        
+
         for i in 0..10 {
             learner.add_sample(TrainingSample::new(vec![i as f32], vec![0.0]));
         }
-        
+
         assert_eq!(learner.buffer_size(), 5);
         assert_eq!(learner.total_samples, 10);
     }
@@ -225,13 +224,13 @@ mod tests {
         let mut config = LearningConfig::default();
         config.min_samples_for_update = 5;
         let mut learner = OnlineLearner::new(config);
-        
+
         assert!(!learner.should_update());
-        
+
         for i in 0..5 {
             learner.add_sample(TrainingSample::new(vec![i as f32], vec![0.0]));
         }
-        
+
         assert!(learner.should_update());
     }
 
@@ -240,10 +239,10 @@ mod tests {
         let mut config = LearningConfig::default();
         config.min_samples_for_update = 2;
         let mut learner = OnlineLearner::new(config);
-        
+
         learner.add_sample(TrainingSample::new(vec![1.0], vec![2.0]));
         learner.add_sample(TrainingSample::new(vec![3.0], vec![4.0]));
-        
+
         let result = learner.trigger_update();
         assert!(result.is_ok());
         assert_eq!(learner.update_count, 1);
@@ -253,7 +252,7 @@ mod tests {
     fn test_online_learner_stats() {
         let mut learner = OnlineLearner::with_defaults();
         learner.add_sample(TrainingSample::new(vec![1.0], vec![2.0]));
-        
+
         let stats = learner.get_stats();
         assert_eq!(stats.total_samples, 1);
         assert_eq!(stats.buffered_samples, 1);
@@ -263,10 +262,10 @@ mod tests {
     #[test]
     fn test_online_learner_learning_rate() {
         let mut learner = OnlineLearner::with_defaults();
-        
+
         learner.set_learning_rate(0.01);
         assert_eq!(learner.get_learning_rate(), 0.01);
-        
+
         // Test negative clamping
         learner.set_learning_rate(-0.5);
         assert_eq!(learner.get_learning_rate(), 0.0);
@@ -276,7 +275,7 @@ mod tests {
     fn test_online_learner_clear_buffer() {
         let mut learner = OnlineLearner::with_defaults();
         learner.add_sample(TrainingSample::new(vec![1.0], vec![2.0]));
-        
+
         assert_eq!(learner.buffer_size(), 1);
         learner.clear_buffer();
         assert_eq!(learner.buffer_size(), 0);

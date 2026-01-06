@@ -1,0 +1,16 @@
+# Quick Training URLs - Diverse categories
+https://example.com,documentation
+https://www.iana.org,government
+https://www.w3.org,documentation
+https://html.spec.whatwg.org,documentation
+https://developer.mozilla.org,documentation
+https://nodejs.org,documentation
+https://www.python.org,documentation
+https://reactjs.org,documentation
+https://vuejs.org,documentation
+https://angular.io,documentation
+https://github.com,tools
+https://stackoverflow.com,tools
+https://wikipedia.org,education
+https://www.khanacademy.org,education
+https://www.coursera.org,education

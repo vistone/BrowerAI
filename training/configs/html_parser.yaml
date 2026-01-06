@@ -1,0 +1,51 @@
+# HTML Parser Configuration
+
+# Model architecture
+model:
+  vocab_size: 10000  # Will be set from tokenizer
+  d_model: 256
+  num_heads: 8
+  num_layers: 6
+  d_ff: 1024
+  dropout: 0.1
+  max_len: 512
+
+# Training hyperparameters
+training:
+  epochs: 20
+  batch_size: 32
+  log_every_n_steps: 10
+
+# Optimizer configuration (AdamW - modern standard)
+optimizer:
+  type: adamw
+  lr: 0.0005
+  weight_decay: 0.01
+  betas: [0.9, 0.999]
+  eps: 1e-8
+
+# Learning rate scheduler
+scheduler:
+  type: cosine
+  min_lr: 1e-6
+  warmup_steps: 500
+
+# Data configuration
+data:
+  data_dir: data/html
+  train_file: train.json
+  val_file: val.json
+  max_samples: null  # null = use all data
+
+# Advanced training features
+advanced:
+  use_amp: true  # Automatic mixed precision
+  gradient_accumulation_steps: 1
+  max_grad_norm: 1.0
+  label_smoothing: 0.1
+  
+# Multi-task learning weights
+task_weights:
+  validity: 1.0
+  complexity: 0.5
+  semantics: 0.3

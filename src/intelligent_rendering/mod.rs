@@ -1,15 +1,15 @@
 //! 智能渲染系统 - 功能保持的体验变革
-//! 
+//!
 //! 这个模块实现了 BrowerAI 的核心理念：
 //! - 学习：理解网站结构和功能
 //! - 推理：分析优化可能性
 //! - 生成：创造多样化体验
 //! - 保持：确保功能完整性
 
-pub mod site_understanding;
-pub mod reasoning;
 pub mod generation;
+pub mod reasoning;
 pub mod renderer;
+pub mod site_understanding;
 pub mod validation;
 
 use anyhow::Result;
@@ -79,13 +79,13 @@ pub struct SpacingSystem {
 /// 布局方案
 #[derive(Debug, Clone, PartialEq)]
 pub enum LayoutScheme {
-    Traditional,      // 传统布局
-    Minimal,          // 极简布局
-    CardBased,        // 卡片布局
-    Magazine,         // 杂志布局
-    Dashboard,        // 仪表板布局
-    SingleColumn,     // 单列布局
-    GridBased,        // 网格布局
+    Traditional,  // 传统布局
+    Minimal,      // 极简布局
+    CardBased,    // 卡片布局
+    Magazine,     // 杂志布局
+    Dashboard,    // 仪表板布局
+    SingleColumn, // 单列布局
+    GridBased,    // 网格布局
 }
 
 /// 功能映射
@@ -99,19 +99,19 @@ pub struct FunctionMapping {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_page_type_classification() {
         // 测试页面类型分类
         assert_eq!(PageType::Homepage, PageType::Homepage);
     }
-    
+
     #[test]
     fn test_function_type_categorization() {
         // 测试功能类型分类
         assert_eq!(FunctionType::Search, FunctionType::Search);
     }
-    
+
     #[test]
     fn test_layout_scheme_selection() {
         // 测试布局方案选择

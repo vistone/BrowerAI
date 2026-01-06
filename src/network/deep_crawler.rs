@@ -1,9 +1,9 @@
 //! Deep web crawler for multi-level site analysis
-//! 
+//!
 //! Handles hierarchical navigation, link following, and comprehensive site learning.
 
 use anyhow::{Context, Result};
-use std::collections::{HashSet, VecDeque, HashMap};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::time::{Duration, Instant};
 use url::Url;
 
@@ -97,14 +97,13 @@ impl DeepCrawler {
     pub fn crawl(&mut self, seed_url: &str) -> Result<CrawlResult> {
         log::info!("Starting deep crawl from: {}", seed_url);
         self.start_time = Instant::now();
-        
+
         // Validate and normalize seed URL
-        let base_url = Url::parse(seed_url)
-            .context("Invalid seed URL")?;
-        
+        let base_url = Url::parse(seed_url).context("Invalid seed URL")?;
+
         // Add seed to queue
         self.queue.push_back((seed_url.to_string(), 0, None));
-        
+
         // Main crawl loop
         while let Some((url, depth, parent)) = self.queue.pop_front() {
             // Check limits
@@ -112,33 +111,34 @@ impl DeepCrawler {
                 log::info!("Reached max pages limit: {}", self.config.max_pages);
                 break;
             }
-            
+
             if depth > self.config.max_depth {
                 continue;
             }
-            
+
             // Skip if already visited
             if self.visited.contains(&url) {
                 continue;
             }
-            
+
             // Mark as visited
             self.visited.insert(url.clone());
-            
+
             // Crawl the page
             match self.crawl_page(&url, depth, parent.clone(), &base_url) {
                 Ok(page) => {
                     // Extract and queue links
                     let links = page.links.clone();
                     self.pages.push(page);
-                    
+
                     // Add children to site map
                     if let Some(parent_url) = &parent {
-                        self.site_map.entry(parent_url.clone())
+                        self.site_map
+                            .entry(parent_url.clone())
                             .or_insert_with(Vec::new)
                             .push(url.clone());
                     }
-                    
+
                     // Queue discovered links
                     for link in links {
                         if !self.visited.contains(&link) {
@@ -152,13 +152,13 @@ impl DeepCrawler {
                     self.errors.push(error_msg);
                 }
             }
-            
+
             // Politeness delay
             if !self.queue.is_empty() {
                 std::thread::sleep(self.config.request_delay);
             }
         }
-        
+
         let total_time = self.start_time.elapsed();
         log::info!(
             "Crawl complete: {} pages crawled, {} errors, {:?}",
@@ -166,7 +166,7 @@ impl DeepCrawler {
             self.errors.len(),
             total_time
         );
-        
+
         Ok(CrawlResult {
             pages: self.pages.clone(),
             site_map: self.site_map.clone(),
@@ -187,25 +187,23 @@ impl DeepCrawler {
     ) -> Result<CrawledPage> {
         log::debug!("Crawling [depth={}]: {}", depth, url);
         let page_start = Instant::now();
-        
+
         // Make HTTP request
         let client = reqwest::blocking::Client::builder()
             .timeout(self.config.request_timeout)
             .user_agent("BrowerAI/0.1.0 DeepCrawler")
             .build()?;
-        
-        let response = client.get(url).send()
-            .context("HTTP request failed")?;
-        
+
+        let response = client.get(url).send().context("HTTP request failed")?;
+
         let status_code = response.status().as_u16();
-        let html_content = response.text()
-            .context("Failed to read response body")?;
-        
+        let html_content = response.text().context("Failed to read response body")?;
+
         // Extract links from HTML
         let links = self.extract_links(&html_content, url, base_url)?;
-        
+
         let crawl_time = page_start.elapsed();
-        
+
         Ok(CrawledPage {
             url: url.to_string(),
             depth,
@@ -218,32 +216,27 @@ impl DeepCrawler {
     }
 
     /// Extract and normalize links from HTML
-    fn extract_links(
-        &self,
-        html: &str,
-        current_url: &str,
-        base_url: &Url,
-    ) -> Result<Vec<String>> {
+    fn extract_links(&self, html: &str, current_url: &str, base_url: &Url) -> Result<Vec<String>> {
         let mut links = Vec::new();
         let current_parsed = Url::parse(current_url)?;
-        
+
         // Simple regex-based link extraction
         // In production, use a proper HTML parser like scraper or html5ever
         let link_regex = regex::Regex::new(r#"(?i)href=["']([^"']+)["']"#)?;
-        
+
         for cap in link_regex.captures_iter(html) {
             if let Some(href) = cap.get(1) {
                 let href_str = href.as_str();
-                
+
                 // Skip fragments and javascript links
                 if href_str.starts_with('#') || href_str.starts_with("javascript:") {
                     continue;
                 }
-                
+
                 // Resolve relative URLs
                 if let Ok(absolute_url) = current_parsed.join(href_str) {
                     let url_str = absolute_url.to_string();
-                    
+
                     // Check if we should follow this link
                     if self.should_follow(&absolute_url, base_url) {
                         links.push(url_str);
@@ -251,11 +244,11 @@ impl DeepCrawler {
                 }
             }
         }
-        
+
         // Deduplicate
         links.sort();
         links.dedup();
-        
+
         Ok(links)
     }
 
@@ -265,12 +258,12 @@ impl DeepCrawler {
         if url.scheme() != "http" && url.scheme() != "https" {
             return false;
         }
-        
+
         // Check external links
         if !self.config.follow_external && url.host() != base_url.host() {
             return false;
         }
-        
+
         // Skip common non-content URLs
         let path = url.path().to_lowercase();
         let skip_extensions = [".pdf", ".jpg", ".jpeg", ".png", ".gif", ".zip", ".exe"];
@@ -279,7 +272,7 @@ impl DeepCrawler {
                 return false;
             }
         }
-        
+
         true
     }
 }
@@ -287,43 +280,42 @@ impl DeepCrawler {
 /// Analyze crawl results to understand site structure
 pub fn analyze_site_structure(result: &CrawlResult) -> SiteStructureAnalysis {
     let mut analysis = SiteStructureAnalysis::default();
-    
+
     // Calculate depth distribution
     for page in &result.pages {
         *analysis.depth_distribution.entry(page.depth).or_insert(0) += 1;
     }
-    
+
     // Find entry points (pages at depth 0 or 1)
-    analysis.entry_points = result.pages.iter()
+    analysis.entry_points = result
+        .pages
+        .iter()
         .filter(|p| p.depth <= 1)
         .map(|p| p.url.clone())
         .collect();
-    
+
     // Calculate average links per page
-    let total_links: usize = result.pages.iter()
-        .map(|p| p.links.len())
-        .sum();
+    let total_links: usize = result.pages.iter().map(|p| p.links.len()).sum();
     analysis.avg_links_per_page = if !result.pages.is_empty() {
         total_links as f64 / result.pages.len() as f64
     } else {
         0.0
     };
-    
+
     // Identify hub pages (pages with many outgoing links)
-    let mut hub_candidates: Vec<_> = result.pages.iter()
+    let mut hub_candidates: Vec<_> = result
+        .pages
+        .iter()
         .filter(|p| p.links.len() > 10)
         .map(|p| (p.url.clone(), p.links.len()))
         .collect();
     hub_candidates.sort_by(|a, b| b.1.cmp(&a.1));
     analysis.hub_pages = hub_candidates.into_iter().take(5).collect();
-    
+
     // Site map summary
     analysis.total_pages = result.pages.len();
-    analysis.max_depth_reached = result.pages.iter()
-        .map(|p| p.depth)
-        .max()
-        .unwrap_or(0);
-    
+    analysis.max_depth_reached = result.pages.iter().map(|p| p.depth).max().unwrap_or(0);
+
     analysis
 }
 
@@ -356,11 +348,11 @@ mod tests {
             ..Default::default()
         };
         let crawler = DeepCrawler::new(config);
-        
+
         let base = Url::parse("https://example.com").unwrap();
         let same_domain = Url::parse("https://example.com/page").unwrap();
         let external = Url::parse("https://other.com/page").unwrap();
-        
+
         assert!(crawler.should_follow(&same_domain, &base));
         assert!(!crawler.should_follow(&external, &base));
     }
@@ -374,12 +366,16 @@ mod tests {
             <a href="#fragment">Fragment</a>
             <a href="javascript:void(0)">JS Link</a>
         "##;
-        
+
         let base = Url::parse("https://example.com").unwrap();
-        let links = crawler.extract_links(html, "https://example.com", &base).unwrap();
-        
+        let links = crawler
+            .extract_links(html, "https://example.com", &base)
+            .unwrap();
+
         // Should extract only valid links
         assert!(links.len() >= 1);
-        assert!(links.iter().any(|l| l.contains("/page1") || l.contains("/page2")));
+        assert!(links
+            .iter()
+            .any(|l| l.contains("/page1") || l.contains("/page2")));
     }
 }

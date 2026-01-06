@@ -1,7 +1,6 @@
 /// Advanced AI performance monitoring and profiling
-/// 
+///
 /// Provides detailed performance analysis for AI operations
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Instant;
@@ -47,7 +46,7 @@ impl PerformanceProfile {
         self.avg_time_ms = self.total_time_ms / self.execution_count as f64;
         self.min_time_ms = self.min_time_ms.min(duration_ms);
         self.max_time_ms = self.max_time_ms.max(duration_ms);
-        
+
         // Update moving averages for memory and CPU
         let alpha = 0.3; // Smoothing factor
         self.memory_mb = alpha * memory_mb + (1.0 - alpha) * self.memory_mb;
@@ -140,7 +139,7 @@ impl AdvancedPerformanceMonitor {
         self.global_metrics.total_operations += 1;
         self.global_metrics.total_time_ms += duration_ms;
         self.global_metrics.peak_memory_mb = self.global_metrics.peak_memory_mb.max(memory_mb);
-        
+
         let n = self.global_metrics.total_operations as f64;
         self.global_metrics.avg_cpu_usage =
             (self.global_metrics.avg_cpu_usage * (n - 1.0) + cpu_usage) / n;
@@ -249,7 +248,7 @@ mod tests {
     fn test_performance_profile_record() {
         let mut profile = PerformanceProfile::new("test_op".to_string());
         profile.record_execution(100.0, 50.0, 75.0);
-        
+
         assert_eq!(profile.execution_count, 1);
         assert_eq!(profile.avg_time_ms, 100.0);
         assert_eq!(profile.min_time_ms, 100.0);
@@ -261,7 +260,7 @@ mod tests {
         let mut profile = PerformanceProfile::new("test_op".to_string());
         profile.record_execution(100.0, 50.0, 75.0);
         profile.record_execution(200.0, 60.0, 80.0);
-        
+
         assert_eq!(profile.execution_count, 2);
         assert_eq!(profile.avg_time_ms, 150.0);
         assert_eq!(profile.min_time_ms, 100.0);
@@ -279,7 +278,7 @@ mod tests {
     fn test_advanced_monitor_record_operation() {
         let mut monitor = AdvancedPerformanceMonitor::new();
         monitor.record_operation("parse_html", 150.0, 45.0, 70.0);
-        
+
         let profile = monitor.get_profile("parse_html");
         assert!(profile.is_some());
         assert_eq!(profile.unwrap().execution_count, 1);
@@ -290,7 +289,7 @@ mod tests {
         let mut monitor = AdvancedPerformanceMonitor::new();
         monitor.record_operation("op1", 100.0, 50.0, 60.0);
         monitor.record_operation("op2", 200.0, 70.0, 80.0);
-        
+
         let metrics = monitor.get_global_metrics();
         assert_eq!(metrics.total_operations, 2);
         assert_eq!(metrics.total_time_ms, 300.0);
@@ -302,7 +301,7 @@ mod tests {
         let mut monitor = AdvancedPerformanceMonitor::new();
         monitor.record_operation("fast_op", 50.0, 30.0, 40.0);
         monitor.record_operation("slow_op", 150.0, 60.0, 80.0);
-        
+
         let bottlenecks = monitor.get_bottlenecks(100.0);
         assert_eq!(bottlenecks.len(), 1);
         assert_eq!(bottlenecks[0].operation, "slow_op");
@@ -312,7 +311,7 @@ mod tests {
     fn test_advanced_monitor_generate_report() {
         let mut monitor = AdvancedPerformanceMonitor::new();
         monitor.record_operation("test_op", 100.0, 50.0, 70.0);
-        
+
         let report = monitor.generate_report();
         assert!(report.contains("Advanced Performance Report"));
         assert!(report.contains("test_op"));
@@ -322,7 +321,7 @@ mod tests {
     fn test_advanced_monitor_reset() {
         let mut monitor = AdvancedPerformanceMonitor::new();
         monitor.record_operation("test_op", 100.0, 50.0, 70.0);
-        
+
         monitor.reset();
         assert_eq!(monitor.global_metrics.total_operations, 0);
         assert!(monitor.get_profile("test_op").is_none());
@@ -332,7 +331,7 @@ mod tests {
     fn test_operation_timer() {
         let monitor = AdvancedPerformanceMonitor::new();
         let timer = monitor.start_operation("test");
-        
+
         assert_eq!(timer.operation(), "test");
         assert!(timer.is_enabled());
         assert!(timer.elapsed_ms() >= 0.0);
@@ -341,11 +340,11 @@ mod tests {
     #[test]
     fn test_enable_disable_profiling() {
         let mut monitor = AdvancedPerformanceMonitor::new();
-        
+
         monitor.enable_profiling(false);
         monitor.record_operation("test_op", 100.0, 50.0, 70.0);
         assert!(monitor.get_profile("test_op").is_none());
-        
+
         monitor.enable_profiling(true);
         monitor.record_operation("test_op2", 100.0, 50.0, 70.0);
         assert!(monitor.get_profile("test_op2").is_some());

@@ -1,0 +1,4 @@
+# Validation URLs
+https://www.rust-lang.org,documentation
+https://svelte.dev,documentation
+https://www.npmjs.com,tools

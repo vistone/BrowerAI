@@ -3,9 +3,7 @@
 
 #[cfg(test)]
 mod tests {
-    use browerai::{
-        AiConfig, FallbackReason, FallbackTracker, HtmlParser, CssParser, JsParser,
-    };
+    use browerai::{AiConfig, CssParser, FallbackReason, FallbackTracker, HtmlParser, JsParser};
 
     #[test]
     fn test_html_parser_no_ai_runtime() {
@@ -36,17 +34,17 @@ mod tests {
     fn test_fallback_tracker_basic_flow() {
         // Test fallback tracker records attempts, successes, and fallbacks
         let tracker = FallbackTracker::new(10);
-        
+
         // Record some attempts
         tracker.record_attempt();
         tracker.record_success(10);
-        
+
         tracker.record_attempt();
         tracker.record_fallback(FallbackReason::ModelNotFound("test.onnx".to_string()));
-        
+
         tracker.record_attempt();
         tracker.record_success(15);
-        
+
         let stats = tracker.get_stats();
         assert_eq!(stats.total_attempts, 3);
         assert_eq!(stats.successful, 2);
@@ -71,7 +69,7 @@ mod tests {
             FallbackReason::ModelUnhealthy("unhealthy".to_string()),
             FallbackReason::NoModelAvailable,
         ];
-        
+
         for reason in reasons {
             let display = format!("{}", reason);
             assert!(!display.is_empty());
@@ -87,7 +85,7 @@ mod tests {
             enable_logging: false,
             max_inference_time_ms: 50,
         };
-        
+
         assert!(!config.enable_ai);
         assert!(!config.enable_fallback);
         assert!(!config.enable_logging);
@@ -101,14 +99,14 @@ mod tests {
         tracker.record_attempt();
         tracker.record_success(10);
         tracker.record_fallback(FallbackReason::AiDisabled);
-        
+
         tracker.clear();
-        
+
         let stats = tracker.get_stats();
         assert_eq!(stats.total_attempts, 0);
         assert_eq!(stats.successful, 0);
         assert_eq!(stats.fallback_count, 0);
-        
+
         let fallbacks = tracker.get_recent_fallbacks();
         assert_eq!(fallbacks.len(), 0);
     }
@@ -117,15 +115,15 @@ mod tests {
     fn test_fallback_tracker_recent_limit() {
         // Test that tracker limits recent fallback history
         let tracker = FallbackTracker::new(5);
-        
+
         // Record more fallbacks than the limit
         for i in 0..10 {
             tracker.record_fallback(FallbackReason::ModelNotFound(format!("model{}", i)));
         }
-        
+
         let fallbacks = tracker.get_recent_fallbacks();
         assert_eq!(fallbacks.len(), 5);
-        
+
         // Should keep the last 5
         let last_reason = &fallbacks[4].1;
         match last_reason {

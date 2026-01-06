@@ -1,0 +1,103 @@
+# Quick Training Configuration - For Fast Demo
+
+# Model architecture (smaller for quick training)
+model:
+  vocab_size: 5000     # Reduced
+  d_model: 128         # Reduced from 512
+  num_heads: 4         # Reduced from 16
+  num_layers: 2        # Reduced from 8
+  d_ff: 512            # Reduced from 2048
+  dropout: 0.1
+  max_len: 512
+  
+  # Component-specific settings
+  html_layers: 2       # Reduced from 4
+  css_layers: 2        # Reduced from 3
+  js_layers: 3         # Reduced from 6
+  
+  # Website-level settings
+  num_categories: 10
+  num_frameworks: 50
+  num_build_tools: 20
+  num_companies: 30
+
+# Training hyperparameters (quick training)
+training:
+  epochs: 5            # Just 5 epochs for demo
+  batch_size: 2        # Small batch
+  log_every_n_steps: 1
+  
+  # Multi-task loss weights
+  task_weights:
+    category: 1.0
+    framework: 0.8
+    build_tool: 0.5
+    company_style: 0.5
+    dependency: 0.7
+    loading_order: 0.6
+    adaptation: 0.4
+    
+# Optimizer configuration
+optimizer:
+  type: adamw
+  lr: 0.001            # Higher for faster convergence
+  weight_decay: 0.01
+  betas: [0.9, 0.999]
+  eps: 0.00000001      # 1e-8 as float
+
+# Learning rate scheduler
+scheduler:
+  type: cosine
+  min_lr: 0.00001      # 1e-5 as float
+  warmup_steps: 10     # Short warmup
+
+# Data configuration
+data:
+  data_dir: data/websites
+  train_file: quick_train.jsonl
+  val_file: quick_val.jsonl
+  
+  max_html_len: 512    # Reduced
+  max_css_len: 256     # Reduced
+  max_js_len: 512      # Reduced
+  
+  # Categories
+  categories:
+    - ecommerce
+    - news
+    - education
+    - entertainment
+    - social
+    - business
+    - government
+    - personal
+    - documentation
+    - tools
+
+# Advanced training features
+advanced:
+  use_amp: false       # Disable for CPU
+  gradient_accumulation_steps: 1
+  max_grad_norm: 1.0
+  label_smoothing: 0.0
+  
+  contrastive_learning:
+    enabled: false     # Disable for quick training
+    
+  curriculum:
+    enabled: false     # Disable for quick training
+
+# Data augmentation
+augmentation:
+  enabled: false       # Disable for quick training
+    
+# Evaluation metrics
+evaluation:
+  metrics:
+    - category_accuracy
+    - framework_f1
+    
+# Model export
+export:
+  onnx_path: "../models/local/website_learner_quick.onnx"
+  export_components: false

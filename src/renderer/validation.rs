@@ -1,8 +1,7 @@
+use crate::renderer::layout::{BoxType, Dimensions, LayoutBox, Rect};
 /// Layout validation and baseline assertions
 /// Implements M4 milestone for AI-Centric Execution Refresh
-
-use anyhow::{Result, Context};
-use crate::renderer::layout::{Dimensions, LayoutBox, Rect, BoxType};
+use anyhow::{Context, Result};
 
 /// Validates that a layout conforms to CSS box model rules
 #[derive(Debug, Clone)]
@@ -31,7 +30,11 @@ impl LayoutValidator {
     }
 
     /// Validate a single layout box recursively
-    fn validate_box_recursive(&self, layout_box: &LayoutBox, report: &mut ValidationReport) -> Result<()> {
+    fn validate_box_recursive(
+        &self,
+        layout_box: &LayoutBox,
+        report: &mut ValidationReport,
+    ) -> Result<()> {
         // Validate dimensions
         self.validate_dimensions(&layout_box.dimensions, report)?;
 
@@ -65,7 +68,9 @@ impl LayoutValidator {
 
         // Padding/border/margin cannot be negative
         if self.has_negative_edges(&dims.padding) {
-            report.warnings.push("Negative padding detected".to_string());
+            report
+                .warnings
+                .push("Negative padding detected".to_string());
         }
         if self.has_negative_edges(&dims.border) {
             report.warnings.push("Negative border detected".to_string());
@@ -73,13 +78,15 @@ impl LayoutValidator {
         if self.has_negative_edges(&dims.margin) {
             // Negative margins are technically allowed in CSS
             // but we warn about them
-            report.warnings.push("Negative margin detected (allowed but unusual)".to_string());
+            report
+                .warnings
+                .push("Negative margin detected (allowed but unusual)".to_string());
         }
 
         // Check box model arithmetic
         let padding_box = dims.padding_box();
         let border_box = dims.border_box();
-        
+
         // Padding box should contain content box
         if !self.contains_or_equal(&padding_box, &dims.content) {
             report.errors.push(ValidationError {
@@ -113,7 +120,12 @@ impl LayoutValidator {
     }
 
     /// Validate box type consistency
-    fn validate_box_type(&self, box_type: &BoxType, element_type: &str, report: &mut ValidationReport) -> Result<()> {
+    fn validate_box_type(
+        &self,
+        box_type: &BoxType,
+        element_type: &str,
+        report: &mut ValidationReport,
+    ) -> Result<()> {
         // Check common inconsistencies
         match box_type {
             BoxType::Inline => {

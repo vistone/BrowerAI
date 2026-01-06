@@ -3,7 +3,7 @@ use reqwest::blocking::Client;
 use std::time::Duration;
 
 use crate::ai::AiRuntime;
-use crate::parser::{HtmlParser, CssParser, JsParser};
+use crate::parser::{CssParser, HtmlParser, JsParser};
 use crate::renderer::RenderEngine;
 
 /// Real website visiting and learning system
@@ -26,17 +26,18 @@ impl WebsiteLearner {
     /// Visit and learn from a website
     pub fn visit_and_learn(&self, url: &str) -> Result<VisitReport> {
         log::info!("🌐 Starting website visit: {}", url);
-        
+
         let start = std::time::Instant::now();
-        
+
         // 1. Fetch HTML
         log::info!("  📥 Fetching HTML...");
         let response = self.client.get(url).send()?;
         let html = response.text()?;
         let fetch_duration = start.elapsed();
-        
-        log::info!("  ✅ Fetch succeeded, size: {} bytes, duration: {:.2}s", 
-            html.len(), 
+
+        log::info!(
+            "  ✅ Fetch succeeded, size: {} bytes, duration: {:.2}s",
+            html.len(),
             fetch_duration.as_secs_f64()
         );
 
@@ -44,12 +45,15 @@ impl WebsiteLearner {
         log::info!("  🔍 Parsing HTML...");
         let parser = HtmlParser::with_ai_runtime(self.runtime.clone());
         let parse_start = std::time::Instant::now();
-        
+
         let dom = match parser.parse(&html) {
             Ok(dom) => {
                 let parse_duration = parse_start.elapsed();
-                log::info!("  ✅ HTML parsing succeeded, duration: {:.2}ms", parse_duration.as_secs_f64() * 1000.0);
-                
+                log::info!(
+                    "  ✅ HTML parsing succeeded, duration: {:.2}ms",
+                    parse_duration.as_secs_f64() * 1000.0
+                );
+
                 // Record to feedback pipeline (save actual HTML content)
                 self.runtime.feedback().record_html_parsing(
                     true,
@@ -59,7 +63,7 @@ impl WebsiteLearner {
                     Some(html.to_string()),
                     html.len(),
                 );
-                
+
                 Some(dom)
             }
             Err(e) => {
@@ -137,7 +141,7 @@ impl WebsiteLearner {
     /// Extract and parse CSS
     fn extract_and_parse_css(&self, html: &str, parser: &CssParser) -> usize {
         let mut count = 0;
-        
+
         // Simple CSS extraction (find <style> tags)
         for style_block in html.split("<style>").skip(1) {
             if let Some(css) = style_block.split("</style>").next() {
@@ -164,14 +168,14 @@ impl WebsiteLearner {
                 }
             }
         }
-        
+
         count
     }
 
     /// Extract and parse JavaScript
     fn extract_and_parse_js(&self, html: &str, parser: &JsParser) -> usize {
         let mut count = 0;
-        
+
         // Simple JS extraction (find <script> tags)
         for script_block in html.split("<script>").skip(1) {
             if let Some(js) = script_block.split("</script>").next() {
@@ -202,28 +206,28 @@ impl WebsiteLearner {
                 }
             }
         }
-        
+
         count
     }
 
     /// Batch visit multiple websites
     pub fn batch_visit(&self, urls: &[&str]) -> Vec<VisitReport> {
         let mut reports = Vec::new();
-        
+
         for (i, url) in urls.iter().enumerate() {
             log::info!("\n📍 [{}/{}] Visiting: {}", i + 1, urls.len(), url);
-            
+
             match self.visit_and_learn(url) {
                 Ok(report) => reports.push(report),
                 Err(e) => log::error!("❌ Visit failed: {}", e),
             }
-            
+
             // Avoid too frequent requests
             if i < urls.len() - 1 {
                 std::thread::sleep(Duration::from_secs(1));
             }
         }
-        
+
         reports
     }
 

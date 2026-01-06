@@ -1,7 +1,6 @@
 /// Plugin system for extensibility
-/// 
+///
 /// Allows third-party extensions to enhance browser functionality
-
 pub mod loader;
 pub mod registry;
 
@@ -81,7 +80,10 @@ pub enum PluginHook {
     /// Network request
     NetworkRequest { url: String },
     /// Custom hook
-    Custom { name: String, data: HashMap<String, String> },
+    Custom {
+        name: String,
+        data: HashMap<String, String>,
+    },
 }
 
 /// Hook result
@@ -232,7 +234,7 @@ mod tests {
         let cancel_result = HookResult::Cancel;
 
         match continue_result {
-            HookResult::Continue => {},
+            HookResult::Continue => {}
             _ => panic!("Expected Continue variant"),
         }
 
@@ -242,7 +244,7 @@ mod tests {
         }
 
         match cancel_result {
-            HookResult::Cancel => {},
+            HookResult::Cancel => {}
             _ => panic!("Expected Cancel variant"),
         }
     }

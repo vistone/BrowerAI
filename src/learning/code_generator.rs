@@ -1,7 +1,6 @@
 /// AI-powered code generation module
-/// 
+///
 /// Provides capabilities to generate simple HTML/CSS/JS based on learned patterns
-
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -123,7 +122,7 @@ impl CodeGenerator {
     fn generate_html(&self, request: &GenerationRequest) -> Result<String> {
         // Extract keywords from description
         let desc_lower = request.description.to_lowercase();
-        
+
         // Select appropriate pattern
         let pattern = if desc_lower.contains("form") {
             self.html_patterns.iter().find(|p| p.name == "form")
@@ -137,7 +136,7 @@ impl CodeGenerator {
 
         if let Some(pattern) = pattern {
             let mut code = pattern.template.clone();
-            
+
             // Defaults for HTML
             let defaults: HashMap<String, String> = [
                 ("title".to_string(), "Generated Page".to_string()),
@@ -154,14 +153,16 @@ impl CodeGenerator {
                 ("item1".to_string(), "Item 1".to_string()),
                 ("item2".to_string(), "Item 2".to_string()),
                 ("item3".to_string(), "Item 3".to_string()),
-            ].into_iter().collect();
-            
+            ]
+            .into_iter()
+            .collect();
+
             // Apply constraints
             for (key, value) in &request.constraints {
                 let placeholder = format!("{{{{{}}}}}", key);
                 code = code.replace(&placeholder, value);
             }
-            
+
             // Apply defaults
             for (key, value) in &defaults {
                 let placeholder = format!("{{{{{}}}}}", key);
@@ -169,7 +170,7 @@ impl CodeGenerator {
                     code = code.replace(&placeholder, value);
                 }
             }
-            
+
             Ok(code)
         } else {
             // Fallback to basic HTML structure
@@ -184,7 +185,7 @@ impl CodeGenerator {
     /// Generate CSS from description
     fn generate_css(&self, request: &GenerationRequest) -> Result<String> {
         let desc_lower = request.description.to_lowercase();
-        
+
         let pattern = if desc_lower.contains("button") {
             self.css_patterns.iter().find(|p| p.name == "button")
         } else if desc_lower.contains("card") {
@@ -197,7 +198,7 @@ impl CodeGenerator {
 
         if let Some(pattern) = pattern {
             let mut code = pattern.template.clone();
-            
+
             // Defaults for CSS
             let defaults: HashMap<String, String> = [
                 ("font".to_string(), "Arial, sans-serif".to_string()),
@@ -206,18 +207,23 @@ impl CodeGenerator {
                 ("bg_color".to_string(), "#007bff".to_string()),
                 ("text_color".to_string(), "#ffffff".to_string()),
                 ("radius".to_string(), "4px".to_string()),
-                ("shadow".to_string(), "0 2px 4px rgba(0,0,0,0.1)".to_string()),
+                (
+                    "shadow".to_string(),
+                    "0 2px 4px rgba(0,0,0,0.1)".to_string(),
+                ),
                 ("margin".to_string(), "10px".to_string()),
                 ("width".to_string(), "1200px".to_string()),
                 ("gap".to_string(), "16px".to_string()),
-            ].into_iter().collect();
-            
+            ]
+            .into_iter()
+            .collect();
+
             // Replace placeholders
             for (key, value) in &request.constraints {
                 let placeholder = format!("{{{{{}}}}}", key);
                 code = code.replace(&placeholder, value);
             }
-            
+
             // Apply defaults
             for (key, value) in &defaults {
                 let placeholder = format!("{{{{{}}}}}", key);
@@ -225,7 +231,7 @@ impl CodeGenerator {
                     code = code.replace(&placeholder, value);
                 }
             }
-            
+
             Ok(code)
         } else {
             // Fallback to basic CSS
@@ -236,7 +242,7 @@ impl CodeGenerator {
     /// Generate JavaScript from description
     fn generate_js(&self, request: &GenerationRequest) -> Result<String> {
         let desc_lower = request.description.to_lowercase();
-        
+
         let pattern = if desc_lower.contains("function") {
             self.js_patterns.iter().find(|p| p.name == "function")
         } else if desc_lower.contains("event") || desc_lower.contains("click") {
@@ -249,7 +255,7 @@ impl CodeGenerator {
 
         if let Some(pattern) = pattern {
             let mut code = pattern.template.clone();
-            
+
             // Replace placeholders with constraints or defaults
             let defaults: HashMap<String, String> = [
                 ("name".to_string(), "generatedFunction".to_string()),
@@ -262,14 +268,16 @@ impl CodeGenerator {
                 ("handler_body".to_string(), "// Handle event".to_string()),
                 ("url".to_string(), "/api/data".to_string()),
                 ("process_data".to_string(), "console.log(data);".to_string()),
-            ].into_iter().collect();
-            
+            ]
+            .into_iter()
+            .collect();
+
             // First apply constraints
             for (key, value) in &request.constraints {
                 let placeholder = format!("{{{{{}}}}}", key);
                 code = code.replace(&placeholder, value);
             }
-            
+
             // Then apply defaults for remaining placeholders
             for (key, value) in &defaults {
                 let placeholder = format!("{{{{{}}}}}", key);
@@ -277,7 +285,7 @@ impl CodeGenerator {
                     code = code.replace(&placeholder, value);
                 }
             }
-            
+
             Ok(code)
         } else {
             // Fallback to basic JS

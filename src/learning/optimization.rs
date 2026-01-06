@@ -1,7 +1,6 @@
 /// Self-optimization system for autonomous improvement
-/// 
+///
 /// Automatically adjusts system parameters and selects best-performing models
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -87,7 +86,9 @@ impl PerformanceMeasurement {
             OptimizationStrategy::Memory => 1000.0 / self.memory_mb.max(1.0),
             OptimizationStrategy::Balanced => {
                 // Balanced: 40% accuracy, 40% speed, 20% memory
-                0.4 * self.accuracy + 0.4 * (100.0 / self.speed_ms.max(1.0)) + 0.2 * (100.0 / self.memory_mb.max(10.0))
+                0.4 * self.accuracy
+                    + 0.4 * (100.0 / self.speed_ms.max(1.0))
+                    + 0.2 * (100.0 / self.memory_mb.max(10.0))
             }
             OptimizationStrategy::Custom(_) => self.accuracy,
         }
@@ -166,7 +167,7 @@ impl SelfOptimizer {
             if let Some(active) = self.measurements.get(active_id) {
                 let active_score = active.score(&self.config.strategy);
                 let best_score = best.score(&self.config.strategy);
-                
+
                 if best_score > 0.0 {
                     let improvement = (best_score - active_score) / best_score;
                     return improvement >= self.config.min_improvement_threshold;
@@ -257,12 +258,12 @@ mod tests {
     fn test_performance_measurement_update() {
         let mut perf = PerformanceMeasurement::new("model_v1");
         perf.update(100.0, 0.95, 50.0);
-        
+
         assert_eq!(perf.speed_ms, 100.0);
         assert_eq!(perf.accuracy, 0.95);
         assert_eq!(perf.memory_mb, 50.0);
         assert_eq!(perf.sample_count, 1);
-        
+
         perf.update(200.0, 0.97, 60.0);
         assert_eq!(perf.sample_count, 2);
         assert_eq!(perf.speed_ms, 150.0); // Average of 100 and 200
@@ -272,7 +273,7 @@ mod tests {
     fn test_performance_measurement_score_speed() {
         let mut perf = PerformanceMeasurement::new("model_v1");
         perf.update(100.0, 0.95, 50.0);
-        
+
         let score = perf.score(&OptimizationStrategy::Speed);
         assert_eq!(score, 10.0); // 1000 / 100
     }
@@ -281,7 +282,7 @@ mod tests {
     fn test_performance_measurement_score_accuracy() {
         let mut perf = PerformanceMeasurement::new("model_v1");
         perf.update(100.0, 0.95, 50.0);
-        
+
         let score = perf.score(&OptimizationStrategy::Accuracy);
         assert_eq!(score, 0.95);
     }
@@ -297,7 +298,7 @@ mod tests {
     fn test_self_optimizer_record_performance() {
         let mut optimizer = SelfOptimizer::with_defaults();
         optimizer.record_performance("model_v1", 100.0, 0.95, 50.0);
-        
+
         assert_eq!(optimizer.measurements.len(), 1);
         assert!(optimizer.measurements.contains_key("model_v1"));
     }
@@ -307,7 +308,7 @@ mod tests {
         let mut optimizer = SelfOptimizer::with_defaults();
         optimizer.record_performance("model_v1", 100.0, 0.90, 50.0);
         optimizer.record_performance("model_v2", 100.0, 0.95, 50.0);
-        
+
         let best = optimizer.get_best_performer();
         assert!(best.is_some());
         assert_eq!(best.unwrap().id, "model_v2"); // Higher accuracy
@@ -318,18 +319,18 @@ mod tests {
         let mut config = OptimizationConfig::default();
         config.strategy = OptimizationStrategy::Accuracy; // Use accuracy strategy for simpler testing
         let mut optimizer = SelfOptimizer::new(config);
-        
+
         // Not enough data
         assert!(!optimizer.should_optimize());
-        
+
         optimizer.record_performance("model_v1", 100.0, 0.80, 50.0);
         optimizer.set_active("model_v1");
-        
+
         // Still not enough models to compare
         assert!(!optimizer.should_optimize());
-        
+
         optimizer.record_performance("model_v2", 100.0, 0.99, 50.0);
-        
+
         // Now should optimize (significant improvement available)
         assert!(optimizer.should_optimize());
     }
@@ -340,11 +341,11 @@ mod tests {
         config.auto_switch_models = true;
         config.strategy = OptimizationStrategy::Accuracy; // Use accuracy strategy for simpler testing
         let mut optimizer = SelfOptimizer::new(config);
-        
+
         optimizer.record_performance("model_v1", 100.0, 0.80, 50.0);
         optimizer.set_active("model_v1");
         optimizer.record_performance("model_v2", 100.0, 0.99, 50.0);
-        
+
         let result = optimizer.optimize();
         assert!(result.is_some());
         assert_eq!(result.unwrap(), "model_v2");
@@ -356,7 +357,7 @@ mod tests {
         let mut optimizer = SelfOptimizer::with_defaults();
         optimizer.record_performance("model_v1", 100.0, 0.95, 50.0);
         optimizer.set_active("model_v1");
-        
+
         let stats = optimizer.get_stats();
         assert_eq!(stats.model_count, 1);
         assert_eq!(stats.active_model, Some("model_v1".to_string()));
@@ -366,7 +367,7 @@ mod tests {
     fn test_optimization_strategy_balanced() {
         let mut perf = PerformanceMeasurement::new("model_v1");
         perf.update(100.0, 0.95, 50.0);
-        
+
         let score = perf.score(&OptimizationStrategy::Balanced);
         assert!(score > 0.0);
     }

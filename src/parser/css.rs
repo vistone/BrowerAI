@@ -59,8 +59,8 @@ impl CssParser {
 
     /// Parse CSS content and extract rules
     pub fn parse(&self, css: &str) -> Result<Vec<CssRule>> {
-        use std::time::Instant;
         use crate::ai::config::FallbackReason;
+        use std::time::Instant;
 
         let mut input = ParserInput::new(css);
         let mut parser = Parser::new(&mut input);
@@ -110,32 +110,28 @@ impl CssParser {
         let model_name = self.model_name.as_deref().unwrap_or("css_model");
         let start_time = Instant::now();
 
-        match CssModelIntegration::new(
-            self.inference_engine.as_ref().unwrap(),
-            model_path,
-            monitor,
-        ) {
-            Ok(mut integration) => {
-                match integration.optimize_rules(css) {
-                    Ok(optimized) => {
-                        let elapsed_ms = start_time.elapsed().as_millis() as u64;
-                        tracker.record_success(elapsed_ms);
-                        log::info!(
-                            "AI CSS optimization (model={}, {}ms): generated {} candidate rules",
-                            model_name, elapsed_ms,
-                            optimized.len()
-                        );
-                    }
-                    Err(err) => {
-                        tracker.record_fallback(FallbackReason::InferenceFailed(err.to_string()));
-                        log::warn!(
-                            "AI CSS optimization failed (model={}): {}; continuing with baseline rules",
-                            model_name,
-                            err
-                        );
-                    }
+        match CssModelIntegration::new(self.inference_engine.as_ref().unwrap(), model_path, monitor)
+        {
+            Ok(mut integration) => match integration.optimize_rules(css) {
+                Ok(optimized) => {
+                    let elapsed_ms = start_time.elapsed().as_millis() as u64;
+                    tracker.record_success(elapsed_ms);
+                    log::info!(
+                        "AI CSS optimization (model={}, {}ms): generated {} candidate rules",
+                        model_name,
+                        elapsed_ms,
+                        optimized.len()
+                    );
                 }
-            }
+                Err(err) => {
+                    tracker.record_fallback(FallbackReason::InferenceFailed(err.to_string()));
+                    log::warn!(
+                        "AI CSS optimization failed (model={}): {}; continuing with baseline rules",
+                        model_name,
+                        err
+                    );
+                }
+            },
             Err(err) => {
                 tracker.record_fallback(FallbackReason::ModelLoadFailed(err.to_string()));
                 log::warn!(

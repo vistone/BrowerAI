@@ -1,0 +1,183 @@
+name: E2E Website Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run E2E tests weekly on Monday at 3 AM UTC
+    - cron: '0 3 * * 1'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  e2e-quick:
+    name: Quick E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-e2e-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Build E2E test suite
+      run: cargo build --release --tests
+    
+    - name: Run E2E unit tests
+      run: cargo test --release e2e_website -- --nocapture --test-threads=1
+    
+    - name: Upload test logs
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: e2e-quick-logs
+        path: |
+          *.log
+          test-*.txt
+
+  e2e-full:
+    name: Full E2E Website Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-e2e-full-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Build with all features
+      run: cargo build --release --all-features
+    
+    - name: Run full E2E test demo
+      run: |
+        cargo run --release --example e2e_test_demo | tee e2e_full_results.txt
+      continue-on-error: true
+    
+    - name: Parse and report results
+      run: |
+        if [ -f e2e_full_results.txt ]; then
+          echo "## E2E Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          grep -E "✓|✗|Testing:" e2e_full_results.txt | tail -20 >> $GITHUB_STEP_SUMMARY || true
+        fi
+    
+    - name: Upload full results
+      uses: actions/upload-artifact@v3
+      with:
+        name: e2e-full-results
+        path: e2e_full_results.txt
+
+  e2e-stress:
+    name: E2E Stress Testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    if: github.event_name == 'workflow_dispatch'
+    
+    strategy:
+      matrix:
+        website-category: [simple, medium, complex]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Set test URLs
+      id: urls
+      run: |
+        case "${{ matrix.website-category }}" in
+          simple)
+            echo "urls=http://example.com,http://info.cern.ch" >> $GITHUB_OUTPUT
+            ;;
+          medium)
+            echo "urls=https://www.wikipedia.org,https://news.ycombinator.com" >> $GITHUB_OUTPUT
+            ;;
+          complex)
+            echo "urls=https://github.com,https://docs.rust-lang.org" >> $GITHUB_OUTPUT
+            ;;
+        esac
+    
+    - name: Run stress tests
+      run: |
+        echo "Testing ${{ matrix.website-category }} websites..."
+        echo "URLs: ${{ steps.urls.outputs.urls }}"
+        # Actual test implementation would go here
+        cargo test --release -- --nocapture e2e_website
+    
+    - name: Upload stress test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: e2e-stress-${{ matrix.website-category }}
+        path: stress_test_*.txt
+
+  e2e-report:
+    name: Generate E2E Report
+    runs-on: ubuntu-latest
+    needs: [e2e-quick, e2e-full]
+    if: always()
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+    
+    - name: Generate summary report
+      run: |
+        cat > e2e_summary.md <<EOF
+        # E2E Test Summary Report
+        
+        **Date**: $(date)
+        **Workflow**: ${{ github.workflow }}
+        **Run ID**: ${{ github.run_id }}
+        
+        ## Test Results
+        
+        - Quick E2E Tests: ${{ needs.e2e-quick.result }}
+        - Full E2E Tests: ${{ needs.e2e-full.result }}
+        
+        ## Artifacts
+        
+        $(ls -la || echo "No artifacts")
+        
+        ## Next Steps
+        
+        1. Review failed tests in artifacts
+        2. Check network connectivity issues
+        3. Validate parser improvements
+        EOF
+        
+        cat e2e_summary.md >> $GITHUB_STEP_SUMMARY
+    
+    - name: Upload summary
+      uses: actions/upload-artifact@v3
+      with:
+        name: e2e-summary-report
+        path: e2e_summary.md

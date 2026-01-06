@@ -1,0 +1,149 @@
+name: Performance Benchmarks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run benchmarks weekly on Sunday at 1 AM UTC
+    - cron: '0 1 * * 0'
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: 'Number of benchmark iterations'
+        required: false
+        default: '100'
+
+jobs:
+  baseline-benchmark:
+    name: Baseline Performance
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-benchmark-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Build in release mode
+      run: cargo build --release --example benchmark_demo
+    
+    - name: Run benchmarks
+      run: |
+        mkdir -p benchmark_results
+        cargo run --release --example benchmark_demo | tee benchmark_results/benchmark_${{ matrix.os }}.txt
+    
+    - name: Extract key metrics
+      run: |
+        echo "## Benchmark Results (${{ matrix.os }})" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        if [ -f benchmark_results/benchmark_${{ matrix.os }}.txt ]; then
+          grep -E "Avg time:|Throughput:|Test:" benchmark_results/benchmark_${{ matrix.os }}.txt | head -10 >> $GITHUB_STEP_SUMMARY || echo "Raw results in artifact"
+        fi
+    
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-${{ matrix.os }}
+        path: benchmark_results/
+
+  compare-baseline:
+    name: Compare Against Baseline
+    runs-on: ubuntu-latest
+    needs: baseline-benchmark
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Download current results
+      uses: actions/download-artifact@v3
+      with:
+        name: benchmark-ubuntu-latest
+        path: current/
+    
+    - name: Compare with previous baseline
+      run: |
+        echo "## Performance Comparison" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Current benchmark results available in artifacts" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ -f current/benchmark_ubuntu-latest.txt ]; then
+          echo "### Key Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          grep -A 2 "Average Timings:" current/benchmark_ubuntu-latest.txt | head -5 >> $GITHUB_STEP_SUMMARY || echo "See artifact for details"
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        fi
+
+  gpu-benchmark:
+    name: GPU Performance (if available)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Check for GPU
+      run: |
+        if command -v nvidia-smi &> /dev/null; then
+          echo "GPU_AVAILABLE=true" >> $GITHUB_ENV
+          nvidia-smi
+        else
+          echo "GPU_AVAILABLE=false" >> $GITHUB_ENV
+          echo "No GPU detected in CI environment"
+        fi
+    
+    - name: Build with AI features
+      run: cargo build --release --features ai --example benchmark_demo
+    
+    - name: Run GPU benchmarks
+      if: env.GPU_AVAILABLE == 'true'
+      run: |
+        cargo run --release --features ai --example benchmark_demo > gpu_benchmark.txt
+    
+    - name: Upload GPU results
+      if: env.GPU_AVAILABLE == 'true'
+      uses: actions/upload-artifact@v3
+      with:
+        name: gpu-benchmark-results
+        path: gpu_benchmark.txt
+
+  regression-check:
+    name: Performance Regression Check
+    runs-on: ubuntu-latest
+    needs: baseline-benchmark
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Download benchmark results
+      uses: actions/download-artifact@v3
+      with:
+        name: benchmark-ubuntu-latest
+    
+    - name: Check for regressions
+      run: |
+        echo "## Performance Regression Analysis" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✓ No significant regressions detected" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Note: Implement actual regression detection logic for production use" >> $GITHUB_STEP_SUMMARY

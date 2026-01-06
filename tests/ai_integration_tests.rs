@@ -98,13 +98,13 @@ fn test_js_parser_basic() {
 #[test]
 fn test_js_deobfuscator_integration() {
     let engine = InferenceEngine::new().unwrap();
-    
+
     // Test without model (fallback mode)
     let mut integration = JsDeobfuscatorIntegration::new(&engine, None, None).unwrap();
-    
+
     let obfuscated = "var a=function(){return 42;}";
     let result = integration.deobfuscate(obfuscated);
-    
+
     assert!(result.is_ok());
     // In fallback mode, should return original
     assert_eq!(result.unwrap(), obfuscated);
@@ -113,17 +113,18 @@ fn test_js_deobfuscator_integration() {
 #[test]
 fn test_js_deobfuscator_with_model() {
     use std::path::PathBuf;
-    
+
     let engine = InferenceEngine::new().unwrap();
     let model_path = PathBuf::from("models/local/js_deobfuscator_v1.onnx");
-    
+
     if model_path.exists() {
-        let mut integration = JsDeobfuscatorIntegration::new(&engine, Some(&model_path), None).unwrap();
+        let mut integration =
+            JsDeobfuscatorIntegration::new(&engine, Some(&model_path), None).unwrap();
         assert!(integration.is_enabled());
-        
+
         let obfuscated = "var a=function(){return 42;}";
         let result = integration.deobfuscate(obfuscated);
-        
+
         // Should succeed (even if output quality varies with training)
         match result {
             Ok(deobfuscated) => {
@@ -131,7 +132,10 @@ fn test_js_deobfuscator_with_model() {
                 println!("Output: {}", deobfuscated);
             }
             Err(e) => {
-                println!("Deobfuscation failed (expected with limited training data): {}", e);
+                println!(
+                    "Deobfuscation failed (expected with limited training data): {}",
+                    e
+                );
             }
         }
     } else {

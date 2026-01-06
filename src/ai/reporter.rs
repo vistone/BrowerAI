@@ -19,7 +19,7 @@ impl AiReporter {
     /// Generate complete AI status report
     pub fn generate_full_report(&self) -> String {
         let mut report = String::new();
-        
+
         report.push_str("╔════════════════════════════════════════════════════════════════╗\n");
         report.push_str("║          BrowerAI - AI System Status Report                  ║\n");
         report.push_str("╚════════════════════════════════════════════════════════════════╝\n\n");
@@ -48,7 +48,7 @@ impl AiReporter {
     /// Generate model health status report
     fn generate_model_health_report(&self) -> String {
         let mut report = String::new();
-        
+
         let model_types = vec![
             ModelType::HtmlParser,
             ModelType::CssParser,
@@ -105,12 +105,19 @@ impl AiReporter {
 
         // Check model availability
         if !self.runtime.has_models() {
-            recommendations.push("  💡 Run 'cd training && python scripts/prepare_data.py' to prepare training data".to_string());
-            recommendations.push("  💡 Run training scripts to generate models, see training/QUICKSTART.md".to_string());
+            recommendations.push(
+                "  💡 Run 'cd training && python scripts/prepare_data.py' to prepare training data"
+                    .to_string(),
+            );
+            recommendations.push(
+                "  💡 Run training scripts to generate models, see training/QUICKSTART.md"
+                    .to_string(),
+            );
         }
 
         if recommendations.is_empty() {
-            recommendations.push("  ✅ System running normally, no special actions needed".to_string());
+            recommendations
+                .push("  ✅ System running normally, no special actions needed".to_string());
         }
 
         recommendations.join("\n")
@@ -119,7 +126,7 @@ impl AiReporter {
     /// Export performance metrics to JSON
     pub fn export_metrics_json(&self) -> Result<String> {
         let all_stats = self.monitor.get_all_stats();
-        
+
         let json_data: Vec<serde_json::Value> = all_stats
             .iter()
             .map(|stats| {

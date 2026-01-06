@@ -167,15 +167,16 @@ impl ModelManager {
             models: Vec<ModelConfig>,
         }
 
-        let configs: Vec<ModelConfig> = if let Ok(wrapper) = toml::from_str::<ConfigWrapper>(&content) {
-            wrapper.models
-        } else if let Ok(direct) = toml::from_str::<Vec<ModelConfig>>(&content) {
-            direct
-        } else {
-            // If both fail, file may be empty or contain only comments
-            log::info!("No models found in config file (may be empty or all comments)");
-            Vec::new()
-        };
+        let configs: Vec<ModelConfig> =
+            if let Ok(wrapper) = toml::from_str::<ConfigWrapper>(&content) {
+                wrapper.models
+            } else if let Ok(direct) = toml::from_str::<Vec<ModelConfig>>(&content) {
+                direct
+            } else {
+                // If both fail, file may be empty or contain only comments
+                log::info!("No models found in config file (may be empty or all comments)");
+                Vec::new()
+            };
 
         for config in configs {
             self.register_model(config)?;
@@ -212,12 +213,16 @@ impl ModelManager {
                     let old_health = model.health.clone();
                     model.health = health.clone();
                     found = true;
-                    
+
                     // Log health changes
                     if old_health != health {
                         match &health {
                             ModelHealth::Ready => {
-                                log::info!("Model '{}' health improved: {:?} -> Ready", model_name, old_health);
+                                log::info!(
+                                    "Model '{}' health improved: {:?} -> Ready",
+                                    model_name,
+                                    old_health
+                                );
                             }
                             ModelHealth::LoadFailed(reason) => {
                                 log::warn!("Model '{}' failed to load: {}", model_name, reason);
@@ -229,34 +234,37 @@ impl ModelManager {
                                 log::error!("Model '{}' consistently failing inference - consider replacing", model_name);
                             }
                             _ => {
-                                log::debug!("Model '{}' health changed: {:?} -> {:?}", model_name, old_health, health);
+                                log::debug!(
+                                    "Model '{}' health changed: {:?} -> {:?}",
+                                    model_name,
+                                    old_health,
+                                    health
+                                );
                             }
                         }
                     }
                 }
             }
         }
-        
+
         if !found {
             anyhow::bail!("Model '{}' not found in registry", model_name);
         }
-        
+
         Ok(())
     }
 
     /// Check for bad models and return their names with reasons
     pub fn detect_bad_models(&self) -> Vec<(String, String)> {
         let mut bad_models = Vec::new();
-        
+
         for models in self.models.values() {
             for model in models {
                 let reason = match &model.health {
                     ModelHealth::MissingFile => {
                         Some(format!("Model file '{}' is missing", model.path.display()))
                     }
-                    ModelHealth::LoadFailed(err) => {
-                        Some(format!("Failed to load: {}", err))
-                    }
+                    ModelHealth::LoadFailed(err) => Some(format!("Failed to load: {}", err)),
                     ModelHealth::ValidationFailed(err) => {
                         Some(format!("Failed validation: {}", err))
                     }
@@ -265,20 +273,20 @@ impl ModelManager {
                     }
                     _ => None,
                 };
-                
+
                 if let Some(reason) = reason {
                     bad_models.push((model.name.clone(), reason));
                 }
             }
         }
-        
+
         bad_models
     }
 
     /// Get health summary for all models
     pub fn health_summary(&self) -> ModelHealthSummary {
         let mut summary = ModelHealthSummary::default();
-        
+
         for models in self.models.values() {
             for model in models {
                 summary.total += 1;
@@ -292,7 +300,7 @@ impl ModelManager {
                 }
             }
         }
-        
+
         summary
     }
 }
@@ -444,7 +452,7 @@ mod tests {
         // Add a good model (create the file)
         let good_path = temp_dir.path().join("good.onnx");
         std::fs::write(&good_path, b"fake model data").unwrap();
-        
+
         let good_config = ModelConfig {
             name: "good_model".to_string(),
             model_type: ModelType::HtmlParser,
@@ -470,12 +478,15 @@ mod tests {
 
         // Update one model to LoadFailed status
         manager
-            .update_model_health("missing_model", ModelHealth::LoadFailed("Test error".to_string()))
+            .update_model_health(
+                "missing_model",
+                ModelHealth::LoadFailed("Test error".to_string()),
+            )
             .unwrap();
 
         let bad_models = manager.detect_bad_models();
         assert_eq!(bad_models.len(), 1); // Only the LoadFailed one
-        
+
         let names: Vec<String> = bad_models.iter().map(|(n, _)| n.clone()).collect();
         assert!(names.contains(&"missing_model".to_string()));
     }

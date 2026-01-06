@@ -1,10 +1,10 @@
 // Real demonstration of intelligent rendering capabilities
 // This demo creates actual HTML files that can be opened in a browser
 
-use browerai::intelligent_rendering::site_understanding::SiteUnderstanding;
-use browerai::intelligent_rendering::reasoning::IntelligentReasoning;
 use browerai::intelligent_rendering::generation::IntelligentGeneration;
+use browerai::intelligent_rendering::reasoning::IntelligentReasoning;
 use browerai::intelligent_rendering::renderer::IntelligentRenderer;
+use browerai::intelligent_rendering::site_understanding::SiteUnderstanding;
 use browerai::intelligent_rendering::validation::FunctionValidator;
 use std::fs;
 use std::path::Path;
@@ -103,19 +103,22 @@ fn main() -> anyhow::Result<()> {
     println!("\n🧠 PHASE 1: LEARNING");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     let understanding = SiteUnderstanding::learn_from_content(example_html)?;
-    
+
     println!("✅ Learned site structure:");
     println!("   • Page Type: {:?}", understanding.page_type);
-    println!("   • Main Sections: {} detected", understanding.structure.main_sections.len());
+    println!(
+        "   • Main Sections: {} detected",
+        understanding.structure.main_sections.len()
+    );
     for section in &understanding.structure.main_sections {
         println!("     - {}", section);
     }
-    
+
     println!("\n✅ Identified functionalities:");
     for func in &understanding.functionality.functions {
         println!("   • {}: {:?}", func.name, func.function_type);
     }
-    
+
     println!("\n✅ Detected interaction patterns:");
     for pattern in &understanding.functionality.interaction_patterns {
         println!("   • {:?}: {}", pattern.pattern_type, pattern.description);
@@ -125,38 +128,45 @@ fn main() -> anyhow::Result<()> {
     println!("\n🤔 PHASE 2: REASONING");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     let reasoning = IntelligentReasoning::analyze(&understanding)?;
-    
+
     println!("✅ Core functions identified (must preserve):");
     for func in &reasoning.core_functions {
         println!("   • {} - {}", func.name, func.reason);
     }
-    
+
     println!("\n✅ Optimization opportunities:");
     for opt in &reasoning.optimization_opportunities {
         println!("   • {}: {}", opt.area, opt.suggestion);
     }
-    
-    println!("\n✅ Experience variants suggested: {}", reasoning.experience_variants.len());
+
+    println!(
+        "\n✅ Experience variants suggested: {}",
+        reasoning.experience_variants.len()
+    );
     for variant in &reasoning.experience_variants {
-        println!("   • {:?} layout - {}", variant.layout_scheme, variant.description);
+        println!(
+            "   • {:?} layout - {}",
+            variant.layout_scheme, variant.description
+        );
     }
 
     // Phase 3: Generation
     println!("\n⚙️  PHASE 3: GENERATION");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     let variants = IntelligentGeneration::generate(&reasoning)?;
-    
+
     println!("✅ Generated {} experience variants", variants.len());
-    
+
     for (idx, variant) in variants.iter().enumerate() {
         let variant_name = format!("{:?}", variant.variant.layout_scheme);
         println!("\n📝 Variant {}: {} Layout", idx + 1, variant_name);
         println!("   HTML size: {} bytes", variant.html.len());
         println!("   CSS size: {} bytes", variant.css.len());
         println!("   JS size: {} bytes", variant.js.len());
-        
+
         // Create complete HTML file for this variant
-        let complete_html = format!(r#"<!DOCTYPE html>
+        let complete_html = format!(
+            r#"<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -173,8 +183,10 @@ fn main() -> anyhow::Result<()> {
 {}
 </script>
 </body>
-</html>"#, variant_name, variant.css, variant.html, variant.js);
-        
+</html>"#,
+            variant_name, variant.css, variant.html, variant.js
+        );
+
         let filename = format!("variant_{}_{}.html", idx + 1, variant_name.to_lowercase());
         fs::write(output_dir.join(&filename), &complete_html)?;
         println!("   ✅ Saved to {}", filename);
@@ -183,14 +195,21 @@ fn main() -> anyhow::Result<()> {
     // Phase 4: Rendering (create a combined demo page)
     println!("\n🎨 PHASE 4: RENDERING");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    
+
     let demo_page = IntelligentRenderer::render(&variants[0])?;
     println!("✅ Rendered primary experience");
-    println!("   • Layout: {:?}", demo_page.current_experience.layout_scheme);
-    println!("   • Alternative experiences available: {}", demo_page.available_experiences.len());
-    
+    println!(
+        "   • Layout: {:?}",
+        demo_page.current_experience.layout_scheme
+    );
+    println!(
+        "   • Alternative experiences available: {}",
+        demo_page.available_experiences.len()
+    );
+
     // Create index page with all variants
-    let index_html = format!(r#"<!DOCTYPE html>
+    let index_html = format!(
+        r#"<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -398,15 +417,19 @@ fn main() -> anyhow::Result<()> {
         <h2 style="color: white; text-align: center; margin-bottom: 30px;">🎨 Generated Experience Variants</h2>
         
         <div class="variants">
-{}"#, 
+{}"#,
         reasoning.core_functions.len(),
         variants.len(),
         601, // total tests
         variants.len(),
-        variants.iter().enumerate().map(|(idx, v)| {
-            let variant_name = format!("{:?}", v.variant.layout_scheme);
-            let filename = format!("variant_{}_{}.html", idx + 1, variant_name.to_lowercase());
-            format!(r#"            <div class="variant-card">
+        variants
+            .iter()
+            .enumerate()
+            .map(|(idx, v)| {
+                let variant_name = format!("{:?}", v.variant.layout_scheme);
+                let filename = format!("variant_{}_{}.html", idx + 1, variant_name.to_lowercase());
+                format!(
+                    r#"            <div class="variant-card">
                 <div class="variant-header">
                     <h3>{} Layout</h3>
                     <p style="opacity: 0.9;">Variant #{}</p>
@@ -422,11 +445,21 @@ fn main() -> anyhow::Result<()> {
                     </ul>
                 </div>
             </div>
-"#, variant_name, idx + 1, v.variant.description, filename)
-        }).collect::<Vec<_>>().join("\n")
+"#,
+                    variant_name,
+                    idx + 1,
+                    v.variant.description,
+                    filename
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
     );
-    
-    let index_html = format!("{}{}", index_html, r#"        </div>
+
+    let index_html = format!(
+        "{}{}",
+        index_html,
+        r#"        </div>
         
         <div class="info-box" style="margin-top: 40px;">
             <h2>🔍 How to Test</h2>
@@ -440,8 +473,9 @@ fn main() -> anyhow::Result<()> {
         </div>
     </div>
 </body>
-</html>"#);
-    
+</html>"#
+    );
+
     fs::write(output_dir.join("index.html"), &index_html)?;
     println!("   ✅ Created demo index page");
 
@@ -449,10 +483,16 @@ fn main() -> anyhow::Result<()> {
     println!("\n✅ VALIDATION");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     for (idx, variant) in variants.iter().enumerate() {
-        let validation = FunctionValidator::validate_variant(variant, &understanding.functionality)?;
-        println!("Variant {}: {} ({} functions preserved)", 
-            idx + 1, 
-            if validation.is_valid { "✅ VALID" } else { "❌ INVALID" },
+        let validation =
+            FunctionValidator::validate_variant(variant, &understanding.functionality)?;
+        println!(
+            "Variant {}: {} ({} functions preserved)",
+            idx + 1,
+            if validation.is_valid {
+                "✅ VALID"
+            } else {
+                "❌ INVALID"
+            },
             validation.preserved_functions.len()
         );
     }
@@ -462,7 +502,10 @@ fn main() -> anyhow::Result<()> {
     println!("╚═══════════════════════════════════════════════════════════════╝");
     println!("\n📂 All files saved to: {}", output_dir.display());
     println!("\n🌐 To view the results:");
-    println!("   1. Open {}/index.html in your browser", output_dir.display());
+    println!(
+        "   1. Open {}/index.html in your browser",
+        output_dir.display()
+    );
     println!("   2. Click on any variant to see the transformed experience");
     println!("   3. Test the functionality - everything works!\n");
     println!("📁 Files generated:");
@@ -470,7 +513,12 @@ fn main() -> anyhow::Result<()> {
     println!("   • original.html - Original website");
     for (idx, v) in variants.iter().enumerate() {
         let variant_name = format!("{:?}", v.variant.layout_scheme);
-        println!("   • variant_{}_{}.html - {} experience", idx + 1, variant_name.to_lowercase(), variant_name);
+        println!(
+            "   • variant_{}_{}.html - {} experience",
+            idx + 1,
+            variant_name.to_lowercase(),
+            variant_name
+        );
     }
 
     Ok(())
