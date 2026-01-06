@@ -44,7 +44,7 @@ impl TestVariant {
     pub fn record_metric(&mut self, metric_name: impl Into<String>, value: f32) {
         self.metrics
             .entry(metric_name.into())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(value);
         self.sample_count += 1;
     }

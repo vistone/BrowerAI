@@ -133,7 +133,7 @@ impl Document {
             let tag_lower = element.tag_name.to_lowercase();
             self.elements_by_tag
                 .entry(tag_lower)
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(node.clone());
 
             // Recurse into children
@@ -190,15 +190,13 @@ impl Document {
         let mut results = Vec::new();
 
         // Parse the selector
-        if selector.starts_with('#') {
+        if let Some(id) = selector.strip_prefix('#') {
             // ID selector
-            let id = &selector[1..];
             if let Some(elem) = self.get_element_by_id(id) {
                 results.push(elem);
             }
-        } else if selector.starts_with('.') {
+        } else if let Some(class_name) = selector.strip_prefix('.') {
             // Class selector
-            let class_name = &selector[1..];
             self.query_by_class_recursive(&self.root, class_name, &mut results);
         } else if selector.contains('[') && selector.contains(']') {
             // Attribute selector [attr] or [attr=value]

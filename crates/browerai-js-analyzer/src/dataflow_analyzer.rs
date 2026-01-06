@@ -139,7 +139,7 @@ impl DataFlowAnalyzer {
         // Update def-use cache
         self.def_use_cache
             .entry(var_name.to_string())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(var_name.to_string());
     }
 
@@ -183,11 +183,9 @@ impl DataFlowAnalyzer {
             if (node.node_type == DataFlowNodeType::Definition
                 || node.node_type == DataFlowNodeType::Parameter)
                 && !used_vars.contains(&node.variable)
-            {
-                if !graph.unused_variables.contains(&node.variable) {
+                && !graph.unused_variables.contains(&node.variable) {
                     graph.unused_variables.push(node.variable.clone());
                 }
-            }
         }
     }
 

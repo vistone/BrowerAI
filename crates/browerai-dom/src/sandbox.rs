@@ -227,7 +227,7 @@ impl JsSandbox {
 
                     // Handle both integer and rational lengths
                     let length = match length_val {
-                        JsValue::Integer(len) => len as i32,
+                        JsValue::Integer(len) => len,
                         JsValue::Rational(len) => len as i32,
                         _ => 0,
                     };

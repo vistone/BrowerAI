@@ -124,7 +124,7 @@ impl IncrementalAnalyzer {
     pub fn add_dependency(&mut self, func_a: String, func_b: String) {
         self.dependencies
             .entry(func_a)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(func_b);
     }
 

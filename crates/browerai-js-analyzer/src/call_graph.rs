@@ -156,7 +156,7 @@ impl CallGraphBuilder {
         let mut depth = 0;
 
         // 找出所有在这个行号之前的函数
-        for (_func_id, func_location) in locations {
+        for func_location in locations.values() {
             if func_location.line < line {
                 // 简单启发式：假设之后的函数嵌套在之前的函数中
                 // 真实情况需要更复杂的括号匹配逻辑
@@ -172,12 +172,12 @@ impl CallGraphBuilder {
     fn add_call(&mut self, caller: &str, callee: &str) {
         self.calls
             .entry(caller.to_string())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(callee.to_string());
 
         self.reverse_calls
             .entry(callee.to_string())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(caller.to_string());
     }
 

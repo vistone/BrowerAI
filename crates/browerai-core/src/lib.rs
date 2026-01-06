@@ -1,5 +1,4 @@
 /// Core types and traits for BrowerAI browser engine
-
 pub mod error;
 pub mod traits;
 pub mod config;

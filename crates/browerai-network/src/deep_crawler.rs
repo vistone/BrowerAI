@@ -135,7 +135,7 @@ impl DeepCrawler {
                     if let Some(parent_url) = &parent {
                         self.site_map
                             .entry(parent_url.clone())
-                            .or_insert_with(Vec::new)
+                            .or_default()
                             .push(url.clone());
                     }
 
