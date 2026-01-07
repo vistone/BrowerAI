@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use std::pin::Pin;
 use std::sync::Once;
 
 pub mod sandbox;
@@ -39,8 +40,7 @@ impl V8JsParser {
     /// Get heap statistics from V8
     pub fn get_heap_statistics(&mut self) -> V8HeapStats {
         let isolate = self.isolate.as_mut().unwrap();
-        let mut stats = v8::HeapStatistics::default();
-        isolate.get_heap_statistics(&mut stats);
+        let stats = isolate.get_heap_statistics();
 
         V8HeapStats {
             total_heap_size: stats.total_heap_size(),
@@ -78,16 +78,28 @@ impl V8JsParser {
             .as_mut()
             .ok_or_else(|| anyhow::anyhow!("V8 isolate not initialized"))?;
 
-        let handle_scope = &mut v8::HandleScope::new(isolate);
-        let context = v8::Context::new(handle_scope, Default::default());
-        let scope = &mut v8::ContextScope::new(handle_scope, context);
+        let mut handle_scope = v8::HandleScope::new(isolate);
+        let mut handle_scope = {
+            // SAFETY: handle_scope is stack allocated and not moved after pin
+            let scope_pinned = unsafe { Pin::new_unchecked(&mut handle_scope) };
+            scope_pinned.init()
+        };
+        let context = v8::Context::new(&handle_scope, Default::default());
+        let mut context_scope = v8::ContextScope::new(&mut handle_scope, context);
+
+        // Inner handle scope bound to the context
+        let mut inner_scope = v8::HandleScope::new(&mut context_scope);
+        let mut scope = {
+            let pinned = unsafe { Pin::new_unchecked(&mut inner_scope) };
+            pinned.init()
+        };
 
         // Create a string containing the JavaScript source code
-        let source = v8::String::new(scope, js)
+        let source = v8::String::new(&mut scope, js)
             .ok_or_else(|| anyhow::anyhow!("Failed to create V8 string"))?;
 
         // Compile the source code
-        let script = v8::Script::compile(scope, source, None)
+        let _script = v8::Script::compile(&mut scope, source, None)
             .ok_or_else(|| anyhow::anyhow!("Failed to compile JavaScript with V8"))?;
 
         // If we got here, the script compiled successfully
@@ -128,29 +140,41 @@ impl V8JsParser {
             .as_mut()
             .ok_or_else(|| anyhow::anyhow!("V8 isolate not initialized"))?;
 
-        let handle_scope = &mut v8::HandleScope::new(isolate);
-        let context = v8::Context::new(handle_scope, Default::default());
-        let scope = &mut v8::ContextScope::new(handle_scope, context);
+        let mut handle_scope = v8::HandleScope::new(isolate);
+        let mut handle_scope = {
+            // SAFETY: handle_scope is stack allocated and not moved after pin
+            let scope_pinned = unsafe { Pin::new_unchecked(&mut handle_scope) };
+            scope_pinned.init()
+        };
+        let context = v8::Context::new(&handle_scope, Default::default());
+        let mut context_scope = v8::ContextScope::new(&mut handle_scope, context);
+
+        // Inner handle scope bound to the context for execution
+        let mut inner_scope = v8::HandleScope::new(&mut context_scope);
+        let mut scope = {
+            let pinned = unsafe { Pin::new_unchecked(&mut inner_scope) };
+            pinned.init()
+        };
 
         // Create a string containing the JavaScript source code
-        let source = v8::String::new(scope, js)
+        let source = v8::String::new(&mut scope, js)
             .ok_or_else(|| anyhow::anyhow!("Failed to create V8 string"))?;
 
         // Compile the source code
-        let script = v8::Script::compile(scope, source, None)
+        let script = v8::Script::compile(&mut scope, source, None)
             .context("Failed to compile JavaScript with V8")?;
 
         // Execute the script
         let result = script
-            .run(scope)
+            .run(&mut scope)
             .ok_or_else(|| anyhow::anyhow!("Failed to execute JavaScript"))?;
 
         // Convert result to string
         let result_str = result
-            .to_string(scope)
+            .to_string(&mut scope)
             .ok_or_else(|| anyhow::anyhow!("Failed to convert result to string"))?;
 
-        Ok(result_str.to_rust_string_lossy(scope))
+        Ok(result_str.to_rust_string_lossy(&mut scope))
     }
 }
 
