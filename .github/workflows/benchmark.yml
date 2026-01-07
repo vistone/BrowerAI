@@ -40,7 +40,7 @@ jobs:
         key: ${{ runner.os }}-benchmark-${{ hashFiles('**/Cargo.lock') }}
     
     - name: Build in release mode
-      run: cargo build --release --workspace --exclude browerai-ml --exclude browerai-js-v8 --example benchmark_demo
+      run: cargo build --release --example benchmark_demo
     
     - name: Run benchmarks
       run: |
@@ -114,7 +114,7 @@ jobs:
         fi
     
     - name: Build with AI features
-      run: cargo build --release --workspace --exclude browerai-ml --exclude browerai-js-v8 --features ai --example benchmark_demo
+      run: cargo build --release --features ai --example benchmark_demo
     
     - name: Run GPU benchmarks
       if: steps.gpu-check.outputs.available == 'true'
