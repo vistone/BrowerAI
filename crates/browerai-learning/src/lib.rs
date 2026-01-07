@@ -1,5 +1,6 @@
 pub mod ab_testing;
 pub mod advanced_deobfuscation;
+pub mod ast_deobfuscation;
 pub mod code_generator;
 pub mod continuous_loop;
 pub mod deobfuscation;
@@ -29,6 +30,7 @@ pub use ab_testing::{ABTest, ABTestManager, TestVariant};
 pub use advanced_deobfuscation::{
     AdvancedDeobfuscator, AdvancedObfuscationAnalysis, FrameworkObfuscation,
 };
+pub use ast_deobfuscation::{ASTDeobfuscator, ASTDeobfuscationStats, VariableUsage};
 pub use code_generator::{CodeGenerator, CodeType, GeneratedCode, GenerationRequest};
 pub use continuous_loop::{ContinuousLearningConfig, ContinuousLearningLoop};
 pub use deobfuscation::{DeobfuscationStrategy, JsDeobfuscator, ObfuscationAnalysis};
