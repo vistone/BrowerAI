@@ -8,11 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **V8 JavaScript Engine Integration** - Google's V8 engine as optional alternative to Boa
+  - Full ES2024+ support
+  - Maximum performance and compatibility
+  - Optional feature flag (`v8`)
+  - New crate: `browerai-js-v8`
+  - Example: `examples/v8_demo.rs`
+  - Documentation: `docs/V8_INTEGRATION.md`
 - SECURITY.md with security policy and best practices
 - CONTRIBUTING.md with comprehensive contribution guidelines
 - .gitattributes for better cross-platform Git handling
-- Workspace architecture with 18 specialized crates
-- Feature flags for optional dependencies (ai, ai-candle, ml)
+- Workspace architecture with 19 specialized crates (including js-v8)
+- Feature flags for optional dependencies (ai, ai-candle, ml, v8)
 - Comprehensive test suite (459+ tests)
 - Code quality improvements with clippy
 - Formatted codebase with rustfmt
