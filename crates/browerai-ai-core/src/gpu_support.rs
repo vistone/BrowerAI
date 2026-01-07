@@ -4,14 +4,12 @@
 /// with automatic fallback to CPU when GPU is unavailable.
 use anyhow::Result;
 
+#[cfg(all(feature = "ai", target_os = "macos"))]
+use ort::execution_providers::coreml::{CoreMLComputeUnits, CoreMLExecutionProvider};
 #[cfg(feature = "ai")]
-use ort::execution_providers::{
-    cpu::CPUExecutionProvider,
-    coreml::{CoreMLComputeUnits, CoreMLExecutionProvider},
-    cuda::CUDAExecutionProvider,
-    directml::DirectMLExecutionProvider,
-    ExecutionProviderDispatch,
-};
+use ort::execution_providers::{cpu::CPUExecutionProvider, cuda::CUDAExecutionProvider, ExecutionProviderDispatch};
+#[cfg(all(feature = "ai", target_os = "windows"))]
+use ort::execution_providers::directml::DirectMLExecutionProvider;
 
 /// GPU execution provider configuration
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
