@@ -9,6 +9,7 @@ description = "CSS parser for BrowerAI"
 
 [dependencies]
 browerai-core = { workspace = true }
+browerai-ai-core = { workspace = true, optional = true }
 anyhow = { workspace = true }
 log = { workspace = true }
 tracing = "0.1"
@@ -17,7 +18,7 @@ selectors = { workspace = true }
 
 [features]
 default = []
-ai = []
+ai = ["browerai-ai-core"]
 
 [dev-dependencies]
 env_logger = { workspace = true }

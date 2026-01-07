@@ -7,8 +7,6 @@ use std::path::PathBuf;
 use browerai_ai_core::model_manager::ModelType;
 #[cfg(feature = "ai")]
 use browerai_ai_core::{AiRuntime, InferenceEngine};
-#[cfg(feature = "ai")]
-use browerai_ai_integration::CssModelIntegration;
 
 /// CSS parser with AI enhancement capabilities
 pub struct CssParser {
