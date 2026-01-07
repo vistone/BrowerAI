@@ -7,7 +7,6 @@
 /// ```bash
 /// cargo run --example enhanced_js_deobfuscation_demo
 /// ```
-
 use browerai::learning::EnhancedDeobfuscator;
 
 fn main() -> anyhow::Result<()> {
@@ -37,7 +36,10 @@ console.log(_0xabc[0x0] + ' ' + _0xabc[0x1] + ' ' + _0xabc[0x2]);
     println!("After:");
     println!("{}", result_1.code);
     println!("Transformations: {}", result_1.transformations.len());
-    println!("String arrays unpacked: {}", result_1.stats.string_arrays_unpacked);
+    println!(
+        "String arrays unpacked: {}",
+        result_1.stats.string_arrays_unpacked
+    );
     println!();
 
     // Test 2: Proxy Function Removal
@@ -58,7 +60,10 @@ _proxy('Result:', _add(5, 10));
     let result_2 = deobfuscator.deobfuscate(obfuscated_2)?;
     println!("After:");
     println!("{}", result_2.code);
-    println!("Proxy functions removed: {}", result_2.stats.proxy_functions_removed);
+    println!(
+        "Proxy functions removed: {}",
+        result_2.stats.proxy_functions_removed
+    );
     println!();
 
     // Test 3: Self-Defending Code Removal
@@ -79,7 +84,10 @@ console.log(message);
     let result_3 = deobfuscator.deobfuscate(obfuscated_3)?;
     println!("After:");
     println!("{}", result_3.code);
-    println!("Self-defending patterns removed: {}", result_3.stats.self_defending_removed);
+    println!(
+        "Self-defending patterns removed: {}",
+        result_3.stats.self_defending_removed
+    );
     println!();
 
     // Test 4: Opaque Predicate Simplification
@@ -160,16 +168,31 @@ obj["method"]();
     println!("After:");
     println!("{}", result_7.code);
     println!("\n--- Statistics ---");
-    println!("Transformations applied: {}", result_7.transformations.len());
+    println!(
+        "Transformations applied: {}",
+        result_7.transformations.len()
+    );
     for (i, transform) in result_7.transformations.iter().enumerate() {
         println!("  {}. {}", i + 1, transform);
     }
     println!("\n--- Detailed Stats ---");
-    println!("String arrays unpacked: {}", result_7.stats.string_arrays_unpacked);
-    println!("Proxy functions removed: {}", result_7.stats.proxy_functions_removed);
-    println!("Control flow simplified: {}", result_7.stats.control_flow_simplified);
+    println!(
+        "String arrays unpacked: {}",
+        result_7.stats.string_arrays_unpacked
+    );
+    println!(
+        "Proxy functions removed: {}",
+        result_7.stats.proxy_functions_removed
+    );
+    println!(
+        "Control flow simplified: {}",
+        result_7.stats.control_flow_simplified
+    );
     println!("Constants folded: {}", result_7.stats.constants_folded);
-    println!("Self-defending patterns removed: {}", result_7.stats.self_defending_removed);
+    println!(
+        "Self-defending patterns removed: {}",
+        result_7.stats.self_defending_removed
+    );
     println!("Size reduction: {} bytes", result_7.stats.size_reduction);
     println!(
         "Readability improvement: {:.1}%",

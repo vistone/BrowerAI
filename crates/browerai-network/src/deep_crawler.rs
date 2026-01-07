@@ -147,9 +147,8 @@ impl DeepCrawler {
                     }
                 }
                 Err(e) => {
-                    let error_msg = format!("Failed to crawl {}: {}", url, e);
-                    log::warn!("{}", error_msg);
-                    self.errors.push(error_msg);
+                    log::warn!("Failed to crawl {}: {}", url, e);
+                    self.errors.push(format!("Failed to crawl {}: {}", url, e));
                 }
             }
 

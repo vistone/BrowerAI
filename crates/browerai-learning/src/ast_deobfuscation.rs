@@ -99,9 +99,7 @@ impl ASTDeobfuscator {
         self.variable_usage.clear();
 
         // Find variable declarations
-        let var_decl_pattern = Regex::new(
-            r"(?:var|let|const)\s+(\w+)\s*=\s*([^;]+);"
-        ).ok();
+        let var_decl_pattern = Regex::new(r"(?:var|let|const)\s+(\w+)\s*=\s*([^;]+);").ok();
 
         if let Some(re) = var_decl_pattern {
             for caps in re.captures_iter(code) {
@@ -110,7 +108,8 @@ impl ASTDeobfuscator {
                     let var_value = value.as_str().trim().to_string();
 
                     // Count usages
-                    let use_pattern = Regex::new(&format!(r"\b{}\b", regex::escape(&var_name))).ok();
+                    let use_pattern =
+                        Regex::new(&format!(r"\b{}\b", regex::escape(&var_name))).ok();
                     let use_count = use_pattern
                         .map(|re| re.find_iter(code).count().saturating_sub(1)) // Subtract declaration
                         .unwrap_or(0);
@@ -118,12 +117,15 @@ impl ASTDeobfuscator {
                     // Check if value is a simple constant
                     let is_constant = self.is_simple_constant(&var_value);
 
-                    self.variable_usage.insert(var_name.clone(), VariableUsage {
-                        name: var_name,
-                        use_count,
-                        initial_value: Some(var_value),
-                        can_inline: use_count <= 2 && is_constant,
-                    });
+                    self.variable_usage.insert(
+                        var_name.clone(),
+                        VariableUsage {
+                            name: var_name,
+                            use_count,
+                            initial_value: Some(var_value),
+                            can_inline: use_count <= 2 && is_constant,
+                        },
+                    );
                 }
             }
         }
@@ -132,9 +134,9 @@ impl ASTDeobfuscator {
     /// Check if a value is a simple constant
     fn is_simple_constant(&self, value: &str) -> bool {
         // Number, string, or boolean literal
-        let constant_pattern = Regex::new(
-            r#"^(?:\d+|0x[0-9a-fA-F]+|'[^']*'|"[^"]*"|true|false|null|undefined)$"#
-        ).ok();
+        let constant_pattern =
+            Regex::new(r#"^(?:\d+|0x[0-9a-fA-F]+|'[^']*'|"[^"]*"|true|false|null|undefined)$"#)
+                .ok();
 
         constant_pattern
             .map(|re| re.is_match(value))
@@ -156,7 +158,9 @@ impl ASTDeobfuscator {
                         let mut new_lines = Vec::new();
 
                         for line in parts {
-                            if line.contains(&format!("{} =", name)) || line.contains(&format!("var {}", name)) {
+                            if line.contains(&format!("{} =", name))
+                                || line.contains(&format!("var {}", name))
+                            {
                                 // Keep declaration
                                 new_lines.push(line.to_string());
                             } else {
@@ -205,9 +209,10 @@ impl ASTDeobfuscator {
         let false_branch = Regex::new(r"if\s*\(\s*false\s*\)\s*\{[^}]*\}")?;
         let removed_count = false_branch.find_iter(&result).count();
         result = false_branch.replace_all(&result, "").to_string();
-        
+
         for _ in 0..removed_count {
-            self.dead_code.push(DeadCodePattern::UnreachableInFalseBranch);
+            self.dead_code
+                .push(DeadCodePattern::UnreachableInFalseBranch);
         }
 
         Ok(result)
@@ -220,7 +225,7 @@ impl ASTDeobfuscator {
         // Pattern: (expr1, expr2, ..., exprN) can often be simplified
         // For now, just detect and log them
         let sequence_pattern = Regex::new(r"\([^,]+,[^)]+\)")?;
-        
+
         // Count sequences for metrics
         let _sequence_count = sequence_pattern.find_iter(&result).count();
 
@@ -232,9 +237,7 @@ impl ASTDeobfuscator {
         let mut result = code.to_string();
 
         // Find functions that just return a value
-        let simple_func = Regex::new(
-            r"function\s+(\w+)\s*\(\s*\)\s*\{\s*return\s+([^;]+);\s*\}"
-        )?;
+        let simple_func = Regex::new(r"function\s+(\w+)\s*\(\s*\)\s*\{\s*return\s+([^;]+);\s*\}")?;
 
         let mut to_inline = Vec::new();
 
@@ -273,20 +276,22 @@ impl ASTDeobfuscator {
         ).ok()?;
 
         if let Some(caps) = rotation_pattern.captures(code) {
-            if let (Some(_param1), Some(_param2), Some(array_name), Some(rotation)) = 
-                (caps.get(1), caps.get(2), caps.get(3), caps.get(4)) 
+            if let (Some(_param1), Some(_param2), Some(array_name), Some(rotation)) =
+                (caps.get(1), caps.get(2), caps.get(3), caps.get(4))
             {
                 let rotation_amount = rotation.as_str().parse::<usize>().ok()?;
-                
+
                 // Find the original array
                 let array_pattern = Regex::new(&format!(
                     r"var\s+{}\s*=\s*\[([^\]]+)\]",
                     regex::escape(array_name.as_str())
-                )).ok()?;
+                ))
+                .ok()?;
 
                 if let Some(arr_caps) = array_pattern.captures(code) {
                     if let Some(contents) = arr_caps.get(1) {
-                        let elements: Vec<String> = contents.as_str()
+                        let elements: Vec<String> = contents
+                            .as_str()
                             .split(',')
                             .map(|s| s.trim().to_string())
                             .collect();
@@ -323,11 +328,7 @@ impl ASTDeobfuscator {
             rotation.array_name,
             rotation.original.join(", ")
         );
-        let new_array = format!(
-            "var {} = [{}]",
-            rotation.array_name,
-            restored.join(", ")
-        );
+        let new_array = format!("var {} = [{}]", rotation.array_name, restored.join(", "));
 
         result = result.replace(&old_array, &new_array);
 
@@ -346,7 +347,9 @@ impl ASTDeobfuscator {
     /// Get statistics about the deobfuscation
     pub fn get_stats(&self) -> ASTDeobfuscationStats {
         ASTDeobfuscationStats {
-            variables_inlined: self.variable_usage.values()
+            variables_inlined: self
+                .variable_usage
+                .values()
                 .filter(|v| v.can_inline)
                 .count(),
             dead_code_removed: self.dead_code.len(),
@@ -380,7 +383,7 @@ mod tests {
 var x = 42;
 console.log(x);
 "#;
-        
+
         let result = deob.deobfuscate(code).unwrap();
         assert!(result.contains("42") || result.contains("x"));
     }
@@ -394,7 +397,7 @@ function test() {
     console.log('never');
 }
 "#;
-        
+
         let result = deob.deobfuscate(code).unwrap();
         // Dead code after return should be removed
         assert!(!result.contains("never") || result.contains("return"));
@@ -407,7 +410,7 @@ function test() {
 function getVal() { return 42; }
 var x = getVal();
 "#;
-        
+
         let result = deob.deobfuscate(code).unwrap();
         assert!(result.contains("42"));
     }
@@ -419,7 +422,7 @@ var x = getVal();
 var _0xabc = ['a', 'b', 'c'];
 (function(arr, num) { while(num--) { arr.push(arr.shift()); } })(_0xabc, 1);
 "#;
-        
+
         let rotation = deob.detect_array_rotation(code);
         // This is a simplified pattern - full detection requires more complex parsing
         // For now, just check that the function doesn't panic
@@ -434,7 +437,7 @@ var x = 10;
 var y = x + 5;
 console.log(y);
 "#;
-        
+
         deob.track_variable_usage(code);
         assert!(deob.variable_usage.contains_key("x"));
         assert!(deob.variable_usage.contains_key("y"));
@@ -443,7 +446,7 @@ console.log(y);
     #[test]
     fn test_is_simple_constant() {
         let deob = ASTDeobfuscator::new();
-        
+
         assert!(deob.is_simple_constant("42"));
         assert!(deob.is_simple_constant("0x10"));
         assert!(deob.is_simple_constant("'hello'"));
@@ -460,10 +463,10 @@ function getX() { return x; }
 if (false) { doEvil(); }
 console.log(getX());
 "#;
-        
+
         let result = deob.deobfuscate(code).unwrap();
         let stats = deob.get_stats();
-        
+
         assert!(stats.variables_inlined > 0 || stats.dead_code_removed > 0);
         assert!(!result.contains("if (false)"));
     }

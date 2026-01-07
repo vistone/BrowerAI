@@ -32,7 +32,11 @@ impl V8Sandbox {
         let mut params = v8::CreateParams::default();
         params = params.heap_limits(0, limits.max_heap_mb * 1024 * 1024);
         let isolate = v8::Isolate::new(params);
-        Ok(Self { isolate, limits, globals: HashMap::new() })
+        Ok(Self {
+            isolate,
+            limits,
+            globals: HashMap::new(),
+        })
     }
 
     pub fn set_global(&mut self, key: String, value: String) {
@@ -62,11 +66,13 @@ impl V8Sandbox {
 
         let script = v8::Script::compile(scope, source, None)
             .ok_or_else(|| anyhow::anyhow!("Failed to compile"))?;
-        let result = script.run(scope)
+        let result = script
+            .run(scope)
             .ok_or_else(|| anyhow::anyhow!("Failed to execute"))?;
-        let result_str = result.to_string(scope)
+        let result_str = result
+            .to_string(scope)
             .ok_or_else(|| anyhow::anyhow!("Failed to convert result"))?;
-        
+
         Ok(result_str.to_rust_string_lossy(scope))
     }
 

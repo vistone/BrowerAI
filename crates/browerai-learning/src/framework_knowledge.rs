@@ -1,3 +1,4 @@
+use anyhow::Result;
 /// Comprehensive Framework Knowledge Base for JavaScript Deobfuscation
 ///
 /// This module contains extensive knowledge about JavaScript frameworks worldwide,
@@ -8,10 +9,8 @@
 /// - Chinese frameworks (Taro, Uni-app, Rax, San, Omi, etc.)
 /// - Build tools (Webpack, Vite, Rollup, esbuild, etc.)
 /// - Obfuscator tools (javascript-obfuscator, terser, uglify-js, etc.)
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use anyhow::Result;
 
 /// Comprehensive framework knowledge entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -223,7 +222,7 @@ impl FrameworkKnowledgeBase {
             category_index: HashMap::new(),
             signature_index: HashMap::new(),
         };
-        
+
         // Initialize with comprehensive framework knowledge
         kb.init_global_frameworks();
         kb.init_chinese_frameworks();
@@ -234,10 +233,10 @@ impl FrameworkKnowledgeBase {
         kb.init_ui_libraries();
         kb.init_additional_frameworks();
         kb.build_indices();
-        
+
         kb
     }
-    
+
     /// Initialize global frameworks (US, Europe, etc.)
     fn init_global_frameworks(&mut self) {
         // React
@@ -277,7 +276,8 @@ impl FrameworkKnowledgeBase {
                 ObfuscationPattern {
                     name: "JSX to createElement".to_string(),
                     technique: ObfuscationTechnique::TemplateCompilation,
-                    example_obfuscated: r#"React.createElement("div", {className: "test"}, "Hello")"#.to_string(),
+                    example_obfuscated:
+                        r#"React.createElement("div", {className: "test"}, "Hello")"#.to_string(),
                     example_deobfuscated: r#"<div className="test">Hello</div>"#.to_string(),
                     complexity: 3,
                     prevalence: 1.0,
@@ -286,34 +286,37 @@ impl FrameworkKnowledgeBase {
                 ObfuscationPattern {
                     name: "Automatic JSX Runtime".to_string(),
                     technique: ObfuscationTechnique::TemplateCompilation,
-                    example_obfuscated: r#"_jsx("div", {className: "test", children: "Hello"})"#.to_string(),
+                    example_obfuscated: r#"_jsx("div", {className: "test", children: "Hello"})"#
+                        .to_string(),
                     example_deobfuscated: r#"<div className="test">Hello</div>"#.to_string(),
                     complexity: 3,
                     prevalence: 0.9,
                     detection_hints: vec!["_jsx or _jsxs function calls".to_string()],
                 },
             ],
-            strategies: vec![
-                DeobfuscationStrategy {
-                    name: "JSX reconstruction".to_string(),
-                    target: ObfuscationTechnique::TemplateCompilation,
-                    approach: "Parse createElement/jsx calls and reconstruct JSX syntax".to_string(),
-                    success_rate: 0.85,
-                    priority: 8,
-                    requirements: vec!["AST parser".to_string(), "React knowledge".to_string()],
-                    limitations: vec!["Complex spread props may be lossy".to_string()],
-                },
-            ],
+            strategies: vec![DeobfuscationStrategy {
+                name: "JSX reconstruction".to_string(),
+                target: ObfuscationTechnique::TemplateCompilation,
+                approach: "Parse createElement/jsx calls and reconstruct JSX syntax".to_string(),
+                success_rate: 0.85,
+                priority: 8,
+                requirements: vec!["AST parser".to_string(), "React knowledge".to_string()],
+                limitations: vec!["Complex spread props may be lossy".to_string()],
+            }],
             confidence_weights: ConfidenceWeights {
                 signature_match: 0.4,
                 pattern_match: 0.3,
                 contextual: 0.2,
                 related_frameworks: 0.1,
             },
-            related_frameworks: vec!["webpack".to_string(), "next-js".to_string(), "react-native".to_string()],
+            related_frameworks: vec![
+                "webpack".to_string(),
+                "next-js".to_string(),
+                "react-native".to_string(),
+            ],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Vue
         self.add_framework(FrameworkKnowledge {
             id: "vue".to_string(),
@@ -387,7 +390,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec!["vite".to_string(), "nuxt-js".to_string(), "vuex".to_string()],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Angular
         self.add_framework(FrameworkKnowledge {
             id: "angular".to_string(),
@@ -413,28 +416,25 @@ impl FrameworkKnowledgeBase {
                     context: "Angular imports".to_string(),
                 },
             ],
-            obfuscation_patterns: vec![
-                ObfuscationPattern {
-                    name: "Ivy template instructions".to_string(),
-                    technique: ObfuscationTechnique::TemplateCompilation,
-                    example_obfuscated: r#"ɵɵelementStart(0, "div"); ɵɵtext(1, "Hello"); ɵɵelementEnd();"#.to_string(),
-                    example_deobfuscated: r#"<div>Hello</div>"#.to_string(),
-                    complexity: 5,
-                    prevalence: 1.0,
-                    detection_hints: vec!["ɵɵ function calls".to_string()],
-                },
-            ],
-            strategies: vec![
-                DeobfuscationStrategy {
-                    name: "Ivy instruction reversal".to_string(),
-                    target: ObfuscationTechnique::TemplateCompilation,
-                    approach: "Parse Ivy instructions and reconstruct template HTML".to_string(),
-                    success_rate: 0.75,
-                    priority: 6,
-                    requirements: vec!["Angular Ivy knowledge".to_string()],
-                    limitations: vec!["Complex directives may be difficult".to_string()],
-                },
-            ],
+            obfuscation_patterns: vec![ObfuscationPattern {
+                name: "Ivy template instructions".to_string(),
+                technique: ObfuscationTechnique::TemplateCompilation,
+                example_obfuscated:
+                    r#"ɵɵelementStart(0, "div"); ɵɵtext(1, "Hello"); ɵɵelementEnd();"#.to_string(),
+                example_deobfuscated: r#"<div>Hello</div>"#.to_string(),
+                complexity: 5,
+                prevalence: 1.0,
+                detection_hints: vec!["ɵɵ function calls".to_string()],
+            }],
+            strategies: vec![DeobfuscationStrategy {
+                name: "Ivy instruction reversal".to_string(),
+                target: ObfuscationTechnique::TemplateCompilation,
+                approach: "Parse Ivy instructions and reconstruct template HTML".to_string(),
+                success_rate: 0.75,
+                priority: 6,
+                requirements: vec!["Angular Ivy knowledge".to_string()],
+                limitations: vec!["Complex directives may be difficult".to_string()],
+            }],
             confidence_weights: ConfidenceWeights {
                 signature_match: 0.5,
                 pattern_match: 0.3,
@@ -445,7 +445,7 @@ impl FrameworkKnowledgeBase {
             last_updated: "2026-01-07".to_string(),
         });
     }
-    
+
     /// Initialize Chinese frameworks
     fn init_chinese_frameworks(&mut self) {
         // Taro (京东)
@@ -473,28 +473,24 @@ impl FrameworkKnowledgeBase {
                     context: "Taro class components".to_string(),
                 },
             ],
-            obfuscation_patterns: vec![
-                ObfuscationPattern {
-                    name: "Mini-program API wrapping".to_string(),
-                    technique: ObfuscationTechnique::ProxyFunctions,
-                    example_obfuscated: r#"Taro.request({url: "api", success: fn})"#.to_string(),
-                    example_deobfuscated: r#"fetch("api").then(fn)"#.to_string(),
-                    complexity: 4,
-                    prevalence: 0.9,
-                    detection_hints: vec!["Taro.* API calls".to_string()],
-                },
-            ],
-            strategies: vec![
-                DeobfuscationStrategy {
-                    name: "Taro API conversion".to_string(),
-                    target: ObfuscationTechnique::ProxyFunctions,
-                    approach: "Convert Taro APIs to standard web APIs".to_string(),
-                    success_rate: 0.85,
-                    priority: 7,
-                    requirements: vec!["Taro API mapping".to_string()],
-                    limitations: vec!["Platform-specific features may not translate".to_string()],
-                },
-            ],
+            obfuscation_patterns: vec![ObfuscationPattern {
+                name: "Mini-program API wrapping".to_string(),
+                technique: ObfuscationTechnique::ProxyFunctions,
+                example_obfuscated: r#"Taro.request({url: "api", success: fn})"#.to_string(),
+                example_deobfuscated: r#"fetch("api").then(fn)"#.to_string(),
+                complexity: 4,
+                prevalence: 0.9,
+                detection_hints: vec!["Taro.* API calls".to_string()],
+            }],
+            strategies: vec![DeobfuscationStrategy {
+                name: "Taro API conversion".to_string(),
+                target: ObfuscationTechnique::ProxyFunctions,
+                approach: "Convert Taro APIs to standard web APIs".to_string(),
+                success_rate: 0.85,
+                priority: 7,
+                requirements: vec!["Taro API mapping".to_string()],
+                limitations: vec!["Platform-specific features may not translate".to_string()],
+            }],
             confidence_weights: ConfidenceWeights {
                 signature_match: 0.5,
                 pattern_match: 0.3,
@@ -504,7 +500,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec!["react".to_string(), "webpack".to_string()],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Uni-app (DCloud)
         self.add_framework(FrameworkKnowledge {
             id: "uni-app".to_string(),
@@ -530,28 +526,25 @@ impl FrameworkKnowledgeBase {
                     context: "DCloud package imports".to_string(),
                 },
             ],
-            obfuscation_patterns: vec![
-                ObfuscationPattern {
-                    name: "Uni API to web API".to_string(),
-                    technique: ObfuscationTechnique::ProxyFunctions,
-                    example_obfuscated: r#"uni.request({url: "/api", method: "GET", success: cb})"#.to_string(),
-                    example_deobfuscated: r#"fetch("/api", {method: "GET"}).then(cb)"#.to_string(),
-                    complexity: 4,
-                    prevalence: 1.0,
-                    detection_hints: vec!["uni.* function calls".to_string()],
-                },
-            ],
-            strategies: vec![
-                DeobfuscationStrategy {
-                    name: "Uni-app to web standard".to_string(),
-                    target: ObfuscationTechnique::ProxyFunctions,
-                    approach: "Map uni.* APIs to web standards".to_string(),
-                    success_rate: 0.80,
-                    priority: 8,
-                    requirements: vec!["Uni-app API reference".to_string()],
-                    limitations: vec!["Native platform features cannot be converted".to_string()],
-                },
-            ],
+            obfuscation_patterns: vec![ObfuscationPattern {
+                name: "Uni API to web API".to_string(),
+                technique: ObfuscationTechnique::ProxyFunctions,
+                example_obfuscated: r#"uni.request({url: "/api", method: "GET", success: cb})"#
+                    .to_string(),
+                example_deobfuscated: r#"fetch("/api", {method: "GET"}).then(cb)"#.to_string(),
+                complexity: 4,
+                prevalence: 1.0,
+                detection_hints: vec!["uni.* function calls".to_string()],
+            }],
+            strategies: vec![DeobfuscationStrategy {
+                name: "Uni-app to web standard".to_string(),
+                target: ObfuscationTechnique::ProxyFunctions,
+                approach: "Map uni.* APIs to web standards".to_string(),
+                success_rate: 0.80,
+                priority: 8,
+                requirements: vec!["Uni-app API reference".to_string()],
+                limitations: vec!["Native platform features cannot be converted".to_string()],
+            }],
             confidence_weights: ConfidenceWeights {
                 signature_match: 0.5,
                 pattern_match: 0.3,
@@ -561,7 +554,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec!["vue".to_string(), "vite".to_string()],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Rax (阿里巴巴)
         self.add_framework(FrameworkKnowledge {
             id: "rax".to_string(),
@@ -569,38 +562,33 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::FrontendFramework,
             origin: "China".to_string(),
             maintainer: "Alibaba (阿里巴巴)".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "Rax createElement".to_string(),
-                    pattern_type: SignatureType::ImportStatement,
-                    pattern: r#"from\s+['"]rax['"]"#.to_string(),
-                    weight: 0.95,
-                    required: true,
-                    context: "Rax framework import".to_string(),
-                },
-            ],
-            obfuscation_patterns: vec![
-                ObfuscationPattern {
-                    name: "Rax JSX compilation".to_string(),
-                    technique: ObfuscationTechnique::TemplateCompilation,
-                    example_obfuscated: r#"createElement("div", {style: styles.container}, "Hello")"#.to_string(),
-                    example_deobfuscated: r#"<div style={styles.container}>Hello</div>"#.to_string(),
-                    complexity: 3,
-                    prevalence: 1.0,
-                    detection_hints: vec!["Similar to React patterns".to_string()],
-                },
-            ],
-            strategies: vec![
-                DeobfuscationStrategy {
-                    name: "Rax to JSX".to_string(),
-                    target: ObfuscationTechnique::TemplateCompilation,
-                    approach: "Similar to React, convert createElement to JSX".to_string(),
-                    success_rate: 0.85,
-                    priority: 6,
-                    requirements: vec!["React-like parsing".to_string()],
-                    limitations: vec!["Rax-specific hooks may differ".to_string()],
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "Rax createElement".to_string(),
+                pattern_type: SignatureType::ImportStatement,
+                pattern: r#"from\s+['"]rax['"]"#.to_string(),
+                weight: 0.95,
+                required: true,
+                context: "Rax framework import".to_string(),
+            }],
+            obfuscation_patterns: vec![ObfuscationPattern {
+                name: "Rax JSX compilation".to_string(),
+                technique: ObfuscationTechnique::TemplateCompilation,
+                example_obfuscated: r#"createElement("div", {style: styles.container}, "Hello")"#
+                    .to_string(),
+                example_deobfuscated: r#"<div style={styles.container}>Hello</div>"#.to_string(),
+                complexity: 3,
+                prevalence: 1.0,
+                detection_hints: vec!["Similar to React patterns".to_string()],
+            }],
+            strategies: vec![DeobfuscationStrategy {
+                name: "Rax to JSX".to_string(),
+                target: ObfuscationTechnique::TemplateCompilation,
+                approach: "Similar to React, convert createElement to JSX".to_string(),
+                success_rate: 0.85,
+                priority: 6,
+                requirements: vec!["React-like parsing".to_string()],
+                limitations: vec!["Rax-specific hooks may differ".to_string()],
+            }],
             confidence_weights: ConfidenceWeights {
                 signature_match: 0.5,
                 pattern_match: 0.3,
@@ -610,7 +598,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec!["react".to_string(), "webpack".to_string()],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // San (百度)
         self.add_framework(FrameworkKnowledge {
             id: "san".to_string(),
@@ -618,38 +606,32 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::FrontendFramework,
             origin: "China".to_string(),
             maintainer: "Baidu (百度)".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "San Component".to_string(),
-                    pattern_type: SignatureType::StringLiteral,
-                    pattern: r"san\.Component|san\.defineComponent".to_string(),
-                    weight: 0.95,
-                    required: true,
-                    context: "San component definition".to_string(),
-                },
-            ],
-            obfuscation_patterns: vec![
-                ObfuscationPattern {
-                    name: "San template compilation".to_string(),
-                    technique: ObfuscationTechnique::TemplateCompilation,
-                    example_obfuscated: r#"template: "<div>{{message}}</div>""#.to_string(),
-                    example_deobfuscated: r#"<div>{{message}}</div>"#.to_string(),
-                    complexity: 3,
-                    prevalence: 1.0,
-                    detection_hints: vec!["Template strings with {{}}".to_string()],
-                },
-            ],
-            strategies: vec![
-                DeobfuscationStrategy {
-                    name: "San template extraction".to_string(),
-                    target: ObfuscationTechnique::TemplateCompilation,
-                    approach: "Extract template strings from component definitions".to_string(),
-                    success_rate: 0.90,
-                    priority: 5,
-                    requirements: vec!["San template syntax knowledge".to_string()],
-                    limitations: vec!["Complex filters may be challenging".to_string()],
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "San Component".to_string(),
+                pattern_type: SignatureType::StringLiteral,
+                pattern: r"san\.Component|san\.defineComponent".to_string(),
+                weight: 0.95,
+                required: true,
+                context: "San component definition".to_string(),
+            }],
+            obfuscation_patterns: vec![ObfuscationPattern {
+                name: "San template compilation".to_string(),
+                technique: ObfuscationTechnique::TemplateCompilation,
+                example_obfuscated: r#"template: "<div>{{message}}</div>""#.to_string(),
+                example_deobfuscated: r#"<div>{{message}}</div>"#.to_string(),
+                complexity: 3,
+                prevalence: 1.0,
+                detection_hints: vec!["Template strings with {{}}".to_string()],
+            }],
+            strategies: vec![DeobfuscationStrategy {
+                name: "San template extraction".to_string(),
+                target: ObfuscationTechnique::TemplateCompilation,
+                approach: "Extract template strings from component definitions".to_string(),
+                success_rate: 0.90,
+                priority: 5,
+                requirements: vec!["San template syntax knowledge".to_string()],
+                limitations: vec!["Complex filters may be challenging".to_string()],
+            }],
             confidence_weights: ConfidenceWeights {
                 signature_match: 0.5,
                 pattern_match: 0.3,
@@ -659,7 +641,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec![],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Omi (腾讯)
         self.add_framework(FrameworkKnowledge {
             id: "omi".to_string(),
@@ -667,38 +649,32 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::FrontendFramework,
             origin: "China".to_string(),
             maintainer: "Tencent (腾讯)".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "Omi WeElement".to_string(),
-                    pattern_type: SignatureType::StringLiteral,
-                    pattern: r#"WeElement|define\(['"][\w-]+['"]\)"#.to_string(),
-                    weight: 0.95,
-                    required: true,
-                    context: "Omi Web Components".to_string(),
-                },
-            ],
-            obfuscation_patterns: vec![
-                ObfuscationPattern {
-                    name: "Omi JSX to Web Components".to_string(),
-                    technique: ObfuscationTechnique::TemplateCompilation,
-                    example_obfuscated: r#"h("div", {class: "test"}, "Hello")"#.to_string(),
-                    example_deobfuscated: r#"<div class="test">Hello</div>"#.to_string(),
-                    complexity: 3,
-                    prevalence: 0.9,
-                    detection_hints: vec!["h() function calls for JSX".to_string()],
-                },
-            ],
-            strategies: vec![
-                DeobfuscationStrategy {
-                    name: "Omi component extraction".to_string(),
-                    target: ObfuscationTechnique::TemplateCompilation,
-                    approach: "Extract templates from h() calls and render methods".to_string(),
-                    success_rate: 0.80,
-                    priority: 5,
-                    requirements: vec!["Web Components knowledge".to_string()],
-                    limitations: vec!["Shadow DOM specifics may be lost".to_string()],
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "Omi WeElement".to_string(),
+                pattern_type: SignatureType::StringLiteral,
+                pattern: r#"WeElement|define\(['"][\w-]+['"]\)"#.to_string(),
+                weight: 0.95,
+                required: true,
+                context: "Omi Web Components".to_string(),
+            }],
+            obfuscation_patterns: vec![ObfuscationPattern {
+                name: "Omi JSX to Web Components".to_string(),
+                technique: ObfuscationTechnique::TemplateCompilation,
+                example_obfuscated: r#"h("div", {class: "test"}, "Hello")"#.to_string(),
+                example_deobfuscated: r#"<div class="test">Hello</div>"#.to_string(),
+                complexity: 3,
+                prevalence: 0.9,
+                detection_hints: vec!["h() function calls for JSX".to_string()],
+            }],
+            strategies: vec![DeobfuscationStrategy {
+                name: "Omi component extraction".to_string(),
+                target: ObfuscationTechnique::TemplateCompilation,
+                approach: "Extract templates from h() calls and render methods".to_string(),
+                success_rate: 0.80,
+                priority: 5,
+                requirements: vec!["Web Components knowledge".to_string()],
+                limitations: vec!["Shadow DOM specifics may be lost".to_string()],
+            }],
             confidence_weights: ConfidenceWeights {
                 signature_match: 0.5,
                 pattern_match: 0.3,
@@ -708,7 +684,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec!["webpack".to_string()],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Qiankun (阿里乾坤)
         self.add_framework(FrameworkKnowledge {
             id: "qiankun".to_string(),
@@ -716,38 +692,32 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::MicroFrontend,
             origin: "China".to_string(),
             maintainer: "Alibaba (阿里巴巴)".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "Qiankun micro app registration".to_string(),
-                    pattern_type: SignatureType::FunctionCall,
-                    pattern: r"registerMicroApps|start".to_string(),
-                    weight: 0.95,
-                    required: true,
-                    context: "Micro-frontend registration".to_string(),
-                },
-            ],
-            obfuscation_patterns: vec![
-                ObfuscationPattern {
-                    name: "Micro app lifecycle wrapping".to_string(),
-                    technique: ObfuscationTechnique::ModuleWrapping,
-                    example_obfuscated: r#"__INJECTED_PUBLIC_PATH_BY_QIANKUN__"#.to_string(),
-                    example_deobfuscated: r#"Original app entry"#.to_string(),
-                    complexity: 5,
-                    prevalence: 0.9,
-                    detection_hints: vec!["__INJECTED_*_BY_QIANKUN__".to_string()],
-                },
-            ],
-            strategies: vec![
-                DeobfuscationStrategy {
-                    name: "Qiankun wrapper removal".to_string(),
-                    target: ObfuscationTechnique::ModuleWrapping,
-                    approach: "Remove Qiankun injection markers and extract original app".to_string(),
-                    success_rate: 0.75,
-                    priority: 6,
-                    requirements: vec!["Qiankun lifecycle knowledge".to_string()],
-                    limitations: vec!["Sandbox isolation may complicate extraction".to_string()],
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "Qiankun micro app registration".to_string(),
+                pattern_type: SignatureType::FunctionCall,
+                pattern: r"registerMicroApps|start".to_string(),
+                weight: 0.95,
+                required: true,
+                context: "Micro-frontend registration".to_string(),
+            }],
+            obfuscation_patterns: vec![ObfuscationPattern {
+                name: "Micro app lifecycle wrapping".to_string(),
+                technique: ObfuscationTechnique::ModuleWrapping,
+                example_obfuscated: r#"__INJECTED_PUBLIC_PATH_BY_QIANKUN__"#.to_string(),
+                example_deobfuscated: r#"Original app entry"#.to_string(),
+                complexity: 5,
+                prevalence: 0.9,
+                detection_hints: vec!["__INJECTED_*_BY_QIANKUN__".to_string()],
+            }],
+            strategies: vec![DeobfuscationStrategy {
+                name: "Qiankun wrapper removal".to_string(),
+                target: ObfuscationTechnique::ModuleWrapping,
+                approach: "Remove Qiankun injection markers and extract original app".to_string(),
+                success_rate: 0.75,
+                priority: 6,
+                requirements: vec!["Qiankun lifecycle knowledge".to_string()],
+                limitations: vec!["Sandbox isolation may complicate extraction".to_string()],
+            }],
             confidence_weights: ConfidenceWeights {
                 signature_match: 0.6,
                 pattern_match: 0.2,
@@ -758,7 +728,7 @@ impl FrameworkKnowledgeBase {
             last_updated: "2026-01-07".to_string(),
         });
     }
-    
+
     /// Initialize bundlers and build tools
     fn init_bundlers(&mut self) {
         // Webpack
@@ -826,7 +796,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec!["babel".to_string(), "terser".to_string()],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Vite
         self.add_framework(FrameworkKnowledge {
             id: "vite".to_string(),
@@ -834,38 +804,33 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::Bundler,
             origin: "Global".to_string(),
             maintainer: "Evan You / Vite Team".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "Vite client".to_string(),
-                    pattern_type: SignatureType::StringLiteral,
-                    pattern: r"__vite|import\.meta\.hot".to_string(),
-                    weight: 0.9,
-                    required: false,
-                    context: "Vite HMR and dev features".to_string(),
-                },
-            ],
-            obfuscation_patterns: vec![
-                ObfuscationPattern {
-                    name: "ES module native".to_string(),
-                    technique: ObfuscationTechnique::TreeShaking,
-                    example_obfuscated: r#"import { used } from './module'; // unused exports removed"#.to_string(),
-                    example_deobfuscated: r#"// All exports visible"#.to_string(),
-                    complexity: 4,
-                    prevalence: 0.9,
-                    detection_hints: vec!["Clean ES modules with tree-shaking".to_string()],
-                },
-            ],
-            strategies: vec![
-                DeobfuscationStrategy {
-                    name: "Vite module resolution".to_string(),
-                    target: ObfuscationTechnique::TreeShaking,
-                    approach: "Trace import statements to reconstruct module dependencies".to_string(),
-                    success_rate: 0.90,
-                    priority: 7,
-                    requirements: vec!["ES module parser".to_string()],
-                    limitations: vec!["Dynamic imports need runtime analysis".to_string()],
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "Vite client".to_string(),
+                pattern_type: SignatureType::StringLiteral,
+                pattern: r"__vite|import\.meta\.hot".to_string(),
+                weight: 0.9,
+                required: false,
+                context: "Vite HMR and dev features".to_string(),
+            }],
+            obfuscation_patterns: vec![ObfuscationPattern {
+                name: "ES module native".to_string(),
+                technique: ObfuscationTechnique::TreeShaking,
+                example_obfuscated: r#"import { used } from './module'; // unused exports removed"#
+                    .to_string(),
+                example_deobfuscated: r#"// All exports visible"#.to_string(),
+                complexity: 4,
+                prevalence: 0.9,
+                detection_hints: vec!["Clean ES modules with tree-shaking".to_string()],
+            }],
+            strategies: vec![DeobfuscationStrategy {
+                name: "Vite module resolution".to_string(),
+                target: ObfuscationTechnique::TreeShaking,
+                approach: "Trace import statements to reconstruct module dependencies".to_string(),
+                success_rate: 0.90,
+                priority: 7,
+                requirements: vec!["ES module parser".to_string()],
+                limitations: vec!["Dynamic imports need runtime analysis".to_string()],
+            }],
             confidence_weights: ConfidenceWeights {
                 signature_match: 0.4,
                 pattern_match: 0.3,
@@ -876,7 +841,7 @@ impl FrameworkKnowledgeBase {
             last_updated: "2026-01-07".to_string(),
         });
     }
-    
+
     /// Initialize obfuscator tools
     fn init_obfuscators(&mut self) {
         // javascript-obfuscator
@@ -971,7 +936,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec![],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Terser / UglifyJS
         self.add_framework(FrameworkKnowledge {
             id: "terser".to_string(),
@@ -979,16 +944,14 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::ObfuscatorTool,
             origin: "Global".to_string(),
             maintainer: "Terser Team".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "License banner".to_string(),
-                    pattern_type: SignatureType::Comment,
-                    pattern: r"/\*! (For license|Copyright)".to_string(),
-                    weight: 0.6,
-                    required: false,
-                    context: "Preserved comments".to_string(),
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "License banner".to_string(),
+                pattern_type: SignatureType::Comment,
+                pattern: r"/\*! (For license|Copyright)".to_string(),
+                weight: 0.6,
+                required: false,
+                context: "Preserved comments".to_string(),
+            }],
             obfuscation_patterns: vec![
                 ObfuscationPattern {
                     name: "Variable name mangling".to_string(),
@@ -1039,7 +1002,7 @@ impl FrameworkKnowledgeBase {
             last_updated: "2026-01-07".to_string(),
         });
     }
-    
+
     /// Initialize meta frameworks (Next.js, Nuxt.js, etc.)
     fn init_meta_frameworks(&mut self) {
         // Next.js
@@ -1067,28 +1030,24 @@ impl FrameworkKnowledgeBase {
                     context: "Next.js data fetching methods".to_string(),
                 },
             ],
-            obfuscation_patterns: vec![
-                ObfuscationPattern {
-                    name: "Hydration markers".to_string(),
-                    technique: ObfuscationTechnique::TemplateCompilation,
-                    example_obfuscated: r#"__NEXT_DATA__ = {"props": {...}}"#.to_string(),
-                    example_deobfuscated: r#"Server-side rendered props"#.to_string(),
-                    complexity: 5,
-                    prevalence: 1.0,
-                    detection_hints: vec!["__NEXT_DATA__ global variable".to_string()],
-                },
-            ],
-            strategies: vec![
-                DeobfuscationStrategy {
-                    name: "Extract SSR data".to_string(),
-                    target: ObfuscationTechnique::TemplateCompilation,
-                    approach: "Parse __NEXT_DATA__ to extract server-rendered props".to_string(),
-                    success_rate: 0.95,
-                    priority: 8,
-                    requirements: vec!["JSON parsing".to_string()],
-                    limitations: vec!["Client-side only data not available".to_string()],
-                },
-            ],
+            obfuscation_patterns: vec![ObfuscationPattern {
+                name: "Hydration markers".to_string(),
+                technique: ObfuscationTechnique::TemplateCompilation,
+                example_obfuscated: r#"__NEXT_DATA__ = {"props": {...}}"#.to_string(),
+                example_deobfuscated: r#"Server-side rendered props"#.to_string(),
+                complexity: 5,
+                prevalence: 1.0,
+                detection_hints: vec!["__NEXT_DATA__ global variable".to_string()],
+            }],
+            strategies: vec![DeobfuscationStrategy {
+                name: "Extract SSR data".to_string(),
+                target: ObfuscationTechnique::TemplateCompilation,
+                approach: "Parse __NEXT_DATA__ to extract server-rendered props".to_string(),
+                success_rate: 0.95,
+                priority: 8,
+                requirements: vec!["JSON parsing".to_string()],
+                limitations: vec!["Client-side only data not available".to_string()],
+            }],
             confidence_weights: ConfidenceWeights {
                 signature_match: 0.5,
                 pattern_match: 0.3,
@@ -1098,7 +1057,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec!["react".to_string(), "webpack".to_string()],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Nuxt.js
         self.add_framework(FrameworkKnowledge {
             id: "nuxt-js".to_string(),
@@ -1106,16 +1065,14 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::MetaFramework,
             origin: "France/Global".to_string(),
             maintainer: "Nuxt Team".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "Nuxt context".to_string(),
-                    pattern_type: SignatureType::StringLiteral,
-                    pattern: r"\$nuxt|__NUXT__|nuxtServerInit".to_string(),
-                    weight: 0.95,
-                    required: false,
-                    context: "Nuxt.js runtime".to_string(),
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "Nuxt context".to_string(),
+                pattern_type: SignatureType::StringLiteral,
+                pattern: r"\$nuxt|__NUXT__|nuxtServerInit".to_string(),
+                weight: 0.95,
+                required: false,
+                context: "Nuxt.js runtime".to_string(),
+            }],
             obfuscation_patterns: vec![],
             strategies: vec![],
             confidence_weights: ConfidenceWeights {
@@ -1127,7 +1084,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec!["vue".to_string(), "vite".to_string()],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Gatsby
         self.add_framework(FrameworkKnowledge {
             id: "gatsby".to_string(),
@@ -1135,16 +1092,14 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::MetaFramework,
             origin: "USA".to_string(),
             maintainer: "Gatsby Team / Netlify".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "Gatsby runtime".to_string(),
-                    pattern_type: SignatureType::StringLiteral,
-                    pattern: r"___gatsby|gatsby-browser|gatsby-ssr".to_string(),
-                    weight: 0.95,
-                    required: false,
-                    context: "Gatsby static site generation".to_string(),
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "Gatsby runtime".to_string(),
+                pattern_type: SignatureType::StringLiteral,
+                pattern: r"___gatsby|gatsby-browser|gatsby-ssr".to_string(),
+                weight: 0.95,
+                required: false,
+                context: "Gatsby static site generation".to_string(),
+            }],
             obfuscation_patterns: vec![],
             strategies: vec![],
             confidence_weights: ConfidenceWeights {
@@ -1156,7 +1111,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec!["react".to_string(), "webpack".to_string()],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // SvelteKit
         self.add_framework(FrameworkKnowledge {
             id: "sveltekit".to_string(),
@@ -1164,16 +1119,14 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::MetaFramework,
             origin: "Global".to_string(),
             maintainer: "Svelte Team".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "SvelteKit imports".to_string(),
-                    pattern_type: SignatureType::ImportStatement,
-                    pattern: r"@sveltejs/kit|\$app/".to_string(),
-                    weight: 0.95,
-                    required: false,
-                    context: "SvelteKit framework".to_string(),
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "SvelteKit imports".to_string(),
+                pattern_type: SignatureType::ImportStatement,
+                pattern: r"@sveltejs/kit|\$app/".to_string(),
+                weight: 0.95,
+                required: false,
+                context: "SvelteKit framework".to_string(),
+            }],
             obfuscation_patterns: vec![],
             strategies: vec![],
             confidence_weights: ConfidenceWeights {
@@ -1186,7 +1139,7 @@ impl FrameworkKnowledgeBase {
             last_updated: "2026-01-07".to_string(),
         });
     }
-    
+
     /// Initialize state management frameworks
     fn init_state_management(&mut self) {
         // Redux
@@ -1196,16 +1149,14 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::StateManagement,
             origin: "USA".to_string(),
             maintainer: "Redux Team".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "Redux store".to_string(),
-                    pattern_type: SignatureType::FunctionCall,
-                    pattern: r"createStore|combineReducers".to_string(),
-                    weight: 0.9,
-                    required: false,
-                    context: "Redux state management".to_string(),
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "Redux store".to_string(),
+                pattern_type: SignatureType::FunctionCall,
+                pattern: r"createStore|combineReducers".to_string(),
+                weight: 0.9,
+                required: false,
+                context: "Redux state management".to_string(),
+            }],
             obfuscation_patterns: vec![],
             strategies: vec![],
             confidence_weights: ConfidenceWeights {
@@ -1217,7 +1168,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec!["react".to_string()],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // MobX
         self.add_framework(FrameworkKnowledge {
             id: "mobx".to_string(),
@@ -1225,16 +1176,14 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::StateManagement,
             origin: "Global".to_string(),
             maintainer: "MobX Team".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "MobX observables".to_string(),
-                    pattern_type: SignatureType::FunctionCall,
-                    pattern: r"makeObservable|observable|action".to_string(),
-                    weight: 0.9,
-                    required: false,
-                    context: "MobX reactive programming".to_string(),
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "MobX observables".to_string(),
+                pattern_type: SignatureType::FunctionCall,
+                pattern: r"makeObservable|observable|action".to_string(),
+                weight: 0.9,
+                required: false,
+                context: "MobX reactive programming".to_string(),
+            }],
             obfuscation_patterns: vec![],
             strategies: vec![],
             confidence_weights: ConfidenceWeights {
@@ -1246,7 +1195,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec!["react".to_string()],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Zustand
         self.add_framework(FrameworkKnowledge {
             id: "zustand".to_string(),
@@ -1254,16 +1203,14 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::StateManagement,
             origin: "Global".to_string(),
             maintainer: "Poimandres".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "Zustand create".to_string(),
-                    pattern_type: SignatureType::ImportStatement,
-                    pattern: r#"from\s+['"]zustand['"]"#.to_string(),
-                    weight: 0.9,
-                    required: false,
-                    context: "Zustand state library".to_string(),
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "Zustand create".to_string(),
+                pattern_type: SignatureType::ImportStatement,
+                pattern: r#"from\s+['"]zustand['"]"#.to_string(),
+                weight: 0.9,
+                required: false,
+                context: "Zustand state library".to_string(),
+            }],
             obfuscation_patterns: vec![],
             strategies: vec![],
             confidence_weights: ConfidenceWeights {
@@ -1275,7 +1222,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec!["react".to_string()],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Pinia (Vue)
         self.add_framework(FrameworkKnowledge {
             id: "pinia".to_string(),
@@ -1283,16 +1230,14 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::StateManagement,
             origin: "France/Global".to_string(),
             maintainer: "Eduardo San Martin Morote".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "Pinia store".to_string(),
-                    pattern_type: SignatureType::FunctionCall,
-                    pattern: r"defineStore|createPinia".to_string(),
-                    weight: 0.95,
-                    required: false,
-                    context: "Pinia Vue state management".to_string(),
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "Pinia store".to_string(),
+                pattern_type: SignatureType::FunctionCall,
+                pattern: r"defineStore|createPinia".to_string(),
+                weight: 0.95,
+                required: false,
+                context: "Pinia Vue state management".to_string(),
+            }],
             obfuscation_patterns: vec![],
             strategies: vec![],
             confidence_weights: ConfidenceWeights {
@@ -1305,7 +1250,7 @@ impl FrameworkKnowledgeBase {
             last_updated: "2026-01-07".to_string(),
         });
     }
-    
+
     /// Initialize UI libraries
     fn init_ui_libraries(&mut self) {
         // Ant Design
@@ -1315,16 +1260,14 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::UILibrary,
             origin: "China".to_string(),
             maintainer: "Ant Group (蚂蚁集团)".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "Ant Design imports".to_string(),
-                    pattern_type: SignatureType::ImportStatement,
-                    pattern: r#"from\s+['"]antd['"]|@ant-design"#.to_string(),
-                    weight: 0.95,
-                    required: false,
-                    context: "Ant Design UI library".to_string(),
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "Ant Design imports".to_string(),
+                pattern_type: SignatureType::ImportStatement,
+                pattern: r#"from\s+['"]antd['"]|@ant-design"#.to_string(),
+                weight: 0.95,
+                required: false,
+                context: "Ant Design UI library".to_string(),
+            }],
             obfuscation_patterns: vec![],
             strategies: vec![],
             confidence_weights: ConfidenceWeights {
@@ -1336,7 +1279,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec!["react".to_string()],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Material-UI / MUI
         self.add_framework(FrameworkKnowledge {
             id: "mui".to_string(),
@@ -1344,16 +1287,14 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::UILibrary,
             origin: "Global".to_string(),
             maintainer: "MUI Team".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "MUI imports".to_string(),
-                    pattern_type: SignatureType::ImportStatement,
-                    pattern: r"@mui/|@material-ui/|makeStyles|createTheme".to_string(),
-                    weight: 0.9,
-                    required: false,
-                    context: "Material-UI library".to_string(),
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "MUI imports".to_string(),
+                pattern_type: SignatureType::ImportStatement,
+                pattern: r"@mui/|@material-ui/|makeStyles|createTheme".to_string(),
+                weight: 0.9,
+                required: false,
+                context: "Material-UI library".to_string(),
+            }],
             obfuscation_patterns: vec![],
             strategies: vec![],
             confidence_weights: ConfidenceWeights {
@@ -1365,7 +1306,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec!["react".to_string()],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Element UI / Element Plus (饿了么)
         self.add_framework(FrameworkKnowledge {
             id: "element-ui".to_string(),
@@ -1373,16 +1314,14 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::UILibrary,
             origin: "China".to_string(),
             maintainer: "Ele.me (饿了么)".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "Element imports".to_string(),
-                    pattern_type: SignatureType::ImportStatement,
-                    pattern: r"element-ui|element-plus".to_string(),
-                    weight: 0.95,
-                    required: false,
-                    context: "Element UI library".to_string(),
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "Element imports".to_string(),
+                pattern_type: SignatureType::ImportStatement,
+                pattern: r"element-ui|element-plus".to_string(),
+                weight: 0.95,
+                required: false,
+                context: "Element UI library".to_string(),
+            }],
             obfuscation_patterns: vec![],
             strategies: vec![],
             confidence_weights: ConfidenceWeights {
@@ -1394,7 +1333,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec!["vue".to_string()],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Vant (有赞)
         self.add_framework(FrameworkKnowledge {
             id: "vant".to_string(),
@@ -1402,16 +1341,14 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::UILibrary,
             origin: "China".to_string(),
             maintainer: "Youzan (有赞)".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "Vant imports".to_string(),
-                    pattern_type: SignatureType::ImportStatement,
-                    pattern: r#"from\s+['"]vant['"]|@vant"#.to_string(),
-                    weight: 0.95,
-                    required: false,
-                    context: "Vant mobile UI".to_string(),
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "Vant imports".to_string(),
+                pattern_type: SignatureType::ImportStatement,
+                pattern: r#"from\s+['"]vant['"]|@vant"#.to_string(),
+                weight: 0.95,
+                required: false,
+                context: "Vant mobile UI".to_string(),
+            }],
             obfuscation_patterns: vec![],
             strategies: vec![],
             confidence_weights: ConfidenceWeights {
@@ -1424,7 +1361,7 @@ impl FrameworkKnowledgeBase {
             last_updated: "2026-01-07".to_string(),
         });
     }
-    
+
     /// Initialize additional frameworks (Svelte, Preact, etc.)
     fn init_additional_frameworks(&mut self) {
         // Svelte
@@ -1434,16 +1371,14 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::FrontendFramework,
             origin: "USA".to_string(),
             maintainer: "Rich Harris / Svelte Team".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "Svelte component".to_string(),
-                    pattern_type: SignatureType::StringLiteral,
-                    pattern: r"SvelteComponent|svelte/internal|create_component".to_string(),
-                    weight: 0.9,
-                    required: false,
-                    context: "Svelte compilation".to_string(),
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "Svelte component".to_string(),
+                pattern_type: SignatureType::StringLiteral,
+                pattern: r"SvelteComponent|svelte/internal|create_component".to_string(),
+                weight: 0.9,
+                required: false,
+                context: "Svelte compilation".to_string(),
+            }],
             obfuscation_patterns: vec![],
             strategies: vec![],
             confidence_weights: ConfidenceWeights {
@@ -1455,7 +1390,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec!["rollup".to_string()],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Preact
         self.add_framework(FrameworkKnowledge {
             id: "preact".to_string(),
@@ -1463,16 +1398,14 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::FrontendFramework,
             origin: "USA".to_string(),
             maintainer: "Jason Miller / Preact Team".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "Preact h function".to_string(),
-                    pattern_type: SignatureType::ImportStatement,
-                    pattern: r#"from\s+['"]preact['"]"#.to_string(),
-                    weight: 0.95,
-                    required: false,
-                    context: "Preact lightweight React alternative".to_string(),
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "Preact h function".to_string(),
+                pattern_type: SignatureType::ImportStatement,
+                pattern: r#"from\s+['"]preact['"]"#.to_string(),
+                weight: 0.95,
+                required: false,
+                context: "Preact lightweight React alternative".to_string(),
+            }],
             obfuscation_patterns: vec![],
             strategies: vec![],
             confidence_weights: ConfidenceWeights {
@@ -1484,7 +1417,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec!["react".to_string()],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Solid.js
         self.add_framework(FrameworkKnowledge {
             id: "solid-js".to_string(),
@@ -1492,16 +1425,14 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::FrontendFramework,
             origin: "USA".to_string(),
             maintainer: "Ryan Carniato / Solid Team".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "Solid signals".to_string(),
-                    pattern_type: SignatureType::FunctionCall,
-                    pattern: r"createSignal|createEffect|createMemo".to_string(),
-                    weight: 0.9,
-                    required: false,
-                    context: "Solid.js reactive primitives".to_string(),
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "Solid signals".to_string(),
+                pattern_type: SignatureType::FunctionCall,
+                pattern: r"createSignal|createEffect|createMemo".to_string(),
+                weight: 0.9,
+                required: false,
+                context: "Solid.js reactive primitives".to_string(),
+            }],
             obfuscation_patterns: vec![],
             strategies: vec![],
             confidence_weights: ConfidenceWeights {
@@ -1513,7 +1444,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec![],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Alpine.js
         self.add_framework(FrameworkKnowledge {
             id: "alpine-js".to_string(),
@@ -1521,16 +1452,14 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::FrontendFramework,
             origin: "USA".to_string(),
             maintainer: "Caleb Porzio".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "Alpine directives".to_string(),
-                    pattern_type: SignatureType::StringLiteral,
-                    pattern: r"x-data|x-show|x-if|Alpine\.start".to_string(),
-                    weight: 0.9,
-                    required: false,
-                    context: "Alpine.js lightweight framework".to_string(),
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "Alpine directives".to_string(),
+                pattern_type: SignatureType::StringLiteral,
+                pattern: r"x-data|x-show|x-if|Alpine\.start".to_string(),
+                weight: 0.9,
+                required: false,
+                context: "Alpine.js lightweight framework".to_string(),
+            }],
             obfuscation_patterns: vec![],
             strategies: vec![],
             confidence_weights: ConfidenceWeights {
@@ -1542,7 +1471,7 @@ impl FrameworkKnowledgeBase {
             related_frameworks: vec![],
             last_updated: "2026-01-07".to_string(),
         });
-        
+
         // Lit
         self.add_framework(FrameworkKnowledge {
             id: "lit".to_string(),
@@ -1550,16 +1479,14 @@ impl FrameworkKnowledgeBase {
             category: FrameworkCategory::FrontendFramework,
             origin: "USA".to_string(),
             maintainer: "Google".to_string(),
-            signatures: vec![
-                ObfuscationSignature {
-                    name: "Lit element".to_string(),
-                    pattern_type: SignatureType::StringLiteral,
-                    pattern: r"LitElement|lit-html|customElement".to_string(),
-                    weight: 0.9,
-                    required: false,
-                    context: "Lit web components".to_string(),
-                },
-            ],
+            signatures: vec![ObfuscationSignature {
+                name: "Lit element".to_string(),
+                pattern_type: SignatureType::StringLiteral,
+                pattern: r"LitElement|lit-html|customElement".to_string(),
+                weight: 0.9,
+                required: false,
+                context: "Lit web components".to_string(),
+            }],
             obfuscation_patterns: vec![],
             strategies: vec![],
             confidence_weights: ConfidenceWeights {
@@ -1572,22 +1499,19 @@ impl FrameworkKnowledgeBase {
             last_updated: "2026-01-07".to_string(),
         });
     }
-    
+
     /// Add a framework to the knowledge base
     fn add_framework(&mut self, framework: FrameworkKnowledge) {
         let id = framework.id.clone();
         let category = framework.category.clone();
-        
+
         // Add to main map
         self.frameworks.insert(id.clone(), framework);
-        
+
         // Update category index
-        self.category_index
-            .entry(category)
-            .or_insert_with(Vec::new)
-            .push(id);
+        self.category_index.entry(category).or_default().push(id);
     }
-    
+
     /// Build search indices
     fn build_indices(&mut self) {
         // Build signature index for fast pattern matching
@@ -1595,19 +1519,22 @@ impl FrameworkKnowledgeBase {
             for signature in &framework.signatures {
                 self.signature_index
                     .entry(signature.pattern.clone())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(id.clone());
             }
         }
     }
-    
+
     /// Get framework by ID
     pub fn get_framework(&self, id: &str) -> Option<&FrameworkKnowledge> {
         self.frameworks.get(id)
     }
-    
+
     /// Get all frameworks in a category
-    pub fn get_frameworks_by_category(&self, category: &FrameworkCategory) -> Vec<&FrameworkKnowledge> {
+    pub fn get_frameworks_by_category(
+        &self,
+        category: &FrameworkCategory,
+    ) -> Vec<&FrameworkKnowledge> {
         self.category_index
             .get(category)
             .map(|ids| {
@@ -1617,15 +1544,15 @@ impl FrameworkKnowledgeBase {
             })
             .unwrap_or_default()
     }
-    
+
     /// Analyze code and return detected frameworks
     pub fn analyze_code(&self, code: &str) -> Result<Vec<DetectionResult>> {
         let mut results = Vec::new();
-        
+
         for (id, framework) in &self.frameworks {
             let mut score = 0.0;
             let mut matched_signatures = Vec::new();
-            
+
             // Check signatures
             for signature in &framework.signatures {
                 if self.matches_signature(code, signature) {
@@ -1633,7 +1560,7 @@ impl FrameworkKnowledgeBase {
                     matched_signatures.push(signature.name.clone());
                 }
             }
-            
+
             // Calculate confidence
             let max_score: f32 = framework.signatures.iter().map(|s| s.weight).sum();
             let confidence = if max_score > 0.0 {
@@ -1641,7 +1568,7 @@ impl FrameworkKnowledgeBase {
             } else {
                 0.0
             };
-            
+
             if confidence > 0.1 {
                 results.push(DetectionResult {
                     framework_id: id.clone(),
@@ -1652,13 +1579,13 @@ impl FrameworkKnowledgeBase {
                 });
             }
         }
-        
+
         // Sort by confidence
         results.sort_by(|a, b| b.confidence.partial_cmp(&a.confidence).unwrap());
-        
+
         Ok(results)
     }
-    
+
     /// Check if code matches a signature
     fn matches_signature(&self, code: &str, signature: &ObfuscationSignature) -> bool {
         match signature.pattern_type {
@@ -1667,37 +1594,45 @@ impl FrameworkKnowledgeBase {
                 use regex::Regex;
                 Regex::new(&signature.pattern)
                     .ok()
-                    .and_then(|re| Some(re.is_match(code)))
+                    .map(|re| re.is_match(code))
                     .unwrap_or(false)
             }
-            SignatureType::ImportStatement | SignatureType::FunctionCall | SignatureType::VariableDeclaration => {
+            SignatureType::ImportStatement
+            | SignatureType::FunctionCall
+            | SignatureType::VariableDeclaration => {
                 use regex::Regex;
                 Regex::new(&signature.pattern)
                     .ok()
-                    .and_then(|re| Some(re.is_match(code)))
+                    .map(|re| re.is_match(code))
                     .unwrap_or(false)
             }
             _ => false,
         }
     }
-    
+
     /// Get all frameworks count
     pub fn framework_count(&self) -> usize {
         self.frameworks.len()
     }
-    
+
     /// Get statistics
     pub fn get_statistics(&self) -> KnowledgeBaseStats {
         let total_frameworks = self.frameworks.len();
         let total_signatures: usize = self.frameworks.values().map(|f| f.signatures.len()).sum();
-        let total_patterns: usize = self.frameworks.values().map(|f| f.obfuscation_patterns.len()).sum();
+        let total_patterns: usize = self
+            .frameworks
+            .values()
+            .map(|f| f.obfuscation_patterns.len())
+            .sum();
         let total_strategies: usize = self.frameworks.values().map(|f| f.strategies.len()).sum();
-        
+
         let mut category_counts = HashMap::new();
         for framework in self.frameworks.values() {
-            *category_counts.entry(framework.category.clone()).or_insert(0) += 1;
+            *category_counts
+                .entry(framework.category.clone())
+                .or_insert(0) += 1;
         }
-        
+
         KnowledgeBaseStats {
             total_frameworks,
             total_signatures,
@@ -1747,13 +1682,13 @@ impl Default for FrameworkKnowledgeBase {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_knowledge_base_initialization() {
         let kb = FrameworkKnowledgeBase::new();
         assert!(kb.framework_count() > 0);
     }
-    
+
     #[test]
     fn test_react_detection() {
         let kb = FrameworkKnowledgeBase::new();
@@ -1763,12 +1698,12 @@ mod tests {
                 return React.createElement("div", null, "Hello");
             }
         "#;
-        
+
         let results = kb.analyze_code(code).unwrap();
         assert!(!results.is_empty());
         assert!(results.iter().any(|r| r.framework_id == "react"));
     }
-    
+
     #[test]
     fn test_vue_detection() {
         let kb = FrameworkKnowledgeBase::new();
@@ -1778,12 +1713,12 @@ mod tests {
                 return _createElementVNode("div", _hoisted_1, "Hello");
             }
         "#;
-        
+
         let results = kb.analyze_code(code).unwrap();
         assert!(!results.is_empty());
         assert!(results.iter().any(|r| r.framework_id == "vue"));
     }
-    
+
     #[test]
     fn test_webpack_detection() {
         let kb = FrameworkKnowledgeBase::new();
@@ -1794,16 +1729,16 @@ mod tests {
                 }
             })([function() { }]);
         "#;
-        
+
         let results = kb.analyze_code(code).unwrap();
         assert!(!results.is_empty());
         assert!(results.iter().any(|r| r.framework_id == "webpack"));
     }
-    
+
     #[test]
     fn test_chinese_framework_detection() {
         let kb = FrameworkKnowledgeBase::new();
-        
+
         // Test Taro
         let taro_code = r#"
             import Taro from '@tarojs/taro';
@@ -1811,7 +1746,7 @@ mod tests {
         "#;
         let results = kb.analyze_code(taro_code).unwrap();
         assert!(results.iter().any(|r| r.framework_id == "taro"));
-        
+
         // Test Uni-app
         let uni_code = r#"
             uni.request({ url: '/api', success: () => {} });
@@ -1819,7 +1754,7 @@ mod tests {
         let results = kb.analyze_code(uni_code).unwrap();
         assert!(results.iter().any(|r| r.framework_id == "uni-app"));
     }
-    
+
     #[test]
     fn test_obfuscator_detection() {
         let kb = FrameworkKnowledgeBase::new();
@@ -1829,26 +1764,27 @@ mod tests {
                 console.log(_0xabcd[0]);
             }
         "#;
-        
+
         let results = kb.analyze_code(code).unwrap();
         assert!(!results.is_empty());
     }
-    
+
     #[test]
     fn test_get_framework_by_category() {
         let kb = FrameworkKnowledgeBase::new();
         let bundlers = kb.get_frameworks_by_category(&FrameworkCategory::Bundler);
         assert!(!bundlers.is_empty());
-        
-        let chinese_frameworks = kb.get_frameworks_by_category(&FrameworkCategory::MobileCrossPlatform);
+
+        let chinese_frameworks =
+            kb.get_frameworks_by_category(&FrameworkCategory::MobileCrossPlatform);
         assert!(!chinese_frameworks.is_empty());
     }
-    
+
     #[test]
     fn test_statistics() {
         let kb = FrameworkKnowledgeBase::new();
         let stats = kb.get_statistics();
-        
+
         assert!(stats.total_frameworks > 10);
         assert!(stats.total_signatures > 0);
         assert!(stats.total_patterns > 0);

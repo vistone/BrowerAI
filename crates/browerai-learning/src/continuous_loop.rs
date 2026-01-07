@@ -10,6 +10,9 @@ use super::{
     OnlineLearner,
 };
 
+/// Type alias for learning event callbacks
+type LearningCallback = Box<dyn Fn(&LearningEvent)>;
+
 /// Continuous learning loop configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContinuousLearningConfig {
@@ -191,7 +194,7 @@ impl ContinuousLearningLoop {
     }
 
     /// Run the continuous learning loop
-    pub fn run(&mut self, callback: Option<Box<dyn Fn(&LearningEvent)>>) -> Result<()> {
+    pub fn run(&mut self, callback: Option<LearningCallback>) -> Result<()> {
         self.running = true;
         log::info!("Starting continuous learning loop");
 

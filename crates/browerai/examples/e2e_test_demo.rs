@@ -2,7 +2,7 @@
 ///
 /// This example demonstrates how to use the testing infrastructure to validate
 /// BrowerAI's parsing and rendering capabilities.
-use browerai::testing::{WebsiteTester, WebsiteTestSuite};
+use browerai::testing::{WebsiteTestSuite, WebsiteTester};
 
 fn main() -> anyhow::Result<()> {
     env_logger::init();
@@ -22,9 +22,16 @@ fn main() -> anyhow::Result<()> {
 <head><title>Test</title></head>
 <body><h1>Hello World</h1></body>
 </html>"#;
-    
+
     let result1 = tester.test_website("http://example.com", html1, "", "");
-    println!("  HTML parse: {}", if result1.html_parse_success { "✓" } else { "✗" });
+    println!(
+        "  HTML parse: {}",
+        if result1.html_parse_success {
+            "✓"
+        } else {
+            "✗"
+        }
+    );
     println!("  Elements: {}", result1.elements_parsed);
     println!("  Parse time: {}ms\n", result1.html_parse_time.as_millis());
     suite.add_result(result1);
@@ -37,10 +44,24 @@ fn main() -> anyhow::Result<()> {
 <body><div class="test">Content</div></body>
 </html>"#;
     let css2 = ".test { color: blue; font-size: 16px; }";
-    
+
     let result2 = tester.test_website("http://styled.example", html2, css2, "");
-    println!("  HTML parse: {}", if result2.html_parse_success { "✓" } else { "✗" });
-    println!("  CSS parse: {}", if result2.css_parse_success { "✓" } else { "✗" });
+    println!(
+        "  HTML parse: {}",
+        if result2.html_parse_success {
+            "✓"
+        } else {
+            "✗"
+        }
+    );
+    println!(
+        "  CSS parse: {}",
+        if result2.css_parse_success {
+            "✓"
+        } else {
+            "✗"
+        }
+    );
     println!("  CSS rules: {}", result2.css_rules_parsed);
     println!("  Parse time: {}ms\n", result2.css_parse_time.as_millis());
     suite.add_result(result2);
@@ -53,11 +74,32 @@ fn main() -> anyhow::Result<()> {
 </html>"#;
     let css3 = "button { padding: 10px; }";
     let js3 = "document.getElementById('btn').addEventListener('click', () => alert('Hi'));";
-    
+
     let result3 = tester.test_website("http://complete.example", html3, css3, js3);
-    println!("  HTML parse: {}", if result3.html_parse_success { "✓" } else { "✗" });
-    println!("  CSS parse: {}", if result3.css_parse_success { "✓" } else { "✗" });
-    println!("  JS parse: {}", if result3.js_parse_success { "✓" } else { "✗" });
+    println!(
+        "  HTML parse: {}",
+        if result3.html_parse_success {
+            "✓"
+        } else {
+            "✗"
+        }
+    );
+    println!(
+        "  CSS parse: {}",
+        if result3.css_parse_success {
+            "✓"
+        } else {
+            "✗"
+        }
+    );
+    println!(
+        "  JS parse: {}",
+        if result3.js_parse_success {
+            "✓"
+        } else {
+            "✗"
+        }
+    );
     println!("  JS statements: {}\n", result3.js_statements_parsed);
     suite.add_result(result3);
 

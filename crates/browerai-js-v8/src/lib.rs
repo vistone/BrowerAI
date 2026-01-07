@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use std::sync::Once;
 
 pub mod sandbox;
-pub use sandbox::{V8Sandbox, V8SandboxLimits, V8HeapStats};
+pub use sandbox::{V8HeapStats, V8Sandbox, V8SandboxLimits};
 
 static V8_INIT: Once = Once::new();
 
@@ -16,7 +16,7 @@ fn init_v8() {
 }
 
 /// V8-based JavaScript parser with high performance
-/// 
+///
 /// This uses Google's V8 engine (same engine used in Chrome and Node.js)
 /// for maximum compatibility and performance. V8 supports all modern
 /// JavaScript features including ES2024 syntax.
@@ -28,9 +28,9 @@ impl V8JsParser {
     /// Create a new V8 JavaScript parser
     pub fn new() -> Result<Self> {
         init_v8();
-        
+
         let isolate = v8::Isolate::new(Default::default());
-        
+
         Ok(Self {
             isolate: Some(isolate),
         })
@@ -41,7 +41,7 @@ impl V8JsParser {
         let isolate = self.isolate.as_mut().unwrap();
         let mut stats = v8::HeapStatistics::default();
         isolate.get_heap_statistics(&mut stats);
-        
+
         V8HeapStats {
             total_heap_size: stats.total_heap_size(),
             used_heap_size: stats.used_heap_size(),
@@ -55,25 +55,27 @@ impl V8JsParser {
     }
 
     /// Parse JavaScript content using V8
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `js` - JavaScript source code as a string
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Returns a `Result` containing the parsed AST or an error
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```ignore
     /// use browerai_js_v8::V8JsParser;
-    /// 
+    ///
     /// let parser = V8JsParser::new()?;
     /// let ast = parser.parse("const x = 42;")?;
     /// ```
     pub fn parse(&mut self, js: &str) -> Result<V8JsAst> {
-        let isolate = self.isolate.as_mut()
+        let isolate = self
+            .isolate
+            .as_mut()
             .ok_or_else(|| anyhow::anyhow!("V8 isolate not initialized"))?;
 
         let handle_scope = &mut v8::HandleScope::new(isolate);
@@ -90,7 +92,7 @@ impl V8JsParser {
 
         // If we got here, the script compiled successfully
         // We don't need to execute it for parsing
-        
+
         log::info!(
             "Successfully parsed JavaScript with V8 ({} bytes)",
             js.len()
@@ -112,16 +114,18 @@ impl V8JsParser {
     }
 
     /// Execute JavaScript code and return the result
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `js` - JavaScript source code to execute
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Returns the result of execution as a string
     pub fn execute(&mut self, js: &str) -> Result<String> {
-        let isolate = self.isolate.as_mut()
+        let isolate = self
+            .isolate
+            .as_mut()
             .ok_or_else(|| anyhow::anyhow!("V8 isolate not initialized"))?;
 
         let handle_scope = &mut v8::HandleScope::new(isolate);
@@ -137,14 +141,15 @@ impl V8JsParser {
             .context("Failed to compile JavaScript with V8")?;
 
         // Execute the script
-        let result = script.run(scope)
+        let result = script
+            .run(scope)
             .ok_or_else(|| anyhow::anyhow!("Failed to execute JavaScript"))?;
 
         // Convert result to string
         let result_str = result
             .to_string(scope)
             .ok_or_else(|| anyhow::anyhow!("Failed to convert result to string"))?;
-        
+
         Ok(result_str.to_rust_string_lossy(scope))
     }
 }

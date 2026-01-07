@@ -220,6 +220,11 @@ impl FeedbackPipeline {
         self.events.read().unwrap().len()
     }
 
+    /// Check if pipeline is empty
+    pub fn is_empty(&self) -> bool {
+        self.events.read().unwrap().is_empty()
+    }
+
     /// Convert to training sample format (exportable to JSON)
     pub fn export_training_samples(&self) -> Result<String> {
         let events = self.get_events();

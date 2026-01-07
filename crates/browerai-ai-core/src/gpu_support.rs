@@ -70,11 +70,9 @@ impl GpuConfig {
     }
 
     /// Detect available GPU providers
+    #[allow(unused_mut)] // mut needed when ai feature is enabled
     pub fn detect_available_providers(&self) -> Vec<GpuProvider> {
-        let mut providers = Vec::new();
-
-        // Always have CPU as fallback
-        providers.push(GpuProvider::Cpu);
+        let mut providers = vec![GpuProvider::Cpu];
 
         #[cfg(feature = "ai")]
         {

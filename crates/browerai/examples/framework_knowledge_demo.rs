@@ -2,15 +2,14 @@
 ///
 /// This example demonstrates the comprehensive framework knowledge system
 /// that can detect and analyze obfuscation patterns from global JavaScript frameworks.
-
-use browerai_learning::{FrameworkKnowledgeBase, FrameworkCategory};
+use browerai_learning::{FrameworkCategory, FrameworkKnowledgeBase};
 
 fn main() {
     println!("=== BrowerAI Framework Knowledge Base Demo ===\n");
-    
+
     // Initialize knowledge base
     let kb = FrameworkKnowledgeBase::new();
-    
+
     // Print statistics
     let stats = kb.get_statistics();
     println!("📊 Knowledge Base Statistics:");
@@ -19,13 +18,13 @@ fn main() {
     println!("   Total Patterns: {}", stats.total_patterns);
     println!("   Total Strategies: {}", stats.total_strategies);
     println!();
-    
+
     println!("📁 Frameworks by Category:");
     for (category, count) in &stats.category_counts {
         println!("   {:?}: {}", category, count);
     }
     println!();
-    
+
     // Example 1: Detect React code
     println!("🔍 Example 1: Detecting React Framework");
     let react_code = r#"
@@ -38,16 +37,23 @@ fn main() {
             );
         }
     "#;
-    
+
     let results = kb.analyze_code(react_code).unwrap();
     println!("   Detected {} frameworks:", results.len());
     for result in &results {
-        println!("   • {} (confidence: {:.1}%)", result.framework_name, result.confidence * 100.0);
+        println!(
+            "   • {} (confidence: {:.1}%)",
+            result.framework_name,
+            result.confidence * 100.0
+        );
         println!("     Matched signatures: {:?}", result.matched_signatures);
-        println!("     Strategies available: {}", result.applicable_strategies.len());
+        println!(
+            "     Strategies available: {}",
+            result.applicable_strategies.len()
+        );
     }
     println!();
-    
+
     // Example 2: Detect Vue 3 code
     println!("🔍 Example 2: Detecting Vue 3 Framework");
     let vue_code = r#"
@@ -63,15 +69,19 @@ fn main() {
             ]));
         }
     "#;
-    
+
     let results = kb.analyze_code(vue_code).unwrap();
     println!("   Detected {} frameworks:", results.len());
     for result in &results {
-        println!("   • {} (confidence: {:.1}%)", result.framework_name, result.confidence * 100.0);
+        println!(
+            "   • {} (confidence: {:.1}%)",
+            result.framework_name,
+            result.confidence * 100.0
+        );
         println!("     Matched signatures: {:?}", result.matched_signatures);
     }
     println!();
-    
+
     // Example 3: Detect Webpack bundle
     println!("🔍 Example 3: Detecting Webpack Bundle");
     let webpack_code = r#"
@@ -96,21 +106,25 @@ fn main() {
             }
         ]);
     "#;
-    
+
     let results = kb.analyze_code(webpack_code).unwrap();
     println!("   Detected {} frameworks:", results.len());
     for result in &results {
-        println!("   • {} (confidence: {:.1}%)", result.framework_name, result.confidence * 100.0);
+        println!(
+            "   • {} (confidence: {:.1}%)",
+            result.framework_name,
+            result.confidence * 100.0
+        );
         if let Some(framework) = kb.get_framework(&result.framework_id) {
             println!("     Origin: {}", framework.origin);
             println!("     Maintainer: {}", framework.maintainer);
         }
     }
     println!();
-    
+
     // Example 4: Detect Chinese frameworks
     println!("🔍 Example 4: Detecting Chinese Frameworks");
-    
+
     // Taro
     let taro_code = r#"
         import Taro from '@tarojs/taro';
@@ -131,15 +145,19 @@ fn main() {
             );
         }
     "#;
-    
+
     let results = kb.analyze_code(taro_code).unwrap();
     println!("   Taro detection:");
     for result in &results {
         if result.framework_id == "taro" || result.framework_id == "react" {
-            println!("   • {} (confidence: {:.1}%)", result.framework_name, result.confidence * 100.0);
+            println!(
+                "   • {} (confidence: {:.1}%)",
+                result.framework_name,
+                result.confidence * 100.0
+            );
         }
     }
-    
+
     // Uni-app
     let uniapp_code = r#"
         <template>
@@ -166,16 +184,20 @@ fn main() {
         }
         </script>
     "#;
-    
+
     let results = kb.analyze_code(uniapp_code).unwrap();
     println!("   Uni-app detection:");
     for result in &results {
         if result.framework_id == "uni-app" {
-            println!("   • {} (confidence: {:.1}%)", result.framework_name, result.confidence * 100.0);
+            println!(
+                "   • {} (confidence: {:.1}%)",
+                result.framework_name,
+                result.confidence * 100.0
+            );
         }
     }
     println!();
-    
+
     // Example 5: Detect obfuscator patterns
     println!("🔍 Example 5: Detecting Obfuscator Patterns");
     let obfuscated_code = r#"
@@ -197,33 +219,52 @@ fn main() {
             debugger;
         }
     "#;
-    
+
     let results = kb.analyze_code(obfuscated_code).unwrap();
     println!("   Detected {} obfuscation patterns:", results.len());
     for result in &results {
-        println!("   • {} (confidence: {:.1}%)", result.framework_name, result.confidence * 100.0);
+        println!(
+            "   • {} (confidence: {:.1}%)",
+            result.framework_name,
+            result.confidence * 100.0
+        );
         println!("     Available strategies:");
         for strategy in &result.applicable_strategies {
-            println!("       - {} (success rate: {:.0}%, priority: {})", 
-                strategy.name, strategy.success_rate * 100.0, strategy.priority);
+            println!(
+                "       - {} (success rate: {:.0}%, priority: {})",
+                strategy.name,
+                strategy.success_rate * 100.0,
+                strategy.priority
+            );
         }
     }
     println!();
-    
+
     // Example 6: Browse frameworks by category
     println!("📚 Example 6: Chinese Mobile Frameworks");
     let chinese_mobile = kb.get_frameworks_by_category(&FrameworkCategory::MobileCrossPlatform);
     println!("   Found {} frameworks:", chinese_mobile.len());
     for framework in chinese_mobile {
-        println!("   • {} ({}) - {}", framework.name, framework.origin, framework.maintainer);
-        println!("     Signatures: {}, Patterns: {}, Strategies: {}", 
-            framework.signatures.len(), 
+        println!(
+            "   • {} ({}) - {}",
+            framework.name, framework.origin, framework.maintainer
+        );
+        println!(
+            "     Signatures: {}, Patterns: {}, Strategies: {}",
+            framework.signatures.len(),
             framework.obfuscation_patterns.len(),
-            framework.strategies.len());
+            framework.strategies.len()
+        );
     }
     println!();
-    
+
     println!("✅ Framework Knowledge Base demonstration complete!");
-    println!("   This system can detect and analyze {} frameworks worldwide", stats.total_frameworks);
-    println!("   with {} deobfuscation strategies available.", stats.total_strategies);
+    println!(
+        "   This system can detect and analyze {} frameworks worldwide",
+        stats.total_frameworks
+    );
+    println!(
+        "   with {} deobfuscation strategies available.",
+        stats.total_strategies
+    );
 }
