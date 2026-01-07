@@ -2,6 +2,7 @@
 
 use anyhow::Result;
 use std::collections::HashMap;
+use std::pin::Pin;
 use std::time::{Duration, Instant};
 
 #[derive(Debug, Clone)]
@@ -45,40 +46,55 @@ impl V8Sandbox {
 
     pub fn execute(&mut self, code: &str) -> Result<String> {
         let start_time = Instant::now();
-        let handle_scope = &mut v8::HandleScope::new(&mut self.isolate);
-        let context = v8::Context::new(handle_scope, Default::default());
-        let scope = &mut v8::ContextScope::new(handle_scope, context);
+        // Create & initialize handle scope (pin required by new rusty_v8 API)
+        let mut handle_scope = v8::HandleScope::new(&mut self.isolate);
+        let mut handle_scope = {
+            // SAFETY: handle_scope is stack allocated and not moved after pin
+            let scope_pinned = unsafe { Pin::new_unchecked(&mut handle_scope) };
+            scope_pinned.init()
+        };
 
-        let global = context.global(scope);
+        // Create context and enter context scope
+        let context = v8::Context::new(&handle_scope, Default::default());
+        let mut context_scope = v8::ContextScope::new(&mut handle_scope, context);
+
+        // Create an inner handle scope bound to the context for script execution
+        let mut inner_scope = v8::HandleScope::new(&mut context_scope);
+        let mut scope = {
+            // SAFETY: inner_scope is stack allocated and not moved after pin
+            let pinned = unsafe { Pin::new_unchecked(&mut inner_scope) };
+            pinned.init()
+        };
+
+        let global = context.global(&mut scope);
         for (key, value) in &self.globals {
-            let key_v8 = v8::String::new(scope, key).unwrap();
-            let value_v8 = v8::String::new(scope, value).unwrap();
-            global.set(scope, key_v8.into(), value_v8.into());
+            let key_v8 = v8::String::new(&mut scope, key).unwrap();
+            let value_v8 = v8::String::new(&mut scope, value).unwrap();
+            global.set(&mut scope, key_v8.into(), value_v8.into());
         }
 
         let wrapped_code = format!("\"use strict\";\n{}", code);
-        let source = v8::String::new(scope, &wrapped_code)
+        let source = v8::String::new(&mut scope, &wrapped_code)
             .ok_or_else(|| anyhow::anyhow!("Failed to create V8 string"))?;
 
         if start_time.elapsed() > self.limits.max_execution_time {
             return Err(anyhow::anyhow!("Execution time limit exceeded"));
         }
 
-        let script = v8::Script::compile(scope, source, None)
+        let script = v8::Script::compile(&mut scope, source, None)
             .ok_or_else(|| anyhow::anyhow!("Failed to compile"))?;
         let result = script
-            .run(scope)
+            .run(&mut scope)
             .ok_or_else(|| anyhow::anyhow!("Failed to execute"))?;
         let result_str = result
-            .to_string(scope)
+            .to_string(&mut scope)
             .ok_or_else(|| anyhow::anyhow!("Failed to convert result"))?;
 
-        Ok(result_str.to_rust_string_lossy(scope))
+        Ok(result_str.to_rust_string_lossy(&mut scope))
     }
 
     pub fn heap_statistics(&mut self) -> V8HeapStats {
-        let mut stats = v8::HeapStatistics::default();
-        self.isolate.get_heap_statistics(&mut stats);
+        let stats = self.isolate.get_heap_statistics();
         V8HeapStats {
             used_heap_size: stats.used_heap_size(),
             total_heap_size: stats.total_heap_size(),

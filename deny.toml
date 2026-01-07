@@ -1,0 +1,36 @@
+[advisories]
+ignore = [
+    # rustls-pemfile transitive via reqwest; upstream unmaintained (RUSTSEC-2025-0134).
+    # No safe upgrade available yet; tracked to migrate once reqwest adopts rustls-pki-types API.
+    "RUSTSEC-2025-0134",
+    # fxhash is pulled in via selectors; crate is archived with no safe upgrade. Track upstream cssparser/selectors update.
+    "RUSTSEC-2025-0057",
+    # paste crate archived; used transitively by boa. No drop-in upgrade yet in boa 0.20; monitor upstream.
+    "RUSTSEC-2024-0436",
+]
+
+[licenses]
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-3-Clause",
+    "BSD-2-Clause",
+    "ISC",
+    "MPL-2.0",
+    "Unlicense",
+    # Needed for ICU/Unicode data crates used by boa/v8 pipeline
+    "Unicode-3.0",
+    # Common permissive licenses used by dependencies
+    "CC0-1.0",
+    "Zlib",
+    "CDLA-Permissive-2.0",
+]
+confidence-threshold = 0.8
+
+[bans]
+multiple-versions = "warn"
+wildcards = "allow"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
