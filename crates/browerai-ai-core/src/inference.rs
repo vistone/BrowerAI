@@ -23,7 +23,8 @@ impl InferenceEngine {
         #[cfg(feature = "ai")]
         {
             // Initialize global environment once
-            ort::init().with_name("BrowerAI").commit()?;
+            // commit() returns a boolean indicating whether initialization occurred; ignore value
+            let _ = ort::init().with_name("BrowerAI").commit();
 
             Ok(Self { monitor: None })
         }

@@ -1,3 +1,8 @@
+# Ignore accidentally added GitHub/Git keys or tokens
+github_pat_*
+*.pem
+*.key
+
 # Rust
 /target
 Cargo.lock
