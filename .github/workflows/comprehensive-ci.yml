@@ -116,6 +116,9 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
       
+      - name: Install cargo-hack
+        run: cargo install cargo-hack
+      
       - name: Install cargo-minimal-versions
         run: cargo install cargo-minimal-versions
       
