@@ -40,7 +40,7 @@ jobs:
         key: ${{ runner.os }}-benchmark-${{ hashFiles('**/Cargo.lock') }}
     
     - name: Build in release mode
-      run: cargo build --release --example benchmark_demo
+      run: cargo build --release --workspace --exclude browerai-ml --exclude browerai-js-v8 --example benchmark_demo
     
     - name: Run benchmarks
       run: |
@@ -103,25 +103,26 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
     
     - name: Check for GPU
+      id: gpu-check
       run: |
         if command -v nvidia-smi &> /dev/null; then
-          echo "GPU_AVAILABLE=true" >> $GITHUB_ENV
+          echo "available=true" >> $GITHUB_OUTPUT
           nvidia-smi
         else
-          echo "GPU_AVAILABLE=false" >> $GITHUB_ENV
+          echo "available=false" >> $GITHUB_OUTPUT
           echo "No GPU detected in CI environment"
         fi
     
     - name: Build with AI features
-      run: cargo build --release --features ai --example benchmark_demo
+      run: cargo build --release --workspace --exclude browerai-ml --exclude browerai-js-v8 --features ai --example benchmark_demo
     
     - name: Run GPU benchmarks
-      if: env.GPU_AVAILABLE == 'true'
+      if: steps.gpu-check.outputs.available == 'true'
       run: |
         cargo run --release --features ai --example benchmark_demo > gpu_benchmark.txt
     
     - name: Upload GPU results
-      if: env.GPU_AVAILABLE == 'true'
+      if: steps.gpu-check.outputs.available == 'true'
       uses: actions/upload-artifact@v3
       with:
         name: gpu-benchmark-results

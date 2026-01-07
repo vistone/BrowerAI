@@ -158,13 +158,13 @@ mod tests {
 
     #[test]
     fn test_render_engine_creation() {
-        let engine = RenderEngine::new();
+        let _engine = RenderEngine::new();
         // AI path removed; ensure object creates successfully
     }
 
     #[test]
     fn test_render_with_viewport() {
-        let engine = RenderEngine::with_viewport(1024.0, 768.0);
+        let _engine = RenderEngine::with_viewport(1024.0, 768.0);
         // AI path removed; ensure object creates successfully
     }
 

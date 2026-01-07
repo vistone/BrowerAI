@@ -501,7 +501,7 @@ mod tests {
             end_line: 0,
         });
 
-        let result = analyzer.analyze(&mut semantic).unwrap();
+        let _result = analyzer.analyze(&mut semantic).unwrap();
         // 事件处理器应该被检测出来
         assert!(!semantic.event_handlers.is_empty());
     }
