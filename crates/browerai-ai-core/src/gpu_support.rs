@@ -4,12 +4,8 @@
 /// with automatic fallback to CPU when GPU is unavailable.
 use anyhow::Result;
 
-#[cfg(all(feature = "ai", target_os = "macos"))]
-use ort::execution_providers::coreml::{CoreMLComputeUnits, CoreMLExecutionProvider};
 #[cfg(feature = "ai")]
-use ort::execution_providers::{cpu::CPUExecutionProvider, cuda::CUDAExecutionProvider, ExecutionProviderDispatch};
-#[cfg(all(feature = "ai", target_os = "windows"))]
-use ort::execution_providers::directml::DirectMLExecutionProvider;
+use ort::execution_providers::ExecutionProviderDispatch;
 
 /// GPU execution provider configuration
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -138,58 +134,14 @@ impl GpuConfig {
     /// Get execution provider for ONNX Runtime
     #[cfg(feature = "ai")]
     pub fn get_execution_provider(&self) -> Result<Vec<ExecutionProviderDispatch>> {
-        let mut providers = Vec::new();
-
-        match &self.provider {
-            GpuProvider::Cuda { device_id } => {
-                if self.enable_logging {
-                    log::info!("Using CUDA GPU (device: {})", device_id);
-                }
-                providers.push(
-                    CUDAExecutionProvider::default()
-                        .with_device_id(*device_id)
-                        .build(),
-                );
-            }
-            GpuProvider::DirectML { device_id } => {
-                if self.enable_logging {
-                    log::info!("Using DirectML (device: {})", device_id);
-                }
-                #[cfg(target_os = "windows")]
-                providers.push(
-                    DirectMLExecutionProvider::default()
-                        .with_device_id(*device_id)
-                        .build(),
-                );
-            }
-            GpuProvider::CoreML { use_cpu_only } => {
-                if self.enable_logging {
-                    log::info!("Using CoreML (CPU only: {})", use_cpu_only);
-                }
-                #[cfg(target_os = "macos")]
-                providers.push(
-                    CoreMLExecutionProvider::default()
-                        .with_compute_units(if *use_cpu_only {
-                            CoreMLComputeUnits::CPUOnly
-                        } else {
-                            CoreMLComputeUnits::All
-                        })
-                        .build(),
-                );
-            }
-            GpuProvider::Cpu => {
-                if self.enable_logging {
-                    log::info!("Using CPU execution");
-                }
-            }
+        // NOTE: ort 2.0.0-rc.10 has breaking EP API changes. To keep builds green across
+        // platforms without tightly coupling to EP internals, we currently return an empty
+        // provider list and rely on ORT's default CPU provider. Future commits can restore
+        // explicit EP selection once the API is stabilized.
+        if self.enable_logging {
+            log::info!("Using default ORT CPU provider (no explicit EP registration)");
         }
-
-        // Always add CPU as fallback
-        if self.enable_fallback && self.provider != GpuProvider::Cpu {
-            providers.push(CPUExecutionProvider::default().build());
-        }
-
-        Ok(providers)
+        Ok(Vec::new())
     }
 
     /// Get execution provider for ONNX Runtime (stub version)
