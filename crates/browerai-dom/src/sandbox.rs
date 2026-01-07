@@ -580,7 +580,7 @@ mod tests {
         sandbox.execute("test code").ok();
 
         let stats = sandbox.get_stats();
-        assert!(stats.elapsed_ms >= 0);
+        // elapsed_ms is u64, always >= 0
         assert_eq!(stats.operation_count, 0);
     }
 

@@ -542,7 +542,7 @@ mod tests {
         // a 是入口点（深度 0）
         assert_eq!(depth_a, 0);
         // 其他非入口点深度应该 > 0
-        assert!(depth_b > 0 || depth_d >= 0);
+        assert!(depth_b > 0 && depth_d > 0);
     }
 
     #[test]

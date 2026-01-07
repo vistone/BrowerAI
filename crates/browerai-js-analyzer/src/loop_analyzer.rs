@@ -241,10 +241,10 @@ mod tests {
         let data_flow = DataFlowAnalyzer::new().analyze(&ast, &scope_tree).unwrap();
         let control_flow = ControlFlowAnalyzer::new().analyze(&ast).unwrap();
         let mut analyzer = LoopAnalyzer::new();
-        let analyses = analyzer
+        let _analyses = analyzer
             .analyze(&ast, &scope_tree, &data_flow, &control_flow)
             .unwrap();
-        assert!(analyses.len() >= 0);
+        // analyses.len()总是>=0，不需要检查
     }
 
     #[test]

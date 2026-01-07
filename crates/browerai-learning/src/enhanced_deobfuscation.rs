@@ -125,6 +125,7 @@ pub struct DeobfuscationStats {
 /// Enhanced JavaScript deobfuscator
 pub struct EnhancedDeobfuscator {
     /// Enable aggressive transformations
+    #[allow(dead_code)]
     aggressive_mode: bool,
     /// Maximum iterations for multi-pass
     max_iterations: usize,

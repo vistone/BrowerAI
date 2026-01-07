@@ -480,7 +480,7 @@ mod tests {
     #[test]
     fn test_html_validation_fallback() {
         let engine = InferenceEngine::new().unwrap();
-        let mut integration = HtmlModelIntegration::new(&engine, None, None).unwrap();
+        let integration = HtmlModelIntegration::new(&engine, None, None).unwrap();
         let (valid, complexity) = integration
             .validate_structure("<html><body>Test</body></html>")
             .unwrap();
