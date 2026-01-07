@@ -1,9 +1,6 @@
 use anyhow::{Context, Result};
 use std::sync::Once;
 
-pub mod sandbox;
-pub use sandbox::{V8Sandbox, V8SandboxLimits, V8HeapStats};
-
 static V8_INIT: Once = Once::new();
 
 /// Initialize V8 (must be called once before using V8)
@@ -34,24 +31,6 @@ impl V8JsParser {
         Ok(Self {
             isolate: Some(isolate),
         })
-    }
-
-    /// Get heap statistics from V8
-    pub fn get_heap_statistics(&mut self) -> V8HeapStats {
-        let isolate = self.isolate.as_mut().unwrap();
-        let mut stats = v8::HeapStatistics::default();
-        isolate.get_heap_statistics(&mut stats);
-        
-        V8HeapStats {
-            total_heap_size: stats.total_heap_size(),
-            used_heap_size: stats.used_heap_size(),
-            heap_size_limit: stats.heap_size_limit(),
-        }
-    }
-
-    /// Set strict mode enforcement  
-    pub fn set_strict_mode(&mut self, _enabled: bool) {
-        // Strict mode is always enforced in V8
     }
 
     /// Parse JavaScript content using V8
