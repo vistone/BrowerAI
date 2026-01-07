@@ -78,7 +78,7 @@ pub mod prelude {
     pub use browerai_html_parser::HtmlParser;
     pub use browerai_js_analyzer::JsDeepAnalyzer;
     pub use browerai_js_parser::JsParser;
-    
+
     // V8 (conditional)
     #[cfg(feature = "v8")]
     pub use browerai_js_v8::V8JsParser;

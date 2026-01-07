@@ -1,8 +1,12 @@
-#![cfg(feature = "ai-candle")]
+use anyhow::Result;
 
-use anyhow::{Context, Result};
+#[cfg(feature = "ai-candle")]
+use anyhow::Context;
+
+#[cfg(feature = "ai-candle")]
 use std::path::PathBuf;
 
+#[cfg(feature = "ai-candle")]
 use browerai_ai_core::CandleCodeLlm;
 
 fn main() -> Result<()> {
@@ -63,5 +67,12 @@ Task: Write a vanilla JS function `debounce(fn, delay)` and show a usage example
     )?;
 
     println!("\n=== Model Output ===\n{}", output.trim());
+    Ok(())
+}
+
+#[cfg(not(feature = "ai-candle"))]
+fn run_codegen_demo() -> Result<()> {
+    println!("This example requires the 'ai-candle' feature to be enabled.");
+    println!("Run with: cargo run --example candle_qwen_codegen --features ai-candle");
     Ok(())
 }

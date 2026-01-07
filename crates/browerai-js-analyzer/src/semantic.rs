@@ -49,23 +49,28 @@ impl SemanticAnalyzer {
 
     /// 分析已提取的语义信息
     pub fn analyze(&self, semantic: &mut JsSemanticInfo) -> Result<AnalysisResult> {
-        let mut result = AnalysisResult::default();
+        let start = std::time::Instant::now();
 
         // 1. 检测框架
-        result.detected_frameworks = self.detect_frameworks(semantic);
-        semantic.detected_frameworks = result.detected_frameworks.clone();
+        let detected_frameworks = self.detect_frameworks(semantic);
+        semantic.detected_frameworks = detected_frameworks.clone();
 
         // 2. 检测特殊特性
-        result.special_features = self.detect_special_features(semantic);
-        semantic.special_features = result.special_features.clone();
+        let special_features = self.detect_special_features(semantic);
+        semantic.special_features = special_features.clone();
 
         // 3. 分析函数属性
         self.analyze_functions(semantic);
 
         // 4. 检测事件处理器
-        result.event_handlers_found = semantic.event_handlers.len();
+        let event_handlers_found = semantic.event_handlers.len();
 
-        Ok(result)
+        Ok(AnalysisResult {
+            detected_frameworks,
+            special_features,
+            event_handlers_found,
+            analysis_duration_ms: start.elapsed().as_millis() as u64,
+        })
     }
 
     /// Phase 2 增强：使用 EnhancedAst 进行更精细的分析

@@ -4,7 +4,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 fn benchmark_simple_css(c: &mut Criterion) {
     let parser = CssParser::new();
     let css = "body { color: red; margin: 0; }";
-    
+
     c.bench_function("parse simple css", |b| {
         b.iter(|| parser.parse(black_box(css)))
     });
@@ -42,7 +42,7 @@ fn benchmark_complex_css(c: &mut Criterion) {
             }
         }
     "#;
-    
+
     c.bench_function("parse complex css", |b| {
         b.iter(|| parser.parse(black_box(css)))
     });
@@ -51,7 +51,7 @@ fn benchmark_complex_css(c: &mut Criterion) {
 fn benchmark_validate_css(c: &mut Criterion) {
     let parser = CssParser::new();
     let css = "div { margin: 10px; padding: 5px; }";
-    
+
     c.bench_function("validate css", |b| {
         b.iter(|| parser.validate(black_box(css)))
     });

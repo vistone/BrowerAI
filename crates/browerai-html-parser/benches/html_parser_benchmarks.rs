@@ -1,10 +1,10 @@
 use browerai_html_parser::HtmlParser;
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 
 fn benchmark_simple_html(c: &mut Criterion) {
     let parser = HtmlParser::new();
     let html = "<html><body><h1>Hello World</h1></body></html>";
-    
+
     c.bench_function("parse simple html", |b| {
         b.iter(|| parser.parse(black_box(html)))
     });
@@ -43,7 +43,7 @@ fn benchmark_complex_html(c: &mut Criterion) {
         </body>
         </html>
     "#;
-    
+
     c.bench_function("parse complex html", |b| {
         b.iter(|| parser.parse(black_box(html)))
     });
@@ -51,7 +51,7 @@ fn benchmark_complex_html(c: &mut Criterion) {
 
 fn benchmark_nested_divs(c: &mut Criterion) {
     let parser = HtmlParser::new();
-    
+
     let mut group = c.benchmark_group("nested_divs");
     for depth in [5, 10, 20].iter() {
         let mut html = String::new();
@@ -62,7 +62,7 @@ fn benchmark_nested_divs(c: &mut Criterion) {
         for _ in 0..*depth {
             html.push_str("</div>");
         }
-        
+
         group.bench_with_input(BenchmarkId::from_parameter(depth), depth, |b, _| {
             b.iter(|| parser.parse(black_box(&html)))
         });

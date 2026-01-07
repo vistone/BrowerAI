@@ -95,11 +95,7 @@ impl HttpClient {
 
     /// Execute an HTTP request (stub implementation)
     pub fn execute(&self, mut request: HttpRequest) -> Result<HttpResponse> {
-        log::info!(
-            "Executing {} request to {}",
-            format!("{:?}", request.method),
-            request.url
-        );
+        log::info!("Executing {:?} request to {}", request.method, request.url);
 
         // Add default headers
         if !request.headers.contains_key("User-Agent") {

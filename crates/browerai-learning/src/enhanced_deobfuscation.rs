@@ -186,16 +186,18 @@ impl EnhancedDeobfuscator {
             if !proxies.is_empty() {
                 current_code = self.remove_proxy_functions(&current_code, &proxies)?;
                 self.stats.proxy_functions_removed += proxies.len();
-                transformations
-                    .push(format!("Iter {}: Removed {} proxy functions", iteration + 1, proxies.len()));
+                transformations.push(format!(
+                    "Iter {}: Removed {} proxy functions",
+                    iteration + 1,
+                    proxies.len()
+                ));
             }
 
             // Phase 3: Control flow unflattening
             if self.detect_control_flow_flattening(&current_code) {
                 current_code = self.unflatten_control_flow(&current_code)?;
                 self.stats.control_flow_simplified += 1;
-                transformations
-                    .push(format!("Iter {}: Unflattened control flow", iteration + 1));
+                transformations.push(format!("Iter {}: Unflattened control flow", iteration + 1));
             }
 
             // Phase 4: Constant folding and simplification
@@ -230,7 +232,8 @@ impl EnhancedDeobfuscator {
 
         // Calculate final statistics
         self.stats.size_reduction = original_code.len() as i64 - current_code.len() as i64;
-        self.stats.readability_improvement = self.calculate_readability_improvement(&original_code, &current_code);
+        self.stats.readability_improvement =
+            self.calculate_readability_improvement(&original_code, &current_code);
 
         Ok(EnhancedDeobfuscationResult {
             code: current_code,
@@ -245,7 +248,8 @@ impl EnhancedDeobfuscator {
     fn detect_string_array(&self, code: &str) -> Option<StringArray> {
         // Pattern: var _0xabcd = ['string1', 'string2', ...]
         // More specific: must start with _ followed by 0x and hex digits
-        let array_pattern = Regex::new(r"(?:var|let|const)\s+(_0x[a-f0-9]{4,})\s*=\s*\[([^\]]+)\]").ok()?;
+        let array_pattern =
+            Regex::new(r"(?:var|let|const)\s+(_0x[a-f0-9]{4,})\s*=\s*\[([^\]]+)\]").ok()?;
 
         if let Some(caps) = array_pattern.captures(code) {
             let name = caps.get(1)?.as_str().to_string();
@@ -282,9 +286,7 @@ impl EnhancedDeobfuscator {
         // Replace array[index] with actual string
         for (index, value) in array.contents.iter().enumerate() {
             // Escape the value to prevent injection
-            let escaped_value = value
-                .replace('\\', "\\\\")
-                .replace('\'', "\\'");
+            let escaped_value = value.replace('\\', "\\\\").replace('\'', "\\'");
 
             // Pattern: arrayName[index] or arrayName[0xhex]
             let patterns = vec![
@@ -294,7 +296,9 @@ impl EnhancedDeobfuscator {
 
             for pattern in patterns {
                 if let Ok(re) = Regex::new(&pattern) {
-                    result = re.replace_all(&result, format!("'{}'", escaped_value)).to_string();
+                    result = re
+                        .replace_all(&result, format!("'{}'", escaped_value))
+                        .to_string();
                 }
             }
         }
@@ -316,9 +320,8 @@ impl EnhancedDeobfuscator {
         let mut proxies = Vec::new();
 
         // Pattern 1: function name(args) { return otherFunc(args); }
-        let simple_proxy = Regex::new(
-            r"function\s+(\w+)\s*\([^)]*\)\s*\{\s*return\s+(\w+)\([^)]*\);\s*\}"
-        ).ok();
+        let simple_proxy =
+            Regex::new(r"function\s+(\w+)\s*\([^)]*\)\s*\{\s*return\s+(\w+)\([^)]*\);\s*\}").ok();
 
         if let Some(re) = simple_proxy {
             for caps in re.captures_iter(code) {
@@ -334,9 +337,9 @@ impl EnhancedDeobfuscator {
         }
 
         // Pattern 2: function name(a, b) { return a + b; } (arithmetic proxy)
-        let arithmetic_proxy = Regex::new(
-            r"function\s+(\w+)\s*\([^)]*\)\s*\{\s*return\s+[^;]+[+\-*/]\s*[^;]+;\s*\}"
-        ).ok();
+        let arithmetic_proxy =
+            Regex::new(r"function\s+(\w+)\s*\([^)]*\)\s*\{\s*return\s+[^;]+[+\-*/]\s*[^;]+;\s*\}")
+                .ok();
 
         if let Some(re) = arithmetic_proxy {
             for caps in re.captures_iter(code) {
@@ -364,7 +367,7 @@ impl EnhancedDeobfuscator {
                     // Replace proxyName(args) with targetName(args)
                     let pattern = format!(r"\b{}\(", regex::escape(&proxy.name));
                     let replacement = format!("{}(", proxy.target);
-                    
+
                     if let Ok(re) = Regex::new(&pattern) {
                         result = re.replace_all(&result, replacement.as_str()).to_string();
                     }
@@ -417,7 +420,7 @@ impl EnhancedDeobfuscator {
 
         // Remove switch-based state machines with sequential execution
         // Pattern: while(true) { switch(state) { case 0: ...; state=1; break; case 1: ...; return; } }
-        
+
         // For now, just simplify obvious patterns
         result = self.simplify_opaque_predicates(&result)?;
 
@@ -515,6 +518,11 @@ impl EnhancedDeobfuscator {
     ) -> Result<String> {
         let mut result = code.to_string();
 
+        // Precompile regex patterns outside loop
+        let console_pattern = Regex::new(r"console\.\w+\s*=\s*function[^}]*\};")?;
+        let devtools_pattern =
+            Regex::new(r"if\s*\([^)]*(?:outerHeight|innerHeight)[^)]*\)\s*\{[^}]*\}")?;
+
         for pattern in patterns {
             match pattern {
                 SelfDefendingPattern::AntiDebug => {
@@ -524,14 +532,10 @@ impl EnhancedDeobfuscator {
                 }
                 SelfDefendingPattern::ConsoleProtection => {
                     // Remove console hijacking
-                    let console_pattern = Regex::new(r"console\.\w+\s*=\s*function[^}]*\};")?;
                     result = console_pattern.replace_all(&result, "").to_string();
                 }
                 SelfDefendingPattern::DevToolsDetect => {
                     // Remove DevTools detection code
-                    let devtools_pattern = Regex::new(
-                        r"if\s*\([^)]*(?:outerHeight|innerHeight)[^)]*\)\s*\{[^}]*\}"
-                    )?;
                     result = devtools_pattern.replace_all(&result, "").to_string();
                 }
                 _ => {}
@@ -592,11 +596,14 @@ impl EnhancedDeobfuscator {
             identifiers.iter().map(|s| s.len()).sum::<usize>() as f32 / identifiers.len() as f32
         };
 
-        let nesting_depth = code.chars().fold((0usize, 0usize), |(max, current), c| match c {
-            '{' => (max.max(current + 1), current + 1),
-            '}' => (max, current.saturating_sub(1)),
-            _ => (max, current),
-        }).0;
+        let nesting_depth = code
+            .chars()
+            .fold((0usize, 0usize), |(max, current), c| match c {
+                '{' => (max.max(current + 1), current + 1),
+                '}' => (max, current.saturating_sub(1)),
+                _ => (max, current),
+            })
+            .0;
 
         let hex_literal_count = code.matches("0x").count();
 
@@ -645,10 +652,10 @@ mod tests {
     fn test_string_array_detection() {
         let deob = EnhancedDeobfuscator::new();
         let code = r#"var _0xabcd = ['hello', 'world', 'test', 'foo', 'bar'];"#;
-        
+
         let array = deob.detect_string_array(code);
         assert!(array.is_some());
-        
+
         let array = array.unwrap();
         assert_eq!(array.name, "_0xabcd");
         assert_eq!(array.contents.len(), 5);
@@ -658,7 +665,7 @@ mod tests {
     fn test_string_array_unpacking() {
         let deob = EnhancedDeobfuscator::new();
         let code = r#"var _0xabcd = ['hello', 'world', 'test', 'foo', 'bar']; console.log(_0xabcd[0] + ' ' + _0xabcd[1]);"#;
-        
+
         if let Some(array) = deob.detect_string_array(code) {
             let result = deob.unpack_string_array(code, &array).unwrap();
             assert!(result.contains("'hello'"));
@@ -674,7 +681,7 @@ mod tests {
             function proxy(a, b) { return realFunc(a, b); }
             function arithmeticProxy(a, b) { return a + b; }
         "#;
-        
+
         let proxies = deob.detect_proxy_functions(code);
         assert!(!proxies.is_empty());
     }
@@ -686,7 +693,7 @@ mod tests {
             debugger;
             console.log = function() {};
         "#;
-        
+
         let patterns = deob.detect_self_defending(code);
         assert!(patterns.contains(&SelfDefendingPattern::AntiDebug));
         assert!(patterns.contains(&SelfDefendingPattern::ConsoleProtection));
@@ -696,7 +703,7 @@ mod tests {
     fn test_opaque_predicate_simplification() {
         let deob = EnhancedDeobfuscator::new();
         let code = "if(true){console.log('hi');}if(false){doEvil();}";
-        
+
         let result = deob.simplify_opaque_predicates(code).unwrap();
         assert!(result.contains("console.log('hi')"));
         assert!(!result.contains("if(false)"));
@@ -711,7 +718,7 @@ mod tests {
             debugger;
             if(true){proxy(_0xabc[0x0]);}
         "#;
-        
+
         let result = deob.deobfuscate(code).unwrap();
         assert!(result.success);
         assert!(!result.transformations.is_empty());
@@ -722,7 +729,7 @@ mod tests {
     fn test_hex_constant_folding() {
         let deob = EnhancedDeobfuscator::new();
         let code = "var x = 0x10; var y = 0xFF;";
-        
+
         let result = deob.fold_constants(code).unwrap();
         assert!(result.contains("16") || result.contains("0x10"));
     }
@@ -731,7 +738,7 @@ mod tests {
     fn test_member_expression_simplification() {
         let deob = EnhancedDeobfuscator::new();
         let code = r#"obj["property"]"#;
-        
+
         let result = deob.simplify_member_expressions(code).unwrap();
         assert!(result.contains("obj.property"));
     }
