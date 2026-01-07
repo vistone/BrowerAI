@@ -1,6 +1,6 @@
-use anyhow::Result;
 #[cfg(not(feature = "ai"))]
 use anyhow::anyhow;
+use anyhow::Result;
 #[cfg(feature = "ai")]
 use std::path::PathBuf;
 
