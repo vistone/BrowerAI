@@ -43,6 +43,7 @@ jobs:
       run: cargo build --release --example benchmark_demo
     
     - name: Run benchmarks
+      shell: bash
       run: |
         mkdir -p benchmark_results
         cargo run --release --example benchmark_demo | tee benchmark_results/benchmark_${{ matrix.os }}.txt
