@@ -40,7 +40,7 @@ pub struct ModelManager {
 }
 
 /// Health status for a model record
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 pub enum ModelHealth {
     /// Model is ready to use
     Ready,
@@ -53,13 +53,8 @@ pub enum ModelHealth {
     /// Model inference consistently fails
     InferenceFailing,
     /// Health status unknown
+    #[default]
     Unknown,
-}
-
-impl Default for ModelHealth {
-    fn default() -> Self {
-        Self::Unknown
-    }
 }
 
 impl ModelManager {

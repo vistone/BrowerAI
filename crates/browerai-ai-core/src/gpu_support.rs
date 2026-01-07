@@ -8,7 +8,7 @@ use anyhow::Result;
 use ort::ExecutionProviderDispatch;
 
 /// GPU execution provider configuration
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum GpuProvider {
     /// NVIDIA CUDA provider
     Cuda { device_id: i32 },
@@ -17,13 +17,8 @@ pub enum GpuProvider {
     /// CoreML provider (macOS/iOS)
     CoreML { use_cpu_only: bool },
     /// CPU only (fallback)
+    #[default]
     Cpu,
-}
-
-impl Default for GpuProvider {
-    fn default() -> Self {
-        Self::Cpu
-    }
 }
 
 /// GPU configuration and detection

@@ -18,9 +18,10 @@ browerai-html-parser = { workspace = true }
 browerai-css-parser = { workspace = true }
 browerai-js-parser = { workspace = true }
 browerai-js-analyzer = { workspace = true }
+browerai-js-v8 = { workspace = true, optional = true }
 browerai-ai-core = { workspace = true, optional = true }
 browerai-ai-integration = { workspace = true, optional = true }
-browerai-ml = { workspace = true }
+browerai-ml = { workspace = true, optional = true }
 browerai-renderer-core = { workspace = true }
 browerai-renderer-predictive = { workspace = true }
 browerai-intelligent-rendering = { workspace = true }
@@ -29,6 +30,7 @@ browerai-network = { workspace = true }
 browerai-devtools = { workspace = true }
 browerai-testing = { workspace = true }
 browerai-plugins = { workspace = true }
+browerai-metrics = { workspace = true, optional = true }
 
 anyhow = { workspace = true }
 log = { workspace = true }
@@ -39,6 +41,12 @@ default = []
 ai = ["browerai-ai-core", "browerai-ai-core/onnx", "browerai-ai-integration"]
 # Enable Candle-based GGUF LLMs (e.g., Qwen2.5-Coder) with browerai-ai-core
 ai-candle = ["browerai-ai-core", "browerai-ai-core/candle"]
+# Enable ML toolkit with tch-rs (PyTorch bindings)
+ml = ["browerai-ml"]
+# Enable V8 JavaScript engine (high performance, full ES2024+ support)
+v8 = ["browerai-js-v8"]
+# Enable Prometheus metrics collection
+metrics = ["browerai-metrics"]
 
 [dev-dependencies]
 tempfile = { workspace = true }

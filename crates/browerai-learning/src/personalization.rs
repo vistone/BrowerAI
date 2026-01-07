@@ -54,7 +54,7 @@ impl UserPreferences {
     ) {
         self.preferences
             .entry(category)
-            .or_insert_with(HashMap::new)
+            .or_default()
             .insert(key.into(), value);
     }
 
@@ -68,7 +68,7 @@ impl UserPreferences {
         if !self.privacy_mode {
             self.learned_patterns
                 .entry(pattern_type.into())
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(value.into());
         }
     }

@@ -12,9 +12,16 @@ browerai-core = { workspace = true }
 browerai-dom = { workspace = true }
 anyhow = { workspace = true }
 log = { workspace = true }
+tracing = "0.1"
 html5ever = { workspace = true }
 markup5ever_rcdom = { workspace = true }
 
 [dev-dependencies]
 env_logger = { workspace = true }
 tempfile = { workspace = true }
+proptest = "1.0"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "html_parser_benchmarks"
+harness = false

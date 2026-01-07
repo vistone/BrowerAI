@@ -61,11 +61,6 @@ impl ModelVersion {
     pub fn increment_patch(&mut self) {
         self.patch += 1;
     }
-
-    /// Convert to string representation
-    pub fn to_string(&self) -> String {
-        format!("{}.{}.{}", self.major, self.minor, self.patch)
-    }
 }
 
 impl std::fmt::Display for ModelVersion {
@@ -150,10 +145,7 @@ impl VersionManager {
     /// Register a new model version
     pub fn register_version(&mut self, model: VersionedModel) {
         let name = model.name.clone();
-        self.versions
-            .entry(name)
-            .or_insert_with(Vec::new)
-            .push(model);
+        self.versions.entry(name).or_default().push(model);
     }
 
     /// Get all versions for a model

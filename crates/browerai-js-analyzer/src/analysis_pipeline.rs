@@ -65,7 +65,7 @@ impl AnalysisPipeline {
 
         // Check cache
         let source_hash = super::performance_optimizer::hash_string(source);
-        let cache_key = format!("full_analysis");
+        let cache_key = "full_analysis".to_string();
 
         if let Some(_cached) = self.optimizer.cache(&cache_key, source_hash) {
             self.optimizer.record_cache_hit();
@@ -101,10 +101,14 @@ impl AnalysisPipeline {
         let loop_count = control_flow.loops.len();
 
         // Loop analysis
-        let _loop_analyses = self.loop_analyzer.analyze(&ast, &scope_tree, &data_flow, &control_flow)?;
+        let _loop_analyses =
+            self.loop_analyzer
+                .analyze(&ast, &scope_tree, &data_flow, &control_flow)?;
 
         // Call graph analysis
-        let call_graph = self.call_graph_analyzer.analyze(&ast, &scope_tree, &data_flow, &control_flow)?;
+        let call_graph =
+            self.call_graph_analyzer
+                .analyze(&ast, &scope_tree, &data_flow, &control_flow)?;
         let call_edges = call_graph.edges.len();
 
         let time_ms = start.elapsed().as_secs_f64() * 1000.0;

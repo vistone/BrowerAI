@@ -1,0 +1,28 @@
+[package]
+name = "browerai-metrics"
+version = "0.1.0"
+edition = "2021"
+authors = ["BrowerAI Contributors"]
+description = "Metrics collection and monitoring for BrowerAI"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/vistone/BrowerAI"
+
+[dependencies]
+# Core dependencies
+anyhow = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Metrics
+prometheus = { version = "0.13", default-features = false }
+
+# Optional OpenTelemetry support
+opentelemetry = { version = "0.24", optional = true }
+opentelemetry-prometheus = { version = "0.17", optional = true }
+
+[features]
+default = []
+otel = ["opentelemetry", "opentelemetry-prometheus"]
+
+[dev-dependencies]
+tokio = { version = "1.0", features = ["rt", "macros"] }

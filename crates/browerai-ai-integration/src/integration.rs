@@ -405,7 +405,7 @@ impl CodeUnderstandingIntegration {
                 m.record_inference(InferenceMetrics {
                     model_name: "code_understanding".to_string(),
                     inference_time: start.elapsed(),
-                    input_size: features.len() * size_of::<f32>(),
+                    input_size: std::mem::size_of_val(features),
                     output_size: CODE_UNDERSTANDING_OUTPUT_DIM * size_of::<f32>(),
                     success: false,
                     timestamp: start,
@@ -415,7 +415,7 @@ impl CodeUnderstandingIntegration {
         }
 
         // Pad or truncate to fixed length expected by ONNX model
-        let mut input_data: Vec<f32> = features.iter().copied().collect();
+        let mut input_data: Vec<f32> = features.to_vec();
         input_data.truncate(CODE_UNDERSTANDING_FEATURE_DIM);
         while input_data.len() < CODE_UNDERSTANDING_FEATURE_DIM {
             input_data.push(0.0);
@@ -507,6 +507,12 @@ mod tests {
 pub struct JsTokenizer {
     vocab: Vec<String>,
     token_to_id: HashMap<String, i64>,
+}
+
+impl Default for JsTokenizer {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl JsTokenizer {

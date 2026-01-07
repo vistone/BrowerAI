@@ -95,7 +95,7 @@ impl MetricStats {
         // Calculate median
         let mut sorted = values.to_vec();
         sorted.sort_by(|a, b| a.total_cmp(b)); // Use total_cmp to handle NaN safely
-        let median = if count % 2 == 0 {
+        let median = if count.is_multiple_of(2) {
             (sorted[count / 2 - 1] + sorted[count / 2]) / 2.0
         } else {
             sorted[count / 2]
@@ -253,10 +253,7 @@ impl MetricsDashboard {
         let mut metrics_by_type: HashMap<String, Vec<&Metric>> = HashMap::new();
         for metric in &self.metrics {
             let type_key = format!("{:?}", metric.metric_type);
-            metrics_by_type
-                .entry(type_key)
-                .or_insert_with(Vec::new)
-                .push(metric);
+            metrics_by_type.entry(type_key).or_default().push(metric);
         }
 
         for (metric_type, metrics) in metrics_by_type {

@@ -5,13 +5,13 @@ use serde::{Deserialize, Serialize};
 pub struct BrowserConfig {
     /// Enable AI-powered features
     pub enable_ai: bool,
-    
+
     /// Enable logging
     pub enable_logging: bool,
-    
+
     /// Log level
     pub log_level: String,
-    
+
     /// Model directory path
     pub model_dir: String,
 }

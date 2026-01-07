@@ -1,0 +1,10 @@
+[book]
+title = "BrowerAI Guide"
+authors = ["BrowerAI Contributors"]
+language = "en"
+src = "src"
+
+[output.html]
+git-repository-url = "https://github.com/vistone/BrowerAI"
+git-repository-icon = "fa-github"
+default-theme = "light"
