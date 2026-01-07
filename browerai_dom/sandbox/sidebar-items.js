@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["SandboxError","SandboxValue"],"struct":["ExecutionContext","ExecutionStats","JsSandbox","ResourceLimits"]};

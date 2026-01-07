@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["OptimizationType"],"struct":["CoreFunction","ExperienceVariant","IntelligentReasoning","LayoutSuggestion","OptimizableRegion","ReasoningResult"]};

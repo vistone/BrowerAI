@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["FallbackReason","GpuProvider","ModelHealth"],"mod":["integration"],"struct":["AdvancedPerformanceMonitor","AiConfig","AiReporter","AiRuntime","AiStats","FallbackTracker","FeedbackPipeline","GpuConfig","GpuStats","HotReloadManager","InferenceEngine","ModelHealthSummary","ModelLoader","ModelManager","PerformanceMonitor"]};

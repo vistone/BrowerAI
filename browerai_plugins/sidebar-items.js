@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["HookResult","PluginCapability","PluginError","PluginHook"],"mod":["loader","registry"],"struct":["PluginMetadata"],"trait":["Plugin"]};

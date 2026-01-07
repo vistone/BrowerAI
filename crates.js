@@ -1,0 +1,2 @@
+window.ALL_CRATES = ["browerai","browerai_ai_core","browerai_ai_integration","browerai_core","browerai_css_parser","browerai_devtools","browerai_dom","browerai_html_parser","browerai_intelligent_rendering","browerai_js_analyzer","browerai_js_parser","browerai_learning","browerai_metrics","browerai_network","browerai_plugins","browerai_renderer_core","browerai_renderer_predictive","browerai_testing"];
+//{"start":21,"fragment_lengths":[10,19,26,16,22,20,15,23,33,23,21,20,19,19,19,25,31,19]}

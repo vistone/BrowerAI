@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["DeadCodePattern"],"struct":["ASTDeobfuscationStats","ASTDeobfuscator","ArrayRotation","VariableUsage"]};

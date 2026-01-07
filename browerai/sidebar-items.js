@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["VERSION"],"enum":["BrowserError"],"mod":["config","error","prelude","traits"],"struct":["BrowserConfig"],"trait":["AiModel","Parser","Renderer"],"type":["Result"]};

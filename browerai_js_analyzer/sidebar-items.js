@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["analysis_pipeline","call_graph","controlflow_analyzer","dataflow_analyzer","enhanced_call_graph","extractor","loop_analyzer","performance_optimizer","scope_analyzer","semantic","swc_extractor","types"],"struct":["AnalysisConfig","AnalysisOutput","JsDeepAnalyzer"]};

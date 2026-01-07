@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["analyze_site_structure"],"struct":["CrawlConfig","CrawlResult","CrawledPage","DeepCrawler","SiteStructureAnalysis"]};

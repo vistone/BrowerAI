@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["FrameworkCategory","ObfuscationTechnique","SignatureType"],"struct":["ConfidenceWeights","DeobfuscationStrategy","DetectionResult","FrameworkKnowledge","FrameworkKnowledgeBase","KnowledgeBaseStats","ObfuscationPattern","ObfuscationSignature"]};

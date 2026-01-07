@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["OptimizationStrategy"],"struct":["OptimizationConfig","OptimizationStats","PerformanceMeasurement","SelfOptimizer"]};

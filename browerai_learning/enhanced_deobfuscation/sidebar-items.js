@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ControlFlowPattern","ProxyFunctionType","SelfDefendingPattern"],"struct":["DeobfuscationStats","EnhancedDeobfuscationResult","EnhancedDeobfuscator","ProxyFunction","StringArray"]};

@@ -1,0 +1,9 @@
+(function() {
+    var implementors = Object.fromEntries([["browerai_ai_core",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.92.0/core/fmt/trait.Display.html\" title=\"trait core::fmt::Display\">Display</a> for <a class=\"enum\" href=\"browerai_ai_core/config/enum.FallbackReason.html\" title=\"enum browerai_ai_core::config::FallbackReason\">FallbackReason</a>"]]],["browerai_core",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.92.0/core/fmt/trait.Display.html\" title=\"trait core::fmt::Display\">Display</a> for <a class=\"enum\" href=\"browerai_core/error/enum.BrowserError.html\" title=\"enum browerai_core::error::BrowserError\">BrowserError</a>"]]],["browerai_dom",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.92.0/core/fmt/trait.Display.html\" title=\"trait core::fmt::Display\">Display</a> for <a class=\"enum\" href=\"browerai_dom/sandbox/enum.SandboxError.html\" title=\"enum browerai_dom::sandbox::SandboxError\">SandboxError</a>"]]],["browerai_learning",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.92.0/core/fmt/trait.Display.html\" title=\"trait core::fmt::Display\">Display</a> for <a class=\"struct\" href=\"browerai_learning/versioning/struct.ModelVersion.html\" title=\"struct browerai_learning::versioning::ModelVersion\">ModelVersion</a>"]]],["browerai_plugins",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.92.0/core/fmt/trait.Display.html\" title=\"trait core::fmt::Display\">Display</a> for <a class=\"enum\" href=\"browerai_plugins/enum.PluginError.html\" title=\"enum browerai_plugins::PluginError\">PluginError</a>"]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":57,"fragment_lengths":[322,306,307,334,299]}

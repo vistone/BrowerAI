@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["InteractionType","RegionType"],"struct":["ContentNode","ContentTree","DataFlow","EventHandler","FunctionalRegion","Functionality","InteractionPattern","NavItem","NavigationStructure","SiteStructure","SiteUnderstanding"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["FunctionType","LayoutScheme","PageType"],"mod":["generation","reasoning","renderer","site_understanding","validation"],"struct":["ColorScheme","FunctionMapping","SpacingSystem","Typography","VisualStyle"]};

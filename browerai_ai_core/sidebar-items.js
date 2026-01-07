@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["advanced_monitor","candle_loader","config","feedback_pipeline","gpu_support","hot_reload","inference","model_loader","model_manager","performance_monitor","reporter","runtime","smart_features"]};

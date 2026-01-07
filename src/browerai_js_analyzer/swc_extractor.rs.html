@@ -1,0 +1,479 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/browerai-js-analyzer/src/swc_extractor.rs`."><title>swc_extractor.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="browerai_js_analyzer" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0 (ded5c06cf 2025-12-08)" data-channel="1.92.0" data-search-js="search-d69d8955.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">browerai_js_analyzer/</div>swc_extractor.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span><span class="kw">super</span>::extractor::AstExtractor;
+<a href=#2 id=2 data-nosnippet>2</a><span class="doccomment">/// Swc 完整 AST 提取器 - Phase 2 增强模块
+<a href=#3 id=3 data-nosnippet>3</a>///
+<a href=#4 id=4 data-nosnippet>4</a>/// 本模块使用 Swc 完整解析器来替代 Phase 1 的正则表达式方法
+<a href=#5 id=5 data-nosnippet>5</a>/// 提供：
+<a href=#6 id=6 data-nosnippet>6</a>/// - 完整的 JavaScript/TypeScript 解析
+<a href=#7 id=7 data-nosnippet>7</a>/// - 精确的行号和列号信息
+<a href=#8 id=8 data-nosnippet>8</a>/// - JSX 语法完整支持
+<a href=#9 id=9 data-nosnippet>9</a>/// - TypeScript 类型注解支持
+<a href=#10 id=10 data-nosnippet>10</a>///
+<a href=#11 id=11 data-nosnippet>11</a>/// 与 Phase 1 的关系：
+<a href=#12 id=12 data-nosnippet>12</a>/// - 保留兼容的数据接口
+<a href=#13 id=13 data-nosnippet>13</a>/// - 增强现有的 JsAstMetadata 和 JsSemanticInfo
+<a href=#14 id=14 data-nosnippet>14</a>/// - 添加位置和类型信息
+<a href=#15 id=15 data-nosnippet>15</a></span><span class="kw">use </span><span class="kw">super</span>::types::<span class="kw-2">*</span>;
+<a href=#16 id=16 data-nosnippet>16</a><span class="kw">use </span>anyhow::Result;
+<a href=#17 id=17 data-nosnippet>17</a><span class="kw">use </span>serde::{Deserialize, Serialize};
+<a href=#18 id=18 data-nosnippet>18</a><span class="kw">use </span>std::collections::HashMap;
+<a href=#19 id=19 data-nosnippet>19</a>
+<a href=#20 id=20 data-nosnippet>20</a><span class="comment">// Re-export LocationInfo for backward compatibility (now defined in types.rs)
+<a href=#21 id=21 data-nosnippet>21</a></span><span class="kw">pub use </span><span class="kw">super</span>::types::LocationInfo;
+<a href=#22 id=22 data-nosnippet>22</a>
+<a href=#23 id=23 data-nosnippet>23</a><span class="doccomment">/// JSX 元素信息 - 用于识别 React 或类似框架的 JSX 使用
+<a href=#24 id=24 data-nosnippet>24</a></span><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
+<a href=#25 id=25 data-nosnippet>25</a></span><span class="kw">pub struct </span>JsxElementInfo {
+<a href=#26 id=26 data-nosnippet>26</a>    <span class="doccomment">/// 元素名称 (如 "Component", "div")
+<a href=#27 id=27 data-nosnippet>27</a>    </span><span class="kw">pub </span>name: String,
+<a href=#28 id=28 data-nosnippet>28</a>    <span class="doccomment">/// 是否自定义组件（首字母大写）
+<a href=#29 id=29 data-nosnippet>29</a>    </span><span class="kw">pub </span>is_component: bool,
+<a href=#30 id=30 data-nosnippet>30</a>    <span class="doccomment">/// 属性列表
+<a href=#31 id=31 data-nosnippet>31</a>    </span><span class="kw">pub </span>attributes: Vec&lt;JsxAttribute&gt;,
+<a href=#32 id=32 data-nosnippet>32</a>    <span class="doccomment">/// 位置信息
+<a href=#33 id=33 data-nosnippet>33</a>    </span><span class="kw">pub </span>location: LocationInfo,
+<a href=#34 id=34 data-nosnippet>34</a>}
+<a href=#35 id=35 data-nosnippet>35</a>
+<a href=#36 id=36 data-nosnippet>36</a><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
+<a href=#37 id=37 data-nosnippet>37</a></span><span class="kw">pub struct </span>JsxAttribute {
+<a href=#38 id=38 data-nosnippet>38</a>    <span class="kw">pub </span>name: String,
+<a href=#39 id=39 data-nosnippet>39</a>    <span class="kw">pub </span>value: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#40 id=40 data-nosnippet>40</a>}
+<a href=#41 id=41 data-nosnippet>41</a>
+<a href=#42 id=42 data-nosnippet>42</a><span class="doccomment">/// TypeScript 类型信息 - 用于识别和跟踪类型定义
+<a href=#43 id=43 data-nosnippet>43</a></span><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
+<a href=#44 id=44 data-nosnippet>44</a></span><span class="kw">pub struct </span>TypeScriptInfo {
+<a href=#45 id=45 data-nosnippet>45</a>    <span class="doccomment">/// 类型定义名称
+<a href=#46 id=46 data-nosnippet>46</a>    </span><span class="kw">pub </span>name: String,
+<a href=#47 id=47 data-nosnippet>47</a>    <span class="doccomment">/// 类型类别：interface, type, class, enum 等
+<a href=#48 id=48 data-nosnippet>48</a>    </span><span class="kw">pub </span>kind: String,
+<a href=#49 id=49 data-nosnippet>49</a>    <span class="doccomment">/// 继承/实现的类型
+<a href=#50 id=50 data-nosnippet>50</a>    </span><span class="kw">pub </span>extends: Vec&lt;String&gt;,
+<a href=#51 id=51 data-nosnippet>51</a>    <span class="doccomment">/// 位置信息
+<a href=#52 id=52 data-nosnippet>52</a>    </span><span class="kw">pub </span>location: LocationInfo,
+<a href=#53 id=53 data-nosnippet>53</a>}
+<a href=#54 id=54 data-nosnippet>54</a>
+<a href=#55 id=55 data-nosnippet>55</a><span class="doccomment">/// 增强的 AST 结构 - 结合 Phase 1 的数据和新的 Swc 数据
+<a href=#56 id=56 data-nosnippet>56</a></span><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+<a href=#57 id=57 data-nosnippet>57</a></span><span class="kw">pub struct </span>EnhancedAst {
+<a href=#58 id=58 data-nosnippet>58</a>    <span class="doccomment">/// Phase 1 的基础元数据（保持兼容性）
+<a href=#59 id=59 data-nosnippet>59</a>    </span><span class="kw">pub </span>metadata: JsAstMetadata,
+<a href=#60 id=60 data-nosnippet>60</a>
+<a href=#61 id=61 data-nosnippet>61</a>    <span class="doccomment">/// Phase 1 的语义信息
+<a href=#62 id=62 data-nosnippet>62</a>    </span><span class="kw">pub </span>semantic: JsSemanticInfo,
+<a href=#63 id=63 data-nosnippet>63</a>
+<a href=#64 id=64 data-nosnippet>64</a>    <span class="doccomment">/// 位置映射：函数/类名 -&gt; 位置信息
+<a href=#65 id=65 data-nosnippet>65</a>    </span><span class="kw">pub </span>locations: HashMap&lt;String, LocationInfo&gt;,
+<a href=#66 id=66 data-nosnippet>66</a>
+<a href=#67 id=67 data-nosnippet>67</a>    <span class="doccomment">/// JSX 元素列表（如果存在）
+<a href=#68 id=68 data-nosnippet>68</a>    </span><span class="kw">pub </span>jsx_elements: Vec&lt;JsxElementInfo&gt;,
+<a href=#69 id=69 data-nosnippet>69</a>
+<a href=#70 id=70 data-nosnippet>70</a>    <span class="doccomment">/// TypeScript 类型信息（如果存在）
+<a href=#71 id=71 data-nosnippet>71</a>    </span><span class="kw">pub </span>typescript_types: Vec&lt;TypeScriptInfo&gt;,
+<a href=#72 id=72 data-nosnippet>72</a>
+<a href=#73 id=73 data-nosnippet>73</a>    <span class="doccomment">/// 是否包含 JSX
+<a href=#74 id=74 data-nosnippet>74</a>    </span><span class="kw">pub </span>has_jsx: bool,
+<a href=#75 id=75 data-nosnippet>75</a>
+<a href=#76 id=76 data-nosnippet>76</a>    <span class="doccomment">/// 是否包含 TypeScript
+<a href=#77 id=77 data-nosnippet>77</a>    </span><span class="kw">pub </span>has_typescript: bool,
+<a href=#78 id=78 data-nosnippet>78</a>
+<a href=#79 id=79 data-nosnippet>79</a>    <span class="doccomment">/// 源代码评估：是否为有效的现代 JavaScript
+<a href=#80 id=80 data-nosnippet>80</a>    </span><span class="kw">pub </span>is_modern_js: bool,
+<a href=#81 id=81 data-nosnippet>81</a>}
+<a href=#82 id=82 data-nosnippet>82</a>
+<a href=#83 id=83 data-nosnippet>83</a><span class="doccomment">/// Swc 解析结果中间结构
+<a href=#84 id=84 data-nosnippet>84</a></span><span class="attr">#[derive(Debug, Clone, Default)]
+<a href=#85 id=85 data-nosnippet>85</a></span><span class="kw">struct </span>SwcParseResult {
+<a href=#86 id=86 data-nosnippet>86</a>    has_jsx: bool,
+<a href=#87 id=87 data-nosnippet>87</a>    jsx_elements: Vec&lt;JsxElementInfo&gt;,
+<a href=#88 id=88 data-nosnippet>88</a>    typescript_types: Vec&lt;TypeScriptInfo&gt;,
+<a href=#89 id=89 data-nosnippet>89</a>    locations: HashMap&lt;String, LocationInfo&gt;,
+<a href=#90 id=90 data-nosnippet>90</a>}
+<a href=#91 id=91 data-nosnippet>91</a>
+<a href=#92 id=92 data-nosnippet>92</a><span class="doccomment">/// Swc 完整 AST 提取器
+<a href=#93 id=93 data-nosnippet>93</a>///
+<a href=#94 id=94 data-nosnippet>94</a>/// 设计特点：
+<a href=#95 id=95 data-nosnippet>95</a>/// - 兼容 Phase 1 的输出格式
+<a href=#96 id=96 data-nosnippet>96</a>/// - 使用 Swc 进行完整 AST 解析
+<a href=#97 id=97 data-nosnippet>97</a>/// - 支持 JSX 和 TypeScript
+<a href=#98 id=98 data-nosnippet>98</a>/// - 获取精确的位置信息
+<a href=#99 id=99 data-nosnippet>99</a>///
+<a href=#100 id=100 data-nosnippet>100</a>/// # 示例
+<a href=#101 id=101 data-nosnippet>101</a>///
+<a href=#102 id=102 data-nosnippet>102</a>/// ```ignore
+<a href=#103 id=103 data-nosnippet>103</a>/// let extractor = SwcAstExtractor::new();
+<a href=#104 id=104 data-nosnippet>104</a>/// let enhanced = extractor.extract_from_source(code)?;
+<a href=#105 id=105 data-nosnippet>105</a>///
+<a href=#106 id=106 data-nosnippet>106</a>/// // 访问位置信息
+<a href=#107 id=107 data-nosnippet>107</a>/// if let Some(loc) = enhanced.locations.get("myFunction") {
+<a href=#108 id=108 data-nosnippet>108</a>///     println!("Function at line {}, column {}", loc.line, loc.column);
+<a href=#109 id=109 data-nosnippet>109</a>/// }
+<a href=#110 id=110 data-nosnippet>110</a>///
+<a href=#111 id=111 data-nosnippet>111</a>/// // 访问 JSX 信息
+<a href=#112 id=112 data-nosnippet>112</a>/// for jsx in &amp;enhanced.jsx_elements {
+<a href=#113 id=113 data-nosnippet>113</a>///     println!("JSX element: &lt;{} /&gt;", jsx.name);
+<a href=#114 id=114 data-nosnippet>114</a>/// }
+<a href=#115 id=115 data-nosnippet>115</a>/// ```
+<a href=#116 id=116 data-nosnippet>116</a></span><span class="attr">#[derive(Default)]
+<a href=#117 id=117 data-nosnippet>117</a></span><span class="kw">pub struct </span>SwcAstExtractor {
+<a href=#118 id=118 data-nosnippet>118</a>    <span class="comment">// 预留位置：用于 Swc 配置和状态
+<a href=#119 id=119 data-nosnippet>119</a>    </span>_phantom: std::marker::PhantomData&lt;()&gt;,
+<a href=#120 id=120 data-nosnippet>120</a>}
+<a href=#121 id=121 data-nosnippet>121</a>
+<a href=#122 id=122 data-nosnippet>122</a><span class="kw">impl </span>SwcAstExtractor {
+<a href=#123 id=123 data-nosnippet>123</a>    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+<a href=#124 id=124 data-nosnippet>124</a>        <span class="self">Self</span>::default()
+<a href=#125 id=125 data-nosnippet>125</a>    }
+<a href=#126 id=126 data-nosnippet>126</a>
+<a href=#127 id=127 data-nosnippet>127</a>    <span class="doccomment">/// 从源代码提取增强的 AST 信息
+<a href=#128 id=128 data-nosnippet>128</a>    ///
+<a href=#129 id=129 data-nosnippet>129</a>    /// # 参数
+<a href=#130 id=130 data-nosnippet>130</a>    /// - `source` - JavaScript/TypeScript 源代码
+<a href=#131 id=131 data-nosnippet>131</a>    ///
+<a href=#132 id=132 data-nosnippet>132</a>    /// # 返回
+<a href=#133 id=133 data-nosnippet>133</a>    /// 增强的 AST 数据，包括位置信息、JSX 和 TypeScript 支持
+<a href=#134 id=134 data-nosnippet>134</a>    ///
+<a href=#135 id=135 data-nosnippet>135</a>    /// # 错误
+<a href=#136 id=136 data-nosnippet>136</a>    /// 如果解析失败，返回包含详细信息的错误
+<a href=#137 id=137 data-nosnippet>137</a>    </span><span class="kw">pub fn </span>extract_from_source(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;EnhancedAst&gt; {
+<a href=#138 id=138 data-nosnippet>138</a>        <span class="comment">// 第一步：先使用 Phase 1 的提取器获取基础数据
+<a href=#139 id=139 data-nosnippet>139</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>extractor = AstExtractor::new();
+<a href=#140 id=140 data-nosnippet>140</a>        <span class="kw">let </span>base = extractor.extract_from_source(source)<span class="question-mark">?</span>;
+<a href=#141 id=141 data-nosnippet>141</a>
+<a href=#142 id=142 data-nosnippet>142</a>        <span class="comment">// 第二步：检测 TypeScript（根据文件内容）
+<a href=#143 id=143 data-nosnippet>143</a>        </span><span class="kw">let </span>has_typescript = <span class="self">self</span>.detect_typescript(source);
+<a href=#144 id=144 data-nosnippet>144</a>
+<a href=#145 id=145 data-nosnippet>145</a>        <span class="comment">// 第三步：使用 Swc 进行完整解析
+<a href=#146 id=146 data-nosnippet>146</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>swc_result = <span class="self">self</span>.parse_with_swc(source, has_typescript)<span class="question-mark">?</span>;
+<a href=#147 id=147 data-nosnippet>147</a>
+<a href=#148 id=148 data-nosnippet>148</a>        <span class="comment">// 第四步：提取精确的位置信息
+<a href=#149 id=149 data-nosnippet>149</a>        </span><span class="kw">if </span>swc_result.locations.is_empty() {
+<a href=#150 id=150 data-nosnippet>150</a>            swc_result.locations = <span class="self">self</span>.extract_locations(source);
+<a href=#151 id=151 data-nosnippet>151</a>        }
+<a href=#152 id=152 data-nosnippet>152</a>
+<a href=#153 id=153 data-nosnippet>153</a>        <span class="kw">let </span>enhanced = EnhancedAst {
+<a href=#154 id=154 data-nosnippet>154</a>            metadata: base.metadata,
+<a href=#155 id=155 data-nosnippet>155</a>            semantic: base.semantic,
+<a href=#156 id=156 data-nosnippet>156</a>            locations: swc_result.locations,
+<a href=#157 id=157 data-nosnippet>157</a>            jsx_elements: swc_result.jsx_elements,
+<a href=#158 id=158 data-nosnippet>158</a>            typescript_types: swc_result.typescript_types,
+<a href=#159 id=159 data-nosnippet>159</a>            has_jsx: swc_result.has_jsx,
+<a href=#160 id=160 data-nosnippet>160</a>            has_typescript,
+<a href=#161 id=161 data-nosnippet>161</a>            is_modern_js: <span class="bool-val">true</span>,
+<a href=#162 id=162 data-nosnippet>162</a>        };
+<a href=#163 id=163 data-nosnippet>163</a>
+<a href=#164 id=164 data-nosnippet>164</a>        <span class="macro">log::debug!</span>(
+<a href=#165 id=165 data-nosnippet>165</a>            <span class="string">"Enhanced AST: JSX={}, TS={}, locations={}, jsx_count={}, ts_count={}"</span>,
+<a href=#166 id=166 data-nosnippet>166</a>            enhanced.has_jsx,
+<a href=#167 id=167 data-nosnippet>167</a>            enhanced.has_typescript,
+<a href=#168 id=168 data-nosnippet>168</a>            enhanced.locations.len(),
+<a href=#169 id=169 data-nosnippet>169</a>            enhanced.jsx_elements.len(),
+<a href=#170 id=170 data-nosnippet>170</a>            enhanced.typescript_types.len()
+<a href=#171 id=171 data-nosnippet>171</a>        );
+<a href=#172 id=172 data-nosnippet>172</a>
+<a href=#173 id=173 data-nosnippet>173</a>        <span class="prelude-val">Ok</span>(enhanced)
+<a href=#174 id=174 data-nosnippet>174</a>    }
+<a href=#175 id=175 data-nosnippet>175</a>
+<a href=#176 id=176 data-nosnippet>176</a>    <span class="doccomment">/// 使用 Swc 进行完整的 AST 解析
+<a href=#177 id=177 data-nosnippet>177</a>    ///
+<a href=#178 id=178 data-nosnippet>178</a>    /// 返回包含位置信息、JSX 和 TypeScript 数据的结果
+<a href=#179 id=179 data-nosnippet>179</a>    ///
+<a href=#180 id=180 data-nosnippet>180</a>    /// 注意：当前使用启发式实现。完整的 Swc AST 遍历将在 Phase 2 Day 3 实现。
+<a href=#181 id=181 data-nosnippet>181</a>    </span><span class="kw">fn </span>parse_with_swc(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str, _is_typescript: bool) -&gt; <span class="prelude-ty">Result</span>&lt;SwcParseResult&gt; {
+<a href=#182 id=182 data-nosnippet>182</a>        <span class="comment">// Phase 2 Day 2-3：基础启发式实现
+<a href=#183 id=183 data-nosnippet>183</a>        // Phase 2 Day 3：完整的 Swc AST 遍历和位置信息提取
+<a href=#184 id=184 data-nosnippet>184</a>        //
+<a href=#185 id=185 data-nosnippet>185</a>        // 当前使用启发式方法：
+<a href=#186 id=186 data-nosnippet>186</a>        // 1. 检测 JSX - 通过 &lt;Component /&gt; 模式
+<a href=#187 id=187 data-nosnippet>187</a>        // 2. 检测 TypeScript - 通过类型注解
+<a href=#188 id=188 data-nosnippet>188</a>        // 3. 提取类型定义 - 通过正则表达式
+<a href=#189 id=189 data-nosnippet>189</a>        // 4. 提取元素位置 - 基于文本搜索
+<a href=#190 id=190 data-nosnippet>190</a>
+<a href=#191 id=191 data-nosnippet>191</a>        </span><span class="prelude-val">Ok</span>(SwcParseResult {
+<a href=#192 id=192 data-nosnippet>192</a>            has_jsx: <span class="self">self</span>.detect_jsx(source),
+<a href=#193 id=193 data-nosnippet>193</a>            jsx_elements: <span class="self">self</span>.extract_jsx_elements_heuristic(source),
+<a href=#194 id=194 data-nosnippet>194</a>            typescript_types: <span class="self">self</span>.extract_typescript_heuristic(source),
+<a href=#195 id=195 data-nosnippet>195</a>            locations: HashMap::new(), <span class="comment">// 将在 Day 3 实现精确位置信息
+<a href=#196 id=196 data-nosnippet>196</a>        </span>})
+<a href=#197 id=197 data-nosnippet>197</a>    }
+<a href=#198 id=198 data-nosnippet>198</a>
+<a href=#199 id=199 data-nosnippet>199</a>    <span class="doccomment">/// 使用启发式方法检测 TypeScript
+<a href=#200 id=200 data-nosnippet>200</a>    </span><span class="kw">fn </span>detect_typescript(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str) -&gt; bool {
+<a href=#201 id=201 data-nosnippet>201</a>        <span class="comment">// 检查常见的 TypeScript 特征
+<a href=#202 id=202 data-nosnippet>202</a>        </span>source.contains(<span class="string">": string"</span>)
+<a href=#203 id=203 data-nosnippet>203</a>            || source.contains(<span class="string">": number"</span>)
+<a href=#204 id=204 data-nosnippet>204</a>            || source.contains(<span class="string">": boolean"</span>)
+<a href=#205 id=205 data-nosnippet>205</a>            || source.contains(<span class="string">": any"</span>)
+<a href=#206 id=206 data-nosnippet>206</a>            || source.contains(<span class="string">"interface "</span>)
+<a href=#207 id=207 data-nosnippet>207</a>            || source.contains(<span class="string">"type "</span>)
+<a href=#208 id=208 data-nosnippet>208</a>            || source.contains(<span class="string">"&lt;T&gt;"</span>)
+<a href=#209 id=209 data-nosnippet>209</a>            || source.contains(<span class="string">"as const"</span>)
+<a href=#210 id=210 data-nosnippet>210</a>            || source.contains(<span class="string">"enum "</span>)
+<a href=#211 id=211 data-nosnippet>211</a>    }
+<a href=#212 id=212 data-nosnippet>212</a>
+<a href=#213 id=213 data-nosnippet>213</a>    <span class="doccomment">/// 使用启发式方法检测 JSX
+<a href=#214 id=214 data-nosnippet>214</a>    </span><span class="kw">fn </span>detect_jsx(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str) -&gt; bool {
+<a href=#215 id=215 data-nosnippet>215</a>        <span class="comment">// 检查 JSX 特征：&lt;Component ... /&gt; 或 &lt;div ...&gt;
+<a href=#216 id=216 data-nosnippet>216</a>        </span><span class="kw">let </span>has_jsx_like = source.contains(<span class="string">"&lt;/"</span>) || (source.contains(<span class="string">"&lt;"</span>) &amp;&amp; source.contains(<span class="string">"/&gt;"</span>));
+<a href=#217 id=217 data-nosnippet>217</a>        <span class="kw">let </span>has_react_imports = source.contains(<span class="string">"import React"</span>) || source.contains(<span class="string">"from 'react'"</span>);
+<a href=#218 id=218 data-nosnippet>218</a>
+<a href=#219 id=219 data-nosnippet>219</a>        has_jsx_like || has_react_imports
+<a href=#220 id=220 data-nosnippet>220</a>    }
+<a href=#221 id=221 data-nosnippet>221</a>
+<a href=#222 id=222 data-nosnippet>222</a>    <span class="doccomment">/// 使用启发式方法提取 JSX 元素信息
+<a href=#223 id=223 data-nosnippet>223</a>    </span><span class="kw">fn </span>extract_jsx_elements_heuristic(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str) -&gt; Vec&lt;JsxElementInfo&gt; {
+<a href=#224 id=224 data-nosnippet>224</a>        <span class="kw">let </span><span class="kw-2">mut </span>elements = Vec::new();
+<a href=#225 id=225 data-nosnippet>225</a>
+<a href=#226 id=226 data-nosnippet>226</a>        <span class="comment">// 简单的正则表达式匹配：&lt;ComponentName ... &gt;
+<a href=#227 id=227 data-nosnippet>227</a>        </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(re) = regex::Regex::new(<span class="string">r#"&lt;([A-Za-z][A-Za-z0-9]*)\s*([^&gt;]*)/?&gt;"#</span>) {
+<a href=#228 id=228 data-nosnippet>228</a>            <span class="kw">for </span>cap <span class="kw">in </span>re.captures_iter(source) {
+<a href=#229 id=229 data-nosnippet>229</a>                <span class="kw">if </span>cap.len() &gt;= <span class="number">2 </span>{
+<a href=#230 id=230 data-nosnippet>230</a>                    <span class="kw">let </span>name = cap
+<a href=#231 id=231 data-nosnippet>231</a>                        .get(<span class="number">1</span>)
+<a href=#232 id=232 data-nosnippet>232</a>                        .map(|m| m.as_str())
+<a href=#233 id=233 data-nosnippet>233</a>                        .unwrap_or(<span class="string">"Unknown"</span>)
+<a href=#234 id=234 data-nosnippet>234</a>                        .to_string();
+<a href=#235 id=235 data-nosnippet>235</a>                    <span class="kw">let </span>is_component = name
+<a href=#236 id=236 data-nosnippet>236</a>                        .chars()
+<a href=#237 id=237 data-nosnippet>237</a>                        .next()
+<a href=#238 id=238 data-nosnippet>238</a>                        .map(|c| c.is_uppercase())
+<a href=#239 id=239 data-nosnippet>239</a>                        .unwrap_or(<span class="bool-val">false</span>);
+<a href=#240 id=240 data-nosnippet>240</a>                    <span class="kw">let </span>attrs_str = cap.get(<span class="number">2</span>).map(|m| m.as_str()).unwrap_or(<span class="string">""</span>);
+<a href=#241 id=241 data-nosnippet>241</a>
+<a href=#242 id=242 data-nosnippet>242</a>                    <span class="kw">let </span>attributes = <span class="self">self</span>.parse_jsx_attributes(attrs_str);
+<a href=#243 id=243 data-nosnippet>243</a>
+<a href=#244 id=244 data-nosnippet>244</a>                    <span class="comment">// 计算精确的位置信息
+<a href=#245 id=245 data-nosnippet>245</a>                    </span><span class="kw">let </span>start_pos = cap.get(<span class="number">0</span>).unwrap().start();
+<a href=#246 id=246 data-nosnippet>246</a>                    <span class="kw">let </span>end_pos = cap.get(<span class="number">0</span>).unwrap().end();
+<a href=#247 id=247 data-nosnippet>247</a>                    <span class="kw">let </span>location = <span class="self">self</span>.compute_location_from_offsets(source, start_pos, end_pos);
+<a href=#248 id=248 data-nosnippet>248</a>
+<a href=#249 id=249 data-nosnippet>249</a>                    elements.push(JsxElementInfo {
+<a href=#250 id=250 data-nosnippet>250</a>                        name,
+<a href=#251 id=251 data-nosnippet>251</a>                        is_component,
+<a href=#252 id=252 data-nosnippet>252</a>                        attributes,
+<a href=#253 id=253 data-nosnippet>253</a>                        location,
+<a href=#254 id=254 data-nosnippet>254</a>                    });
+<a href=#255 id=255 data-nosnippet>255</a>                }
+<a href=#256 id=256 data-nosnippet>256</a>            }
+<a href=#257 id=257 data-nosnippet>257</a>        }
+<a href=#258 id=258 data-nosnippet>258</a>
+<a href=#259 id=259 data-nosnippet>259</a>        elements
+<a href=#260 id=260 data-nosnippet>260</a>    }
+<a href=#261 id=261 data-nosnippet>261</a>
+<a href=#262 id=262 data-nosnippet>262</a>    <span class="doccomment">/// 使用启发式方法提取 TypeScript 类型信息
+<a href=#263 id=263 data-nosnippet>263</a>    </span><span class="kw">fn </span>extract_typescript_heuristic(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str) -&gt; Vec&lt;TypeScriptInfo&gt; {
+<a href=#264 id=264 data-nosnippet>264</a>        <span class="kw">let </span><span class="kw-2">mut </span>types = Vec::new();
+<a href=#265 id=265 data-nosnippet>265</a>
+<a href=#266 id=266 data-nosnippet>266</a>        <span class="comment">// 提取 interface 定义
+<a href=#267 id=267 data-nosnippet>267</a>        </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(re) =
+<a href=#268 id=268 data-nosnippet>268</a>            regex::Regex::new(<span class="string">r"interface\s+(\w+)\s*(?:&lt;[^&gt;]+&gt;)?\s*(?:extends\s+([^{]+))?\s*\{"</span>)
+<a href=#269 id=269 data-nosnippet>269</a>        {
+<a href=#270 id=270 data-nosnippet>270</a>            <span class="kw">for </span>cap <span class="kw">in </span>re.captures_iter(source) {
+<a href=#271 id=271 data-nosnippet>271</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(name) = cap.get(<span class="number">1</span>) {
+<a href=#272 id=272 data-nosnippet>272</a>                    <span class="kw">let </span>extends = cap
+<a href=#273 id=273 data-nosnippet>273</a>                        .get(<span class="number">2</span>)
+<a href=#274 id=274 data-nosnippet>274</a>                        .map(|m| {
+<a href=#275 id=275 data-nosnippet>275</a>                            m.as_str()
+<a href=#276 id=276 data-nosnippet>276</a>                                .split(<span class="string">','</span>)
+<a href=#277 id=277 data-nosnippet>277</a>                                .map(|s| s.trim().to_string())
+<a href=#278 id=278 data-nosnippet>278</a>                                .collect()
+<a href=#279 id=279 data-nosnippet>279</a>                        })
+<a href=#280 id=280 data-nosnippet>280</a>                        .unwrap_or_default();
+<a href=#281 id=281 data-nosnippet>281</a>
+<a href=#282 id=282 data-nosnippet>282</a>                    types.push(TypeScriptInfo {
+<a href=#283 id=283 data-nosnippet>283</a>                        name: name.as_str().to_string(),
+<a href=#284 id=284 data-nosnippet>284</a>                        kind: <span class="string">"interface"</span>.to_string(),
+<a href=#285 id=285 data-nosnippet>285</a>                        extends,
+<a href=#286 id=286 data-nosnippet>286</a>                        location: LocationInfo::new(<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>),
+<a href=#287 id=287 data-nosnippet>287</a>                    });
+<a href=#288 id=288 data-nosnippet>288</a>                }
+<a href=#289 id=289 data-nosnippet>289</a>            }
+<a href=#290 id=290 data-nosnippet>290</a>        }
+<a href=#291 id=291 data-nosnippet>291</a>
+<a href=#292 id=292 data-nosnippet>292</a>        <span class="comment">// 提取 type 定义
+<a href=#293 id=293 data-nosnippet>293</a>        </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(re) = regex::Regex::new(<span class="string">r"type\s+(\w+)\s*(?:&lt;[^&gt;]+&gt;)?\s*="</span>) {
+<a href=#294 id=294 data-nosnippet>294</a>            <span class="kw">for </span>cap <span class="kw">in </span>re.captures_iter(source) {
+<a href=#295 id=295 data-nosnippet>295</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(name) = cap.get(<span class="number">1</span>) {
+<a href=#296 id=296 data-nosnippet>296</a>                    types.push(TypeScriptInfo {
+<a href=#297 id=297 data-nosnippet>297</a>                        name: name.as_str().to_string(),
+<a href=#298 id=298 data-nosnippet>298</a>                        kind: <span class="string">"type"</span>.to_string(),
+<a href=#299 id=299 data-nosnippet>299</a>                        extends: Vec::new(),
+<a href=#300 id=300 data-nosnippet>300</a>                        location: LocationInfo::new(<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>),
+<a href=#301 id=301 data-nosnippet>301</a>                    });
+<a href=#302 id=302 data-nosnippet>302</a>                }
+<a href=#303 id=303 data-nosnippet>303</a>            }
+<a href=#304 id=304 data-nosnippet>304</a>        }
+<a href=#305 id=305 data-nosnippet>305</a>
+<a href=#306 id=306 data-nosnippet>306</a>        types
+<a href=#307 id=307 data-nosnippet>307</a>    }
+<a href=#308 id=308 data-nosnippet>308</a>
+<a href=#309 id=309 data-nosnippet>309</a>    <span class="doccomment">/// 解析 JSX 属性字符串
+<a href=#310 id=310 data-nosnippet>310</a>    </span><span class="kw">fn </span>parse_jsx_attributes(<span class="kw-2">&amp;</span><span class="self">self</span>, attrs_str: <span class="kw-2">&amp;</span>str) -&gt; Vec&lt;JsxAttribute&gt; {
+<a href=#311 id=311 data-nosnippet>311</a>        <span class="kw">let </span><span class="kw-2">mut </span>attributes = Vec::new();
+<a href=#312 id=312 data-nosnippet>312</a>
+<a href=#313 id=313 data-nosnippet>313</a>        <span class="comment">// 简单的属性解析：key="value" 或 key
+<a href=#314 id=314 data-nosnippet>314</a>        </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(re) = regex::Regex::new(<span class="string">r#"(\w+)(?:=(?:"([^"]*)"|'([^']*)'|(\S+)))?"#</span>) {
+<a href=#315 id=315 data-nosnippet>315</a>            <span class="kw">for </span>cap <span class="kw">in </span>re.captures_iter(attrs_str) {
+<a href=#316 id=316 data-nosnippet>316</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(key) = cap.get(<span class="number">1</span>) {
+<a href=#317 id=317 data-nosnippet>317</a>                    <span class="kw">let </span>value = cap
+<a href=#318 id=318 data-nosnippet>318</a>                        .get(<span class="number">2</span>)
+<a href=#319 id=319 data-nosnippet>319</a>                        .or_else(|| cap.get(<span class="number">3</span>))
+<a href=#320 id=320 data-nosnippet>320</a>                        .or_else(|| cap.get(<span class="number">4</span>))
+<a href=#321 id=321 data-nosnippet>321</a>                        .map(|m| m.as_str().to_string());
+<a href=#322 id=322 data-nosnippet>322</a>
+<a href=#323 id=323 data-nosnippet>323</a>                    attributes.push(JsxAttribute {
+<a href=#324 id=324 data-nosnippet>324</a>                        name: key.as_str().to_string(),
+<a href=#325 id=325 data-nosnippet>325</a>                        value,
+<a href=#326 id=326 data-nosnippet>326</a>                    });
+<a href=#327 id=327 data-nosnippet>327</a>                }
+<a href=#328 id=328 data-nosnippet>328</a>            }
+<a href=#329 id=329 data-nosnippet>329</a>        }
+<a href=#330 id=330 data-nosnippet>330</a>
+<a href=#331 id=331 data-nosnippet>331</a>        attributes
+<a href=#332 id=332 data-nosnippet>332</a>    }
+<a href=#333 id=333 data-nosnippet>333</a>
+<a href=#334 id=334 data-nosnippet>334</a>    <span class="doccomment">/// 从字符偏移计算位置信息 (line, column)
+<a href=#335 id=335 data-nosnippet>335</a>    </span><span class="kw">fn </span>compute_location_from_offsets(
+<a href=#336 id=336 data-nosnippet>336</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#337 id=337 data-nosnippet>337</a>        source: <span class="kw-2">&amp;</span>str,
+<a href=#338 id=338 data-nosnippet>338</a>        start: usize,
+<a href=#339 id=339 data-nosnippet>339</a>        end: usize,
+<a href=#340 id=340 data-nosnippet>340</a>    ) -&gt; LocationInfo {
+<a href=#341 id=341 data-nosnippet>341</a>        <span class="kw">let </span>before = <span class="kw-2">&amp;</span>source[..start.min(source.len())];
+<a href=#342 id=342 data-nosnippet>342</a>        <span class="kw">let </span>line = before.lines().count();
+<a href=#343 id=343 data-nosnippet>343</a>        <span class="kw">let </span>last_line = before.lines().last().unwrap_or(<span class="string">""</span>);
+<a href=#344 id=344 data-nosnippet>344</a>        <span class="kw">let </span>column = last_line.len();
+<a href=#345 id=345 data-nosnippet>345</a>
+<a href=#346 id=346 data-nosnippet>346</a>        LocationInfo::new(line, column, start, end)
+<a href=#347 id=347 data-nosnippet>347</a>    }
+<a href=#348 id=348 data-nosnippet>348</a>
+<a href=#349 id=349 data-nosnippet>349</a>    <span class="doccomment">/// 提取所有函数和类的位置信息
+<a href=#350 id=350 data-nosnippet>350</a>    </span><span class="kw">fn </span>extract_locations(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str) -&gt; HashMap&lt;String, LocationInfo&gt; {
+<a href=#351 id=351 data-nosnippet>351</a>        <span class="kw">let </span><span class="kw-2">mut </span>locations = HashMap::new();
+<a href=#352 id=352 data-nosnippet>352</a>
+<a href=#353 id=353 data-nosnippet>353</a>        <span class="comment">// 提取函数声明：function name() 或 const/let name = ()=&gt;
+<a href=#354 id=354 data-nosnippet>354</a>        </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(re) = regex::Regex::new(<span class="string">r"(?:function|const|let)\s+(\w+)\s*(?:\(|=)"</span>) {
+<a href=#355 id=355 data-nosnippet>355</a>            <span class="kw">for </span>cap <span class="kw">in </span>re.captures_iter(source) {
+<a href=#356 id=356 data-nosnippet>356</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(name) = cap.get(<span class="number">1</span>) {
+<a href=#357 id=357 data-nosnippet>357</a>                    <span class="kw">let </span>name_str = name.as_str();
+<a href=#358 id=358 data-nosnippet>358</a>                    <span class="kw">if let </span><span class="prelude-val">Some</span>(pos) = source.find(name_str) {
+<a href=#359 id=359 data-nosnippet>359</a>                        <span class="kw">let </span>location =
+<a href=#360 id=360 data-nosnippet>360</a>                            <span class="self">self</span>.compute_location_from_offsets(source, pos, pos + name_str.len());
+<a href=#361 id=361 data-nosnippet>361</a>                        locations.insert(name_str.to_string(), location);
+<a href=#362 id=362 data-nosnippet>362</a>                    }
+<a href=#363 id=363 data-nosnippet>363</a>                }
+<a href=#364 id=364 data-nosnippet>364</a>            }
+<a href=#365 id=365 data-nosnippet>365</a>        }
+<a href=#366 id=366 data-nosnippet>366</a>
+<a href=#367 id=367 data-nosnippet>367</a>        <span class="comment">// 提取类声明：class Name
+<a href=#368 id=368 data-nosnippet>368</a>        </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(re) = regex::Regex::new(<span class="string">r"class\s+(\w+)"</span>) {
+<a href=#369 id=369 data-nosnippet>369</a>            <span class="kw">for </span>cap <span class="kw">in </span>re.captures_iter(source) {
+<a href=#370 id=370 data-nosnippet>370</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(name) = cap.get(<span class="number">1</span>) {
+<a href=#371 id=371 data-nosnippet>371</a>                    <span class="kw">let </span>name_str = name.as_str();
+<a href=#372 id=372 data-nosnippet>372</a>                    <span class="kw">if let </span><span class="prelude-val">Some</span>(pos) = source.find(name_str) {
+<a href=#373 id=373 data-nosnippet>373</a>                        <span class="kw">let </span>location =
+<a href=#374 id=374 data-nosnippet>374</a>                            <span class="self">self</span>.compute_location_from_offsets(source, pos, pos + name_str.len());
+<a href=#375 id=375 data-nosnippet>375</a>                        locations.insert(name_str.to_string(), location);
+<a href=#376 id=376 data-nosnippet>376</a>                    }
+<a href=#377 id=377 data-nosnippet>377</a>                }
+<a href=#378 id=378 data-nosnippet>378</a>            }
+<a href=#379 id=379 data-nosnippet>379</a>        }
+<a href=#380 id=380 data-nosnippet>380</a>
+<a href=#381 id=381 data-nosnippet>381</a>        locations
+<a href=#382 id=382 data-nosnippet>382</a>    }
+<a href=#383 id=383 data-nosnippet>383</a>}
+<a href=#384 id=384 data-nosnippet>384</a>
+<a href=#385 id=385 data-nosnippet>385</a><span class="attr">#[cfg(test)]
+<a href=#386 id=386 data-nosnippet>386</a></span><span class="kw">mod </span>tests {
+<a href=#387 id=387 data-nosnippet>387</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href=#388 id=388 data-nosnippet>388</a>
+<a href=#389 id=389 data-nosnippet>389</a>    <span class="attr">#[test]
+<a href=#390 id=390 data-nosnippet>390</a>    </span><span class="kw">fn </span>test_extractor_creation() {
+<a href=#391 id=391 data-nosnippet>391</a>        <span class="kw">let </span>extractor = SwcAstExtractor::new();
+<a href=#392 id=392 data-nosnippet>392</a>        <span class="macro">assert_eq!</span>(std::mem::size_of_val(<span class="kw-2">&amp;</span>extractor), <span class="number">0</span>);
+<a href=#393 id=393 data-nosnippet>393</a>    }
+<a href=#394 id=394 data-nosnippet>394</a>
+<a href=#395 id=395 data-nosnippet>395</a>    <span class="attr">#[test]
+<a href=#396 id=396 data-nosnippet>396</a>    </span><span class="kw">fn </span>test_enhanced_ast_default() {
+<a href=#397 id=397 data-nosnippet>397</a>        <span class="kw">let </span>enhanced = EnhancedAst::default();
+<a href=#398 id=398 data-nosnippet>398</a>        <span class="macro">assert_eq!</span>(enhanced.has_jsx, <span class="bool-val">false</span>);
+<a href=#399 id=399 data-nosnippet>399</a>        <span class="macro">assert_eq!</span>(enhanced.has_typescript, <span class="bool-val">false</span>);
+<a href=#400 id=400 data-nosnippet>400</a>        <span class="macro">assert_eq!</span>(enhanced.jsx_elements.len(), <span class="number">0</span>);
+<a href=#401 id=401 data-nosnippet>401</a>    }
+<a href=#402 id=402 data-nosnippet>402</a>
+<a href=#403 id=403 data-nosnippet>403</a>    <span class="attr">#[test]
+<a href=#404 id=404 data-nosnippet>404</a>    </span><span class="kw">fn </span>test_location_info_creation() {
+<a href=#405 id=405 data-nosnippet>405</a>        <span class="kw">let </span>loc = LocationInfo::new(<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>);
+<a href=#406 id=406 data-nosnippet>406</a>        <span class="macro">assert_eq!</span>(loc.line, <span class="number">1</span>);
+<a href=#407 id=407 data-nosnippet>407</a>        <span class="macro">assert_eq!</span>(loc.column, <span class="number">0</span>);
+<a href=#408 id=408 data-nosnippet>408</a>        <span class="macro">assert_eq!</span>(loc.start, <span class="number">0</span>);
+<a href=#409 id=409 data-nosnippet>409</a>        <span class="macro">assert_eq!</span>(loc.end, <span class="number">10</span>);
+<a href=#410 id=410 data-nosnippet>410</a>    }
+<a href=#411 id=411 data-nosnippet>411</a>
+<a href=#412 id=412 data-nosnippet>412</a>    <span class="attr">#[test]
+<a href=#413 id=413 data-nosnippet>413</a>    </span><span class="kw">fn </span>test_extract_simple_javascript() {
+<a href=#414 id=414 data-nosnippet>414</a>        <span class="kw">let </span>extractor = SwcAstExtractor::new();
+<a href=#415 id=415 data-nosnippet>415</a>        <span class="kw">let </span>code = <span class="string">"function hello() { console.log('Hi'); }"</span>;
+<a href=#416 id=416 data-nosnippet>416</a>        <span class="kw">let </span>result = extractor.extract_from_source(code);
+<a href=#417 id=417 data-nosnippet>417</a>
+<a href=#418 id=418 data-nosnippet>418</a>        <span class="macro">assert!</span>(result.is_ok());
+<a href=#419 id=419 data-nosnippet>419</a>        <span class="kw">let </span>enhanced = result.unwrap();
+<a href=#420 id=420 data-nosnippet>420</a>        <span class="macro">assert_eq!</span>(enhanced.has_jsx, <span class="bool-val">false</span>);
+<a href=#421 id=421 data-nosnippet>421</a>        <span class="macro">assert_eq!</span>(enhanced.has_typescript, <span class="bool-val">false</span>);
+<a href=#422 id=422 data-nosnippet>422</a>    }
+<a href=#423 id=423 data-nosnippet>423</a>
+<a href=#424 id=424 data-nosnippet>424</a>    <span class="attr">#[test]
+<a href=#425 id=425 data-nosnippet>425</a>    </span><span class="kw">fn </span>test_jsx_detection() {
+<a href=#426 id=426 data-nosnippet>426</a>        <span class="kw">let </span>extractor = SwcAstExtractor::new();
+<a href=#427 id=427 data-nosnippet>427</a>        <span class="kw">let </span>code = <span class="string">"const el = &lt;Component /&gt;;"</span>;
+<a href=#428 id=428 data-nosnippet>428</a>        <span class="kw">let </span>result = extractor.extract_from_source(code);
+<a href=#429 id=429 data-nosnippet>429</a>
+<a href=#430 id=430 data-nosnippet>430</a>        <span class="macro">assert!</span>(result.is_ok());
+<a href=#431 id=431 data-nosnippet>431</a>        <span class="kw">let </span>enhanced = result.unwrap();
+<a href=#432 id=432 data-nosnippet>432</a>        <span class="macro">assert!</span>(enhanced.has_jsx);
+<a href=#433 id=433 data-nosnippet>433</a>    }
+<a href=#434 id=434 data-nosnippet>434</a>
+<a href=#435 id=435 data-nosnippet>435</a>    <span class="attr">#[test]
+<a href=#436 id=436 data-nosnippet>436</a>    </span><span class="kw">fn </span>test_typescript_detection() {
+<a href=#437 id=437 data-nosnippet>437</a>        <span class="kw">let </span>extractor = SwcAstExtractor::new();
+<a href=#438 id=438 data-nosnippet>438</a>        <span class="kw">let </span>code = <span class="string">"function greet(name: string): void { }"</span>;
+<a href=#439 id=439 data-nosnippet>439</a>        <span class="kw">let </span>result = extractor.extract_from_source(code);
+<a href=#440 id=440 data-nosnippet>440</a>
+<a href=#441 id=441 data-nosnippet>441</a>        <span class="macro">assert!</span>(result.is_ok());
+<a href=#442 id=442 data-nosnippet>442</a>        <span class="kw">let </span>enhanced = result.unwrap();
+<a href=#443 id=443 data-nosnippet>443</a>        <span class="macro">assert!</span>(enhanced.has_typescript);
+<a href=#444 id=444 data-nosnippet>444</a>    }
+<a href=#445 id=445 data-nosnippet>445</a>
+<a href=#446 id=446 data-nosnippet>446</a>    <span class="attr">#[test]
+<a href=#447 id=447 data-nosnippet>447</a>    </span><span class="kw">fn </span>test_jsx_attribute_creation() {
+<a href=#448 id=448 data-nosnippet>448</a>        <span class="kw">let </span>attr = JsxAttribute {
+<a href=#449 id=449 data-nosnippet>449</a>            name: <span class="string">"onClick"</span>.to_string(),
+<a href=#450 id=450 data-nosnippet>450</a>            value: <span class="prelude-val">Some</span>(<span class="string">"handleClick"</span>.to_string()),
+<a href=#451 id=451 data-nosnippet>451</a>        };
+<a href=#452 id=452 data-nosnippet>452</a>        <span class="macro">assert_eq!</span>(attr.name, <span class="string">"onClick"</span>);
+<a href=#453 id=453 data-nosnippet>453</a>        <span class="macro">assert!</span>(attr.value.is_some());
+<a href=#454 id=454 data-nosnippet>454</a>    }
+<a href=#455 id=455 data-nosnippet>455</a>
+<a href=#456 id=456 data-nosnippet>456</a>    <span class="attr">#[test]
+<a href=#457 id=457 data-nosnippet>457</a>    </span><span class="kw">fn </span>test_jsx_element_creation() {
+<a href=#458 id=458 data-nosnippet>458</a>        <span class="kw">let </span>element = JsxElementInfo {
+<a href=#459 id=459 data-nosnippet>459</a>            name: <span class="string">"MyComponent"</span>.to_string(),
+<a href=#460 id=460 data-nosnippet>460</a>            is_component: <span class="bool-val">true</span>,
+<a href=#461 id=461 data-nosnippet>461</a>            attributes: <span class="macro">vec!</span>[],
+<a href=#462 id=462 data-nosnippet>462</a>            location: LocationInfo::new(<span class="number">1</span>, <span class="number">15</span>, <span class="number">15</span>, <span class="number">26</span>),
+<a href=#463 id=463 data-nosnippet>463</a>        };
+<a href=#464 id=464 data-nosnippet>464</a>        <span class="macro">assert_eq!</span>(element.name, <span class="string">"MyComponent"</span>);
+<a href=#465 id=465 data-nosnippet>465</a>        <span class="macro">assert!</span>(element.is_component);
+<a href=#466 id=466 data-nosnippet>466</a>    }
+<a href=#467 id=467 data-nosnippet>467</a>
+<a href=#468 id=468 data-nosnippet>468</a>    <span class="attr">#[test]
+<a href=#469 id=469 data-nosnippet>469</a>    </span><span class="kw">fn </span>test_typescript_info_creation() {
+<a href=#470 id=470 data-nosnippet>470</a>        <span class="kw">let </span>ts_info = TypeScriptInfo {
+<a href=#471 id=471 data-nosnippet>471</a>            name: <span class="string">"User"</span>.to_string(),
+<a href=#472 id=472 data-nosnippet>472</a>            kind: <span class="string">"interface"</span>.to_string(),
+<a href=#473 id=473 data-nosnippet>473</a>            extends: <span class="macro">vec!</span>[<span class="string">"Base"</span>.to_string()],
+<a href=#474 id=474 data-nosnippet>474</a>            location: LocationInfo::new(<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>),
+<a href=#475 id=475 data-nosnippet>475</a>        };
+<a href=#476 id=476 data-nosnippet>476</a>        <span class="macro">assert_eq!</span>(ts_info.name, <span class="string">"User"</span>);
+<a href=#477 id=477 data-nosnippet>477</a>        <span class="macro">assert_eq!</span>(ts_info.kind, <span class="string">"interface"</span>);
+<a href=#478 id=478 data-nosnippet>478</a>    }
+<a href=#479 id=479 data-nosnippet>479</a>}</code></pre></div></section></main></body></html>

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["CodeType"],"struct":["CodeGenerator","GeneratedCode","GenerationMetadata","GenerationRequest","GeneratorConfig"]};
