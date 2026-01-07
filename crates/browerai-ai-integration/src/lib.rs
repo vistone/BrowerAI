@@ -1,10 +1,6 @@
 pub mod integration;
 
-pub use integration::{
-    HtmlModelIntegration,
-    CssModelIntegration,
-    JsDeobfuscatorIntegration,
-};
+pub use integration::{CssModelIntegration, HtmlModelIntegration, JsDeobfuscatorIntegration};
 
 pub use browerai_ai_core::advanced_monitor::AdvancedPerformanceMonitor;
 pub use browerai_ai_core::config::{AiConfig, AiStats, FallbackReason, FallbackTracker};

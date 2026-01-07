@@ -1,6 +1,7 @@
 use anyhow::Result;
 use cssparser::{Parser, ParserInput, Token};
-
+#[cfg(feature = "ai")]
+use std::path::PathBuf;
 
 #[cfg(feature = "ai")]
 use browerai_ai_core::model_manager::ModelType;
@@ -83,8 +84,26 @@ impl CssParser {
 
         log::info!("Successfully parsed CSS with {} rules", rules.len());
         Ok(rules)
+    }
+
+    /// Validate CSS syntax
+    pub fn validate(&self, css: &str) -> Result<bool> {
+        let result = self.parse(css);
+        Ok(result.is_ok())
+    }
+
+    /// Check if AI enhancement is enabled
+    pub fn is_ai_enabled(&self) -> bool {
+        #[cfg(feature = "ai")]
+        {
+            self.inference_engine.is_some()
+        }
+        #[cfg(not(feature = "ai"))]
+        {
+            false
         }
     }
+}
 
 impl Default for CssParser {
     fn default() -> Self {
@@ -133,5 +152,47 @@ mod tests {
     fn test_css_parser_with_ai_disabled() {
         let parser = CssParser::new();
         assert!(!parser.is_ai_enabled());
+    }
+}
+
+#[cfg(test)]
+mod proptests {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        #[test]
+        fn parse_doesnt_crash(css in ".*") {
+            let parser = CssParser::new();
+            let _ = parser.parse(&css);
+            // Should never panic
+        }
+
+        #[test]
+        fn parse_is_deterministic(css in ".*") {
+            let parser = CssParser::new();
+            let result1 = parser.parse(&css);
+            let result2 = parser.parse(&css);
+            prop_assert_eq!(result1.is_ok(), result2.is_ok());
+        }
+
+        #[test]
+        fn validate_doesnt_panic(css in ".*") {
+            let parser = CssParser::new();
+            let _ = parser.validate(&css);
+        }
+
+        #[test]
+        fn parse_simple_selectors(
+            selector in "[a-z]{1,10}",
+            property in "[a-z-]{1,20}",
+            value in "[a-z0-9]{1,20}"
+        ) {
+            let parser = CssParser::new();
+            let css = format!("{} {{ {}: {}; }}", selector, property, value);
+            let result = parser.parse(&css);
+            // May fail with invalid CSS, but shouldn't panic
+            let _ = result;
+        }
     }
 }

@@ -1,5 +1,5 @@
 //! Enhanced Call Graph Analyzer
-//! 
+//!
 //! Integrates call graph analysis with control flow and data flow analysis
 //! to provide comprehensive function-level insights.
 
@@ -13,16 +13,16 @@ use std::collections::{HashMap, HashSet, VecDeque};
 pub struct EnhancedCallGraph {
     /// All call nodes in the graph
     pub nodes: Vec<CallNode>,
-    
+
     /// Call edges with context information
     pub edges: Vec<CallEdge>,
-    
+
     /// Call contexts for context-sensitive analysis
     pub call_contexts: HashMap<String, Vec<CallContext>>,
-    
+
     /// Detected recursive call chains
     pub recursive_chains: Vec<Vec<String>>,
-    
+
     /// Hot call paths (frequently executed)
     pub hot_paths: Vec<CallPath>,
 }
@@ -32,28 +32,28 @@ pub struct EnhancedCallGraph {
 pub struct CallNode {
     /// Function ID
     pub id: String,
-    
+
     /// Function name
     pub name: Option<String>,
-    
+
     /// Direct callees
     pub callees: Vec<String>,
-    
+
     /// Direct callers
     pub callers: Vec<String>,
-    
+
     /// Call depth from entry points
     pub depth: usize,
-    
+
     /// Is this an entry point function
     pub is_entry_point: bool,
-    
+
     /// Estimated execution frequency (based on CFG)
     pub frequency: CallFrequency,
 }
 
 /// Call frequency estimation
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum CallFrequency {
     /// Rarely called
     Low,
@@ -62,13 +62,8 @@ pub enum CallFrequency {
     /// Frequently called (in loops or hot paths)
     High,
     /// Unknown frequency
+    #[default]
     Unknown,
-}
-
-impl Default for CallFrequency {
-    fn default() -> Self {
-        CallFrequency::Unknown
-    }
 }
 
 /// Call edge with context
@@ -76,16 +71,16 @@ impl Default for CallFrequency {
 pub struct CallEdge {
     /// Caller function ID
     pub from: String,
-    
+
     /// Callee function ID
     pub to: String,
-    
+
     /// Call site location
     pub call_site: Option<LocationInfo>,
-    
+
     /// Is this a recursive call
     pub is_recursive: bool,
-    
+
     /// Is this call in a loop
     pub in_loop: bool,
 }
@@ -95,16 +90,16 @@ pub struct CallEdge {
 pub struct CallContext {
     /// Caller function ID
     pub caller_id: String,
-    
+
     /// Callee function ID
     pub callee_id: String,
-    
+
     /// Call site line number
     pub call_site_line: usize,
-    
+
     /// Variables flowing into the call
     pub data_flow_in: Vec<String>,
-    
+
     /// Variables flowing out of the call
     pub data_flow_out: Vec<String>,
 }
@@ -114,10 +109,10 @@ pub struct CallContext {
 pub struct CallPath {
     /// Sequence of function IDs
     pub functions: Vec<String>,
-    
+
     /// Estimated path frequency
     pub frequency: CallFrequency,
-    
+
     /// Total path depth
     pub depth: usize,
 }
@@ -165,7 +160,7 @@ impl EnhancedCallGraphAnalyzer {
             for callee_id in callees {
                 reverse_call_map
                     .entry(callee_id.clone())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(caller_id.clone());
             }
         }
@@ -220,10 +215,7 @@ impl EnhancedCallGraphAnalyzer {
     }
 
     /// Detect recursive call chains
-    fn detect_recursive_chains(
-        &self,
-        call_map: &HashMap<String, Vec<String>>,
-    ) -> Vec<Vec<String>> {
+    fn detect_recursive_chains(&self, call_map: &HashMap<String, Vec<String>>) -> Vec<Vec<String>> {
         let mut chains = Vec::new();
         let mut visited = HashSet::new();
         let mut rec_stack = HashSet::new();
@@ -349,7 +341,8 @@ impl EnhancedCallGraphAnalyzer {
         for entry in entry_points {
             // Explore paths from this entry point
             let mut path = vec![entry.id.clone()];
-            self.explore_paths(&entry.id, edges, &mut path, &mut hot_paths, 10); // Max depth 10
+            self.explore_paths(&entry.id, edges, &mut path, &mut hot_paths, 10);
+            // Max depth 10
         }
 
         // Sort by depth and take top paths
@@ -466,8 +459,8 @@ mod tests {
 
     #[test]
     fn test_enhanced_call_graph_creation() {
-        let mut analyzer = EnhancedCallGraphAnalyzer::new();
-        assert_eq!(analyzer.next_id, 0);
+        let analyzer = EnhancedCallGraphAnalyzer::new();
+        assert_eq!(analyzer._next_id, 0);
     }
 
     #[test]
@@ -610,7 +603,10 @@ mod tests {
             .unwrap();
 
         // Should detect recursive chain
-        assert!(!graph.recursive_chains.is_empty(), "Should detect recursion");
+        assert!(
+            !graph.recursive_chains.is_empty(),
+            "Should detect recursion"
+        );
     }
 
     #[test]

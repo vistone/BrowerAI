@@ -240,7 +240,7 @@ impl Default for PaintEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use browerai_renderer_core::layout::{BoxType, Dimensions, LayoutBox};
+    use crate::layout::{BoxType, Dimensions, LayoutBox};
 
     #[test]
     fn test_color_creation() {

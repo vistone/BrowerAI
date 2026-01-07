@@ -370,7 +370,7 @@ impl AdvancedDeobfuscator {
         let mut event_content_map = HashMap::new();
 
         // Step 1: Detect and unwrap framework bundling
-        if self.detect_webpack(&code) {
+        if self.detect_webpack(code) {
             javascript = self.unwrap_webpack(&javascript)?;
             steps.push("Unwrapped Webpack bundle".to_string());
         }

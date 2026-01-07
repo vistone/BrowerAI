@@ -95,3 +95,49 @@ mod tests {
         assert!(result.is_ok()); // html5ever is forgiving
     }
 }
+
+#[cfg(test)]
+mod proptests {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        #[test]
+        fn parse_doesnt_crash(html in ".*") {
+            let parser = HtmlParser::new();
+            let _ = parser.parse(&html);
+            // Should never panic, even with random input
+        }
+
+        #[test]
+        fn parse_is_deterministic(html in ".*") {
+            let parser = HtmlParser::new();
+            let result1 = parser.parse(&html);
+            let result2 = parser.parse(&html);
+            prop_assert_eq!(result1.is_ok(), result2.is_ok());
+        }
+
+        #[test]
+        fn parse_empty_or_whitespace_succeeds(s in r"[ \t\n\r]*") {
+            let parser = HtmlParser::new();
+            let result = parser.parse(&s);
+            prop_assert!(result.is_ok());
+        }
+
+        #[test]
+        fn parse_simple_tags(tag in "[a-z]{1,10}", content in "[ -~]{0,100}") {
+            let parser = HtmlParser::new();
+            let html = format!("<{0}>{1}</{0}>", tag, content);
+            let result = parser.parse(&html);
+            prop_assert!(result.is_ok());
+        }
+
+        #[test]
+        fn extract_text_never_panics(html in ".*") {
+            let parser = HtmlParser::new();
+            if let Ok(dom) = parser.parse(&html) {
+                let _ = parser.extract_text(&dom);
+            }
+        }
+    }
+}

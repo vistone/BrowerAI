@@ -34,9 +34,10 @@ pub struct JsAstMetadata {
 }
 
 /// 代码长度分类
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum CodeSizeCategory {
     /// < 100行
+    #[default]
     Tiny,
     /// 100-1000行
     Small,
@@ -44,12 +45,6 @@ pub enum CodeSizeCategory {
     Medium,
     /// > 10000行
     Large,
-}
-
-impl Default for CodeSizeCategory {
-    fn default() -> Self {
-        CodeSizeCategory::Tiny
-    }
 }
 
 // ============================================================================
@@ -830,19 +825,19 @@ pub enum CFGNodeType {
 pub struct CFGNode {
     /// Unique node identifier
     pub id: String,
-    
+
     /// Node type
     pub node_type: CFGNodeType,
-    
+
     /// Original statement (if applicable)
     pub statement: Option<String>,
-    
+
     /// Line number
     pub line: usize,
-    
+
     /// Column number
     pub column: usize,
-    
+
     /// Whether this node is reachable
     pub is_reachable: bool,
 }
@@ -852,10 +847,10 @@ pub struct CFGNode {
 pub struct CFGEdge {
     /// Source node ID
     pub from: String,
-    
+
     /// Target node ID
     pub to: String,
-    
+
     /// Edge type
     pub edge_type: EdgeType,
 }
@@ -880,13 +875,13 @@ pub enum EdgeType {
 pub struct LoopInfo {
     /// Loop header node ID
     pub header: String,
-    
+
     /// Loop latch node ID (where back edge originates)
     pub latch: Option<String>,
-    
+
     /// Nodes in the loop body
     pub body_nodes: Vec<String>,
-    
+
     /// Loop type
     pub loop_type: LoopType,
 }
@@ -911,22 +906,22 @@ pub enum LoopType {
 pub struct ControlFlowGraph {
     /// Entry node ID
     pub entry: Option<String>,
-    
+
     /// Exit node ID
     pub exit: Option<String>,
-    
+
     /// All nodes in the graph
     pub nodes: Vec<CFGNode>,
-    
+
     /// All edges in the graph
     pub edges: Vec<CFGEdge>,
-    
+
     /// Detected loops
     pub loops: Vec<LoopInfo>,
-    
+
     /// Unreachable nodes
     pub unreachable_nodes: Vec<String>,
-    
+
     /// Strongly connected components (for loop detection)
     pub sccs: Vec<Vec<String>>,
 }
@@ -936,44 +931,50 @@ impl ControlFlowGraph {
     pub fn new() -> Self {
         Self::default()
     }
-    
+
     /// Check if a node is reachable
     pub fn is_reachable(&self, node_id: &str) -> bool {
-        self.nodes.iter()
+        self.nodes
+            .iter()
             .find(|n| n.id == node_id)
             .map(|n| n.is_reachable)
             .unwrap_or(false)
     }
-    
+
     /// Get all successors of a node
     pub fn get_successors(&self, node_id: &str) -> Vec<&CFGNode> {
-        let successor_ids: Vec<_> = self.edges
+        let successor_ids: Vec<_> = self
+            .edges
             .iter()
             .filter(|e| e.from == node_id)
             .map(|e| &e.to)
             .collect();
-        
-        self.nodes.iter()
+
+        self.nodes
+            .iter()
             .filter(|n| successor_ids.contains(&&n.id))
             .collect()
     }
-    
+
     /// Get all predecessors of a node
     pub fn get_predecessors(&self, node_id: &str) -> Vec<&CFGNode> {
-        let predecessor_ids: Vec<_> = self.edges
+        let predecessor_ids: Vec<_> = self
+            .edges
             .iter()
             .filter(|e| e.to == node_id)
             .map(|e| &e.from)
             .collect();
-        
-        self.nodes.iter()
+
+        self.nodes
+            .iter()
             .filter(|n| predecessor_ids.contains(&&n.id))
             .collect()
     }
-    
+
     /// Find unreachable code
     pub fn find_unreachable_code(&self) -> Vec<&CFGNode> {
-        self.nodes.iter()
+        self.nodes
+            .iter()
             .filter(|n| !n.is_reachable && n.node_type != CFGNodeType::Exit)
             .collect()
     }
@@ -982,14 +983,14 @@ impl ControlFlowGraph {
 #[cfg(test)]
 mod cfg_tests {
     use super::*;
-    
+
     #[test]
     fn test_cfg_creation() {
         let cfg = ControlFlowGraph::new();
         assert!(cfg.nodes.is_empty());
         assert!(cfg.edges.is_empty());
     }
-    
+
     #[test]
     fn test_cfg_node_creation() {
         let node = CFGNode {
@@ -1000,11 +1001,11 @@ mod cfg_tests {
             column: 0,
             is_reachable: true,
         };
-        
+
         assert_eq!(node.node_type, CFGNodeType::Statement);
         assert!(node.is_reachable);
     }
-    
+
     #[test]
     fn test_cfg_edge_creation() {
         let edge = CFGEdge {
@@ -1012,7 +1013,7 @@ mod cfg_tests {
             to: "node_2".to_string(),
             edge_type: EdgeType::Unconditional,
         };
-        
+
         assert_eq!(edge.edge_type, EdgeType::Unconditional);
     }
 }

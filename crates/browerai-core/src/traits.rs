@@ -4,7 +4,7 @@ use crate::error::Result;
 pub trait Parser {
     type Input;
     type Output;
-    
+
     fn parse(&self, input: Self::Input) -> Result<Self::Output>;
 }
 
@@ -12,7 +12,7 @@ pub trait Parser {
 pub trait Renderer {
     type Input;
     type Output;
-    
+
     fn render(&self, input: Self::Input) -> Result<Self::Output>;
 }
 
@@ -20,7 +20,7 @@ pub trait Renderer {
 pub trait AiModel {
     type Input;
     type Output;
-    
+
     fn infer(&self, input: Self::Input) -> Result<Self::Output>;
     fn is_loaded(&self) -> bool;
 }

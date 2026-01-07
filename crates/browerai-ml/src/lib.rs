@@ -18,12 +18,7 @@ impl MlSession {
     }
 
     /// Build a tiny two-layer MLP for demonstration (input_dim -> hidden -> output_dim)
-    pub fn tiny_mlp(
-        &self,
-        input_dim: i64,
-        hidden_dim: i64,
-        output_dim: i64,
-    ) -> impl nn::ModuleT {
+    pub fn tiny_mlp(&self, input_dim: i64, hidden_dim: i64, output_dim: i64) -> impl nn::ModuleT {
         nn::seq_t()
             .add(nn::linear(
                 &self.vs.root() / "layer1",

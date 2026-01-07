@@ -123,7 +123,7 @@ impl EventListeners {
     {
         self.listeners
             .entry(event_type)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(Box::new(listener));
     }
 
@@ -154,7 +154,7 @@ impl Default for EventListeners {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use browerai_dom::Document;
+    use crate::Document;
 
     #[test]
     fn test_event_creation() {
