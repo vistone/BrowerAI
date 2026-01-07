@@ -243,7 +243,8 @@ impl EnhancedDeobfuscator {
     /// Detect string arrays (common in obfuscator.io)
     fn detect_string_array(&self, code: &str) -> Option<StringArray> {
         // Pattern: var _0xabcd = ['string1', 'string2', ...]
-        let array_pattern = Regex::new(r"(?:var|let|const)\s+(_0x[a-f0-9]+)\s*=\s*\[([^\]]+)\]").ok()?;
+        // More specific: must start with _ followed by 0x and hex digits
+        let array_pattern = Regex::new(r"(?:var|let|const)\s+(_0x[a-f0-9]{4,})\s*=\s*\[([^\]]+)\]").ok()?;
 
         if let Some(caps) = array_pattern.captures(code) {
             let name = caps.get(1)?.as_str().to_string();
@@ -256,7 +257,8 @@ impl EnhancedDeobfuscator {
                 .filter_map(|c| c.get(1).map(|m| m.as_str().to_string()))
                 .collect();
 
-            if contents.len() > 3 {
+            // Require at least 5 elements to reduce false positives
+            if contents.len() >= 5 {
                 // Likely a string array
                 Some(StringArray {
                     name,
@@ -278,6 +280,11 @@ impl EnhancedDeobfuscator {
 
         // Replace array[index] with actual string
         for (index, value) in array.contents.iter().enumerate() {
+            // Escape the value to prevent injection
+            let escaped_value = value
+                .replace('\\', "\\\\")
+                .replace('\'', "\\'");
+
             // Pattern: arrayName[index] or arrayName[0xhex]
             let patterns = vec![
                 format!(r"\b{}\[{}\]", regex::escape(&array.name), index),
@@ -286,7 +293,7 @@ impl EnhancedDeobfuscator {
 
             for pattern in patterns {
                 if let Ok(re) = Regex::new(&pattern) {
-                    result = re.replace_all(&result, format!("'{}'", value)).to_string();
+                    result = re.replace_all(&result, format!("'{}'", escaped_value)).to_string();
                 }
             }
         }
@@ -636,26 +643,26 @@ mod tests {
     #[test]
     fn test_string_array_detection() {
         let deob = EnhancedDeobfuscator::new();
-        let code = r#"var _0xabcd = ['hello', 'world', 'test', 'foo'];"#;
+        let code = r#"var _0xabcd = ['hello', 'world', 'test', 'foo', 'bar'];"#;
         
         let array = deob.detect_string_array(code);
         assert!(array.is_some());
         
         let array = array.unwrap();
         assert_eq!(array.name, "_0xabcd");
-        assert_eq!(array.contents.len(), 4);
+        assert_eq!(array.contents.len(), 5);
     }
 
     #[test]
     fn test_string_array_unpacking() {
         let deob = EnhancedDeobfuscator::new();
-        let code = r#"var _0xabc = ['hello', 'world']; console.log(_0xabc[0] + ' ' + _0xabc[1]);"#;
+        let code = r#"var _0xabcd = ['hello', 'world', 'test', 'foo', 'bar']; console.log(_0xabcd[0] + ' ' + _0xabcd[1]);"#;
         
         if let Some(array) = deob.detect_string_array(code) {
             let result = deob.unpack_string_array(code, &array).unwrap();
             assert!(result.contains("'hello'"));
             assert!(result.contains("'world'"));
-            assert!(!result.contains("_0xabc[0]"));
+            assert!(!result.contains("_0xabcd[0]"));
         }
     }
 
