@@ -8,6 +8,10 @@ on:
   schedule:
     - cron: '0 0 * * 0'  # Weekly on Sunday
 
+permissions:
+  contents: write   # required for gh-pages push
+  checks: write     # required for actions-rs/audit-check to create a check run
+
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
@@ -99,6 +103,9 @@ jobs:
   security-audit:
     name: Security Audit
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
     steps:
       - uses: actions/checkout@v4
       
@@ -125,6 +132,8 @@ jobs:
   docs:
     name: Documentation
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       
