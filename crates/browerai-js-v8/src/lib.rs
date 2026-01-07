@@ -89,17 +89,17 @@ impl V8JsParser {
 
         // Inner handle scope bound to the context
         let mut inner_scope = v8::HandleScope::new(&mut context_scope);
-        let mut scope = {
+        let scope = {
             let pinned = unsafe { Pin::new_unchecked(&mut inner_scope) };
             pinned.init()
         };
 
         // Create a string containing the JavaScript source code
-        let source = v8::String::new(&mut scope, js)
+        let source = v8::String::new(&scope, js)
             .ok_or_else(|| anyhow::anyhow!("Failed to create V8 string"))?;
 
         // Compile the source code
-        let _script = v8::Script::compile(&mut scope, source, None)
+        let _script = v8::Script::compile(&scope, source, None)
             .ok_or_else(|| anyhow::anyhow!("Failed to compile JavaScript with V8"))?;
 
         // If we got here, the script compiled successfully
@@ -151,30 +151,30 @@ impl V8JsParser {
 
         // Inner handle scope bound to the context for execution
         let mut inner_scope = v8::HandleScope::new(&mut context_scope);
-        let mut scope = {
+        let scope = {
             let pinned = unsafe { Pin::new_unchecked(&mut inner_scope) };
             pinned.init()
         };
 
         // Create a string containing the JavaScript source code
-        let source = v8::String::new(&mut scope, js)
+        let source = v8::String::new(&scope, js)
             .ok_or_else(|| anyhow::anyhow!("Failed to create V8 string"))?;
 
         // Compile the source code
-        let script = v8::Script::compile(&mut scope, source, None)
+        let script = v8::Script::compile(&scope, source, None)
             .context("Failed to compile JavaScript with V8")?;
 
         // Execute the script
         let result = script
-            .run(&mut scope)
+            .run(&scope)
             .ok_or_else(|| anyhow::anyhow!("Failed to execute JavaScript"))?;
 
         // Convert result to string
         let result_str = result
-            .to_string(&mut scope)
+            .to_string(&scope)
             .ok_or_else(|| anyhow::anyhow!("Failed to convert result to string"))?;
 
-        Ok(result_str.to_rust_string_lossy(&mut scope))
+        Ok(result_str.to_rust_string_lossy(&scope))
     }
 }
 

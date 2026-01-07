@@ -13,10 +13,13 @@ pub struct CssParser {
     #[cfg(feature = "ai")]
     inference_engine: Option<InferenceEngine>,
     #[cfg(feature = "ai")]
+    #[allow(dead_code)]
     ai_runtime: Option<AiRuntime>,
     #[cfg(feature = "ai")]
+    #[allow(dead_code)]
     model_path: Option<PathBuf>,
     #[cfg(feature = "ai")]
+    #[allow(dead_code)]
     model_name: Option<String>,
 }
 

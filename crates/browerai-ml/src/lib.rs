@@ -37,7 +37,7 @@ impl MlSession {
 
     /// Run a single forward pass on random input to validate runtime
     pub fn smoke_test(&self) -> Result<Tensor> {
-        let xs = Tensor::rand(&[4, 8], (Kind::Float, self.device));
+        let xs = Tensor::rand([4, 8], (Kind::Float, self.device));
         let net = self.tiny_mlp(8, 16, 4);
         let ys = net.forward_t(&xs, /*train=*/ false);
         Ok(ys)

@@ -116,6 +116,7 @@ impl CandleCodeLlm {
     }
 
     /// Greedy / top-k / top-p generation (single batch) with repeat penalty.
+    #[allow(clippy::too_many_arguments)]
     pub fn generate(
         &mut self,
         prompt: &str,

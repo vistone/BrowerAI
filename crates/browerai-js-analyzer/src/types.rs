@@ -208,7 +208,7 @@ pub enum EventBindingMethod {
     AddEventListener,
     /// element.onclick = handler
     DirectProperty,
-    /// <div onclick="handler">
+    /// HTML属性方式：`<div onclick="handler">`
     HtmlAttribute,
     /// jQuery: $(selector).on('event', handler)
     JqueryOn,
