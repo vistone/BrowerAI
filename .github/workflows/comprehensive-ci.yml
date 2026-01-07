@@ -119,11 +119,8 @@ jobs:
       - name: Install cargo-hack
         run: cargo install cargo-hack
       
-      - name: Install cargo-minimal-versions
-        run: cargo install cargo-minimal-versions
-      
-      - name: Check minimal versions
-        run: cargo minimal-versions check --workspace --exclude browerai-ml --exclude browerai-js-v8
+      - name: Check with cargo-hack
+        run: cargo hack check --workspace --exclude browerai-ml --exclude browerai-js-v8
 
   docs:
     name: Documentation
