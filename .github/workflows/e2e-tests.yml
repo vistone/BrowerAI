@@ -39,7 +39,7 @@ jobs:
       run: cargo test --release e2e_website -- --nocapture --test-threads=1
     
     - name: Upload test logs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: e2e-quick-logs
@@ -86,7 +86,7 @@ jobs:
         fi
     
     - name: Upload full results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: e2e-full-results
         path: e2e_full_results.txt
@@ -131,7 +131,7 @@ jobs:
         cargo test --release -- --nocapture e2e_website
     
     - name: Upload stress test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: e2e-stress-${{ matrix.website-category }}
         path: stress_test_*.txt
@@ -147,7 +147,7 @@ jobs:
       uses: actions/checkout@v4
     
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
     
     - name: Generate summary report
       run: |
@@ -177,7 +177,7 @@ jobs:
         cat e2e_summary.md >> $GITHUB_STEP_SUMMARY
     
     - name: Upload summary
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: e2e-summary-report
         path: e2e_summary.md
