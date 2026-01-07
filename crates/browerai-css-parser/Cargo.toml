@@ -20,4 +20,10 @@ ai = []
 
 [dev-dependencies]
 env_logger = { workspace = true }
+proptest = "1.0"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "css_parser_benchmarks"
+harness = false
 tempfile = { workspace = true }

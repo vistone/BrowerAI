@@ -154,3 +154,45 @@ mod tests {
         assert!(!parser.is_ai_enabled());
     }
 }
+
+#[cfg(test)]
+mod proptests {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        #[test]
+        fn parse_doesnt_crash(css in ".*") {
+            let parser = CssParser::new();
+            let _ = parser.parse(&css);
+            // Should never panic
+        }
+
+        #[test]
+        fn parse_is_deterministic(css in ".*") {
+            let parser = CssParser::new();
+            let result1 = parser.parse(&css);
+            let result2 = parser.parse(&css);
+            prop_assert_eq!(result1.is_ok(), result2.is_ok());
+        }
+
+        #[test]
+        fn validate_doesnt_panic(css in ".*") {
+            let parser = CssParser::new();
+            let _ = parser.validate(&css);
+        }
+
+        #[test]
+        fn parse_simple_selectors(
+            selector in "[a-z]{1,10}",
+            property in "[a-z-]{1,20}",
+            value in "[a-z0-9]{1,20}"
+        ) {
+            let parser = CssParser::new();
+            let css = format!("{} {{ {}: {}; }}", selector, property, value);
+            let result = parser.parse(&css);
+            // May fail with invalid CSS, but shouldn't panic
+            let _ = result;
+        }
+    }
+}
