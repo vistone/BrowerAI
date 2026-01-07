@@ -3,6 +3,7 @@ pub mod advanced_deobfuscation;
 pub mod code_generator;
 pub mod continuous_loop;
 pub mod deobfuscation;
+pub mod enhanced_deobfuscation;
 /// Learning and adaptation module for BrowerAI
 ///
 /// This module implements Phase 5 functionality:
@@ -31,6 +32,10 @@ pub use advanced_deobfuscation::{
 pub use code_generator::{CodeGenerator, CodeType, GeneratedCode, GenerationRequest};
 pub use continuous_loop::{ContinuousLearningConfig, ContinuousLearningLoop};
 pub use deobfuscation::{DeobfuscationStrategy, JsDeobfuscator, ObfuscationAnalysis};
+pub use enhanced_deobfuscation::{
+    EnhancedDeobfuscator, EnhancedDeobfuscationResult, DeobfuscationStats,
+    SelfDefendingPattern, ProxyFunctionType,
+};
 pub use feedback::{Feedback, FeedbackCollector, FeedbackType};
 pub use metrics::{Metric, MetricType, MetricsDashboard};
 pub use online_learning::{LearningConfig, OnlineLearner};
