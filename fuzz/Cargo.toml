@@ -1,0 +1,42 @@
+[package]
+name = "browerai-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.browerai-html-parser]
+path = "../crates/browerai-html-parser"
+
+[dependencies.browerai-css-parser]
+path = "../crates/browerai-css-parser"
+
+[dependencies.browerai-js-parser]
+path = "../crates/browerai-js-parser"
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "fuzz_html_parser"
+path = "fuzz_targets/fuzz_html_parser.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_css_parser"
+path = "fuzz_targets/fuzz_css_parser.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_js_parser"
+path = "fuzz_targets/fuzz_js_parser.rs"
+test = false
+doc = false
