@@ -11,6 +11,7 @@ description = "CSS parser for BrowerAI"
 browerai-core = { workspace = true }
 anyhow = { workspace = true }
 log = { workspace = true }
+tracing = "0.1"
 cssparser = { workspace = true }
 selectors = { workspace = true }
 

@@ -51,6 +51,38 @@ bench:
     @echo "⚡ Running benchmarks..."
     cargo bench --workspace --exclude browerai-ml --exclude browerai-js-v8
 
+# Run fuzz tests (requires cargo-fuzz)
+fuzz target="fuzz_html_parser" time="60":
+    @echo "🔬 Running fuzz test {{target}} for {{time}} seconds..."
+    cd fuzz && cargo fuzz run {{target}} -- -max_total_time={{time}}
+
+# Run all fuzz tests (short duration for CI)
+fuzz-all:
+    @echo "🔬 Running all fuzz tests..."
+    just fuzz fuzz_html_parser 60
+    just fuzz fuzz_css_parser 60
+    just fuzz fuzz_js_parser 60
+
+# Minimize a fuzz crash
+fuzz-minimize target crash:
+    @echo "🔬 Minimizing fuzz crash..."
+    cd fuzz && cargo fuzz tmin {{target}} {{crash}}
+
+# Build mdBook documentation
+book:
+    @echo "📖 Building mdBook documentation..."
+    cd docs/book && mdbook build
+
+# Serve mdBook documentation
+book-serve:
+    @echo "📖 Serving mdBook documentation..."
+    cd docs/book && mdbook serve --open
+
+# Watch and rebuild mdBook
+book-watch:
+    @echo "📖 Watching mdBook..."
+    cd docs/book && mdbook watch
+
 # Build everything
 build:
     @echo "🔨 Building project..."
