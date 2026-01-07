@@ -1,11 +1,13 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
+#[cfg(not(feature = "ai"))]
+use anyhow::anyhow;
 #[cfg(feature = "ai")]
 use std::path::PathBuf;
 
 #[cfg(feature = "ai")]
 use browerai_ai_core::performance_monitor::PerformanceMonitor;
 #[cfg(feature = "ai")]
-use browerai_ai_core::{AiReporter, AiRuntime, FeedbackPipeline, InferenceEngine, ModelManager};
+use browerai_ai_core::{AiReporter, AiRuntime, InferenceEngine, ModelManager};
 use browerai_css_parser::CssParser;
 use browerai_html_parser::HtmlParser;
 use browerai_js_parser::JsParser;
