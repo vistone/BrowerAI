@@ -229,6 +229,10 @@ impl FrameworkKnowledgeBase {
         kb.init_chinese_frameworks();
         kb.init_bundlers();
         kb.init_obfuscators();
+        kb.init_meta_frameworks();
+        kb.init_state_management();
+        kb.init_ui_libraries();
+        kb.init_additional_frameworks();
         kb.build_indices();
         
         kb
@@ -1032,6 +1036,539 @@ impl FrameworkKnowledgeBase {
                 related_frameworks: 0.1,
             },
             related_frameworks: vec!["webpack".to_string()],
+            last_updated: "2026-01-07".to_string(),
+        });
+    }
+    
+    /// Initialize meta frameworks (Next.js, Nuxt.js, etc.)
+    fn init_meta_frameworks(&mut self) {
+        // Next.js
+        self.add_framework(FrameworkKnowledge {
+            id: "next-js".to_string(),
+            name: "Next.js".to_string(),
+            category: FrameworkCategory::MetaFramework,
+            origin: "USA".to_string(),
+            maintainer: "Vercel".to_string(),
+            signatures: vec![
+                ObfuscationSignature {
+                    name: "Next.js runtime".to_string(),
+                    pattern_type: SignatureType::StringLiteral,
+                    pattern: r"__next|_N_E|__NEXT_DATA__".to_string(),
+                    weight: 0.95,
+                    required: false,
+                    context: "Next.js client runtime".to_string(),
+                },
+                ObfuscationSignature {
+                    name: "Next.js data fetching".to_string(),
+                    pattern_type: SignatureType::FunctionCall,
+                    pattern: r"getServerSideProps|getStaticProps|getInitialProps".to_string(),
+                    weight: 0.9,
+                    required: false,
+                    context: "Next.js data fetching methods".to_string(),
+                },
+            ],
+            obfuscation_patterns: vec![
+                ObfuscationPattern {
+                    name: "Hydration markers".to_string(),
+                    technique: ObfuscationTechnique::TemplateCompilation,
+                    example_obfuscated: r#"__NEXT_DATA__ = {"props": {...}}"#.to_string(),
+                    example_deobfuscated: r#"Server-side rendered props"#.to_string(),
+                    complexity: 5,
+                    prevalence: 1.0,
+                    detection_hints: vec!["__NEXT_DATA__ global variable".to_string()],
+                },
+            ],
+            strategies: vec![
+                DeobfuscationStrategy {
+                    name: "Extract SSR data".to_string(),
+                    target: ObfuscationTechnique::TemplateCompilation,
+                    approach: "Parse __NEXT_DATA__ to extract server-rendered props".to_string(),
+                    success_rate: 0.95,
+                    priority: 8,
+                    requirements: vec!["JSON parsing".to_string()],
+                    limitations: vec!["Client-side only data not available".to_string()],
+                },
+            ],
+            confidence_weights: ConfidenceWeights {
+                signature_match: 0.5,
+                pattern_match: 0.3,
+                contextual: 0.1,
+                related_frameworks: 0.1,
+            },
+            related_frameworks: vec!["react".to_string(), "webpack".to_string()],
+            last_updated: "2026-01-07".to_string(),
+        });
+        
+        // Nuxt.js
+        self.add_framework(FrameworkKnowledge {
+            id: "nuxt-js".to_string(),
+            name: "Nuxt.js".to_string(),
+            category: FrameworkCategory::MetaFramework,
+            origin: "France/Global".to_string(),
+            maintainer: "Nuxt Team".to_string(),
+            signatures: vec![
+                ObfuscationSignature {
+                    name: "Nuxt context".to_string(),
+                    pattern_type: SignatureType::StringLiteral,
+                    pattern: r"\$nuxt|__NUXT__|nuxtServerInit".to_string(),
+                    weight: 0.95,
+                    required: false,
+                    context: "Nuxt.js runtime".to_string(),
+                },
+            ],
+            obfuscation_patterns: vec![],
+            strategies: vec![],
+            confidence_weights: ConfidenceWeights {
+                signature_match: 0.5,
+                pattern_match: 0.3,
+                contextual: 0.1,
+                related_frameworks: 0.1,
+            },
+            related_frameworks: vec!["vue".to_string(), "vite".to_string()],
+            last_updated: "2026-01-07".to_string(),
+        });
+        
+        // Gatsby
+        self.add_framework(FrameworkKnowledge {
+            id: "gatsby".to_string(),
+            name: "Gatsby".to_string(),
+            category: FrameworkCategory::MetaFramework,
+            origin: "USA".to_string(),
+            maintainer: "Gatsby Team / Netlify".to_string(),
+            signatures: vec![
+                ObfuscationSignature {
+                    name: "Gatsby runtime".to_string(),
+                    pattern_type: SignatureType::StringLiteral,
+                    pattern: r"___gatsby|gatsby-browser|gatsby-ssr".to_string(),
+                    weight: 0.95,
+                    required: false,
+                    context: "Gatsby static site generation".to_string(),
+                },
+            ],
+            obfuscation_patterns: vec![],
+            strategies: vec![],
+            confidence_weights: ConfidenceWeights {
+                signature_match: 0.5,
+                pattern_match: 0.3,
+                contextual: 0.1,
+                related_frameworks: 0.1,
+            },
+            related_frameworks: vec!["react".to_string(), "webpack".to_string()],
+            last_updated: "2026-01-07".to_string(),
+        });
+        
+        // SvelteKit
+        self.add_framework(FrameworkKnowledge {
+            id: "sveltekit".to_string(),
+            name: "SvelteKit".to_string(),
+            category: FrameworkCategory::MetaFramework,
+            origin: "Global".to_string(),
+            maintainer: "Svelte Team".to_string(),
+            signatures: vec![
+                ObfuscationSignature {
+                    name: "SvelteKit imports".to_string(),
+                    pattern_type: SignatureType::ImportStatement,
+                    pattern: r"@sveltejs/kit|\$app/".to_string(),
+                    weight: 0.95,
+                    required: false,
+                    context: "SvelteKit framework".to_string(),
+                },
+            ],
+            obfuscation_patterns: vec![],
+            strategies: vec![],
+            confidence_weights: ConfidenceWeights {
+                signature_match: 0.5,
+                pattern_match: 0.3,
+                contextual: 0.1,
+                related_frameworks: 0.1,
+            },
+            related_frameworks: vec!["svelte".to_string(), "vite".to_string()],
+            last_updated: "2026-01-07".to_string(),
+        });
+    }
+    
+    /// Initialize state management frameworks
+    fn init_state_management(&mut self) {
+        // Redux
+        self.add_framework(FrameworkKnowledge {
+            id: "redux".to_string(),
+            name: "Redux".to_string(),
+            category: FrameworkCategory::StateManagement,
+            origin: "USA".to_string(),
+            maintainer: "Redux Team".to_string(),
+            signatures: vec![
+                ObfuscationSignature {
+                    name: "Redux store".to_string(),
+                    pattern_type: SignatureType::FunctionCall,
+                    pattern: r"createStore|combineReducers".to_string(),
+                    weight: 0.9,
+                    required: false,
+                    context: "Redux state management".to_string(),
+                },
+            ],
+            obfuscation_patterns: vec![],
+            strategies: vec![],
+            confidence_weights: ConfidenceWeights {
+                signature_match: 0.5,
+                pattern_match: 0.3,
+                contextual: 0.1,
+                related_frameworks: 0.1,
+            },
+            related_frameworks: vec!["react".to_string()],
+            last_updated: "2026-01-07".to_string(),
+        });
+        
+        // MobX
+        self.add_framework(FrameworkKnowledge {
+            id: "mobx".to_string(),
+            name: "MobX".to_string(),
+            category: FrameworkCategory::StateManagement,
+            origin: "Global".to_string(),
+            maintainer: "MobX Team".to_string(),
+            signatures: vec![
+                ObfuscationSignature {
+                    name: "MobX observables".to_string(),
+                    pattern_type: SignatureType::FunctionCall,
+                    pattern: r"makeObservable|observable|action".to_string(),
+                    weight: 0.9,
+                    required: false,
+                    context: "MobX reactive programming".to_string(),
+                },
+            ],
+            obfuscation_patterns: vec![],
+            strategies: vec![],
+            confidence_weights: ConfidenceWeights {
+                signature_match: 0.5,
+                pattern_match: 0.3,
+                contextual: 0.1,
+                related_frameworks: 0.1,
+            },
+            related_frameworks: vec!["react".to_string()],
+            last_updated: "2026-01-07".to_string(),
+        });
+        
+        // Zustand
+        self.add_framework(FrameworkKnowledge {
+            id: "zustand".to_string(),
+            name: "Zustand".to_string(),
+            category: FrameworkCategory::StateManagement,
+            origin: "Global".to_string(),
+            maintainer: "Poimandres".to_string(),
+            signatures: vec![
+                ObfuscationSignature {
+                    name: "Zustand create".to_string(),
+                    pattern_type: SignatureType::ImportStatement,
+                    pattern: r#"from\s+['"]zustand['"]"#.to_string(),
+                    weight: 0.9,
+                    required: false,
+                    context: "Zustand state library".to_string(),
+                },
+            ],
+            obfuscation_patterns: vec![],
+            strategies: vec![],
+            confidence_weights: ConfidenceWeights {
+                signature_match: 0.5,
+                pattern_match: 0.3,
+                contextual: 0.1,
+                related_frameworks: 0.1,
+            },
+            related_frameworks: vec!["react".to_string()],
+            last_updated: "2026-01-07".to_string(),
+        });
+        
+        // Pinia (Vue)
+        self.add_framework(FrameworkKnowledge {
+            id: "pinia".to_string(),
+            name: "Pinia".to_string(),
+            category: FrameworkCategory::StateManagement,
+            origin: "France/Global".to_string(),
+            maintainer: "Eduardo San Martin Morote".to_string(),
+            signatures: vec![
+                ObfuscationSignature {
+                    name: "Pinia store".to_string(),
+                    pattern_type: SignatureType::FunctionCall,
+                    pattern: r"defineStore|createPinia".to_string(),
+                    weight: 0.95,
+                    required: false,
+                    context: "Pinia Vue state management".to_string(),
+                },
+            ],
+            obfuscation_patterns: vec![],
+            strategies: vec![],
+            confidence_weights: ConfidenceWeights {
+                signature_match: 0.5,
+                pattern_match: 0.3,
+                contextual: 0.1,
+                related_frameworks: 0.1,
+            },
+            related_frameworks: vec!["vue".to_string()],
+            last_updated: "2026-01-07".to_string(),
+        });
+    }
+    
+    /// Initialize UI libraries
+    fn init_ui_libraries(&mut self) {
+        // Ant Design
+        self.add_framework(FrameworkKnowledge {
+            id: "antd".to_string(),
+            name: "Ant Design".to_string(),
+            category: FrameworkCategory::UILibrary,
+            origin: "China".to_string(),
+            maintainer: "Ant Group (蚂蚁集团)".to_string(),
+            signatures: vec![
+                ObfuscationSignature {
+                    name: "Ant Design imports".to_string(),
+                    pattern_type: SignatureType::ImportStatement,
+                    pattern: r#"from\s+['"]antd['"]|@ant-design"#.to_string(),
+                    weight: 0.95,
+                    required: false,
+                    context: "Ant Design UI library".to_string(),
+                },
+            ],
+            obfuscation_patterns: vec![],
+            strategies: vec![],
+            confidence_weights: ConfidenceWeights {
+                signature_match: 0.5,
+                pattern_match: 0.3,
+                contextual: 0.1,
+                related_frameworks: 0.1,
+            },
+            related_frameworks: vec!["react".to_string()],
+            last_updated: "2026-01-07".to_string(),
+        });
+        
+        // Material-UI / MUI
+        self.add_framework(FrameworkKnowledge {
+            id: "mui".to_string(),
+            name: "Material-UI (MUI)".to_string(),
+            category: FrameworkCategory::UILibrary,
+            origin: "Global".to_string(),
+            maintainer: "MUI Team".to_string(),
+            signatures: vec![
+                ObfuscationSignature {
+                    name: "MUI imports".to_string(),
+                    pattern_type: SignatureType::ImportStatement,
+                    pattern: r"@mui/|@material-ui/|makeStyles|createTheme".to_string(),
+                    weight: 0.9,
+                    required: false,
+                    context: "Material-UI library".to_string(),
+                },
+            ],
+            obfuscation_patterns: vec![],
+            strategies: vec![],
+            confidence_weights: ConfidenceWeights {
+                signature_match: 0.5,
+                pattern_match: 0.3,
+                contextual: 0.1,
+                related_frameworks: 0.1,
+            },
+            related_frameworks: vec!["react".to_string()],
+            last_updated: "2026-01-07".to_string(),
+        });
+        
+        // Element UI / Element Plus (饿了么)
+        self.add_framework(FrameworkKnowledge {
+            id: "element-ui".to_string(),
+            name: "Element UI / Element Plus".to_string(),
+            category: FrameworkCategory::UILibrary,
+            origin: "China".to_string(),
+            maintainer: "Ele.me (饿了么)".to_string(),
+            signatures: vec![
+                ObfuscationSignature {
+                    name: "Element imports".to_string(),
+                    pattern_type: SignatureType::ImportStatement,
+                    pattern: r"element-ui|element-plus".to_string(),
+                    weight: 0.95,
+                    required: false,
+                    context: "Element UI library".to_string(),
+                },
+            ],
+            obfuscation_patterns: vec![],
+            strategies: vec![],
+            confidence_weights: ConfidenceWeights {
+                signature_match: 0.5,
+                pattern_match: 0.3,
+                contextual: 0.1,
+                related_frameworks: 0.1,
+            },
+            related_frameworks: vec!["vue".to_string()],
+            last_updated: "2026-01-07".to_string(),
+        });
+        
+        // Vant (有赞)
+        self.add_framework(FrameworkKnowledge {
+            id: "vant".to_string(),
+            name: "Vant".to_string(),
+            category: FrameworkCategory::UILibrary,
+            origin: "China".to_string(),
+            maintainer: "Youzan (有赞)".to_string(),
+            signatures: vec![
+                ObfuscationSignature {
+                    name: "Vant imports".to_string(),
+                    pattern_type: SignatureType::ImportStatement,
+                    pattern: r#"from\s+['"]vant['"]|@vant"#.to_string(),
+                    weight: 0.95,
+                    required: false,
+                    context: "Vant mobile UI".to_string(),
+                },
+            ],
+            obfuscation_patterns: vec![],
+            strategies: vec![],
+            confidence_weights: ConfidenceWeights {
+                signature_match: 0.5,
+                pattern_match: 0.3,
+                contextual: 0.1,
+                related_frameworks: 0.1,
+            },
+            related_frameworks: vec!["vue".to_string()],
+            last_updated: "2026-01-07".to_string(),
+        });
+    }
+    
+    /// Initialize additional frameworks (Svelte, Preact, etc.)
+    fn init_additional_frameworks(&mut self) {
+        // Svelte
+        self.add_framework(FrameworkKnowledge {
+            id: "svelte".to_string(),
+            name: "Svelte".to_string(),
+            category: FrameworkCategory::FrontendFramework,
+            origin: "USA".to_string(),
+            maintainer: "Rich Harris / Svelte Team".to_string(),
+            signatures: vec![
+                ObfuscationSignature {
+                    name: "Svelte component".to_string(),
+                    pattern_type: SignatureType::StringLiteral,
+                    pattern: r"SvelteComponent|svelte/internal|create_component".to_string(),
+                    weight: 0.9,
+                    required: false,
+                    context: "Svelte compilation".to_string(),
+                },
+            ],
+            obfuscation_patterns: vec![],
+            strategies: vec![],
+            confidence_weights: ConfidenceWeights {
+                signature_match: 0.5,
+                pattern_match: 0.3,
+                contextual: 0.1,
+                related_frameworks: 0.1,
+            },
+            related_frameworks: vec!["rollup".to_string()],
+            last_updated: "2026-01-07".to_string(),
+        });
+        
+        // Preact
+        self.add_framework(FrameworkKnowledge {
+            id: "preact".to_string(),
+            name: "Preact".to_string(),
+            category: FrameworkCategory::FrontendFramework,
+            origin: "USA".to_string(),
+            maintainer: "Jason Miller / Preact Team".to_string(),
+            signatures: vec![
+                ObfuscationSignature {
+                    name: "Preact h function".to_string(),
+                    pattern_type: SignatureType::ImportStatement,
+                    pattern: r#"from\s+['"]preact['"]"#.to_string(),
+                    weight: 0.95,
+                    required: false,
+                    context: "Preact lightweight React alternative".to_string(),
+                },
+            ],
+            obfuscation_patterns: vec![],
+            strategies: vec![],
+            confidence_weights: ConfidenceWeights {
+                signature_match: 0.5,
+                pattern_match: 0.3,
+                contextual: 0.1,
+                related_frameworks: 0.1,
+            },
+            related_frameworks: vec!["react".to_string()],
+            last_updated: "2026-01-07".to_string(),
+        });
+        
+        // Solid.js
+        self.add_framework(FrameworkKnowledge {
+            id: "solid-js".to_string(),
+            name: "Solid.js".to_string(),
+            category: FrameworkCategory::FrontendFramework,
+            origin: "USA".to_string(),
+            maintainer: "Ryan Carniato / Solid Team".to_string(),
+            signatures: vec![
+                ObfuscationSignature {
+                    name: "Solid signals".to_string(),
+                    pattern_type: SignatureType::FunctionCall,
+                    pattern: r"createSignal|createEffect|createMemo".to_string(),
+                    weight: 0.9,
+                    required: false,
+                    context: "Solid.js reactive primitives".to_string(),
+                },
+            ],
+            obfuscation_patterns: vec![],
+            strategies: vec![],
+            confidence_weights: ConfidenceWeights {
+                signature_match: 0.5,
+                pattern_match: 0.3,
+                contextual: 0.1,
+                related_frameworks: 0.1,
+            },
+            related_frameworks: vec![],
+            last_updated: "2026-01-07".to_string(),
+        });
+        
+        // Alpine.js
+        self.add_framework(FrameworkKnowledge {
+            id: "alpine-js".to_string(),
+            name: "Alpine.js".to_string(),
+            category: FrameworkCategory::FrontendFramework,
+            origin: "USA".to_string(),
+            maintainer: "Caleb Porzio".to_string(),
+            signatures: vec![
+                ObfuscationSignature {
+                    name: "Alpine directives".to_string(),
+                    pattern_type: SignatureType::StringLiteral,
+                    pattern: r"x-data|x-show|x-if|Alpine\.start".to_string(),
+                    weight: 0.9,
+                    required: false,
+                    context: "Alpine.js lightweight framework".to_string(),
+                },
+            ],
+            obfuscation_patterns: vec![],
+            strategies: vec![],
+            confidence_weights: ConfidenceWeights {
+                signature_match: 0.5,
+                pattern_match: 0.3,
+                contextual: 0.1,
+                related_frameworks: 0.1,
+            },
+            related_frameworks: vec![],
+            last_updated: "2026-01-07".to_string(),
+        });
+        
+        // Lit
+        self.add_framework(FrameworkKnowledge {
+            id: "lit".to_string(),
+            name: "Lit".to_string(),
+            category: FrameworkCategory::FrontendFramework,
+            origin: "USA".to_string(),
+            maintainer: "Google".to_string(),
+            signatures: vec![
+                ObfuscationSignature {
+                    name: "Lit element".to_string(),
+                    pattern_type: SignatureType::StringLiteral,
+                    pattern: r"LitElement|lit-html|customElement".to_string(),
+                    weight: 0.9,
+                    required: false,
+                    context: "Lit web components".to_string(),
+                },
+            ],
+            obfuscation_patterns: vec![],
+            strategies: vec![],
+            confidence_weights: ConfidenceWeights {
+                signature_match: 0.5,
+                pattern_match: 0.3,
+                contextual: 0.1,
+                related_frameworks: 0.1,
+            },
+            related_frameworks: vec![],
             last_updated: "2026-01-07".to_string(),
         });
     }
