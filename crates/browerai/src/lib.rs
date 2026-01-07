@@ -33,6 +33,10 @@ pub use browerai_html_parser as html_parser;
 pub use browerai_js_analyzer as js_analyzer;
 pub use browerai_js_parser as js_parser;
 
+// Re-export V8 (conditional)
+#[cfg(feature = "v8")]
+pub use browerai_js_v8 as js_v8;
+
 // Re-export AI (conditional)
 #[cfg(feature = "ai")]
 pub use browerai_ai_core as ai;
@@ -70,6 +74,10 @@ pub mod prelude {
     pub use browerai_html_parser::HtmlParser;
     pub use browerai_js_analyzer::JsDeepAnalyzer;
     pub use browerai_js_parser::JsParser;
+    
+    // V8 (conditional)
+    #[cfg(feature = "v8")]
+    pub use browerai_js_v8::V8JsParser;
 
     // AI (conditional)
     #[cfg(feature = "ai")]

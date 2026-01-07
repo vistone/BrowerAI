@@ -53,7 +53,8 @@ BrowerAI/
 │   ├── browerai-dom/     # Document Object Model
 │   ├── browerai-html-parser/   # HTML parsing
 │   ├── browerai-css-parser/    # CSS parsing
-│   ├── browerai-js-parser/     # JavaScript parsing
+│   ├── browerai-js-parser/     # JavaScript parsing (Boa)
+│   ├── browerai-js-v8/         # JavaScript V8 engine (optional)
 │   ├── browerai-js-analyzer/   # JS deep analysis
 │   ├── browerai-ai-core/       # AI runtime (optional)
 │   ├── browerai-ai-integration/  # AI integration
@@ -106,6 +107,36 @@ cargo doc --workspace --open
 - `ai` - Enable ONNX-based AI features (default: disabled)
 - `ai-candle` - Enable Candle-based GGUF LLMs
 - `ml` - Enable PyTorch-based ML toolkit (requires LibTorch download)
+- `v8` - Enable V8 JavaScript engine (Google's V8, full ES2024+ support)
+
+### JavaScript Engine Options
+
+BrowerAI supports two JavaScript engines:
+
+**Boa (Default - Pure Rust)**
+- Pure Rust implementation
+- Fast compilation
+- Smaller binary size
+- Good ES6+ support
+- Best for: Embedded systems, simple scripts
+
+**V8 (Optional - High Performance)**
+- Google's V8 engine (Chrome/Node.js)
+- Full ES2024+ compatibility
+- Maximum runtime performance
+- Industry-standard
+- Best for: Complex apps, production workloads
+
+```bash
+# Use default Boa engine
+cargo build
+
+# Use V8 engine for maximum compatibility
+cargo build --features v8
+
+# Run V8 demo
+cargo run --example v8_demo --features v8
+```
 
 ## 🧪 Testing
 

@@ -7,6 +7,7 @@ members = [
     "crates/browerai-css-parser",
     "crates/browerai-js-parser",
     "crates/browerai-js-analyzer",
+    "crates/browerai-js-v8",
     "crates/browerai-ai-core",
     "crates/browerai-ai-integration",
     "crates/browerai-renderer-core",
@@ -83,6 +84,7 @@ browerai-html-parser = { path = "crates/browerai-html-parser" }
 browerai-css-parser = { path = "crates/browerai-css-parser" }
 browerai-js-parser = { path = "crates/browerai-js-parser" }
 browerai-js-analyzer = { path = "crates/browerai-js-analyzer" }
+browerai-js-v8 = { path = "crates/browerai-js-v8" }
 browerai-ai-core = { path = "crates/browerai-ai-core" }
 browerai-ai-integration = { path = "crates/browerai-ai-integration" }
 browerai-renderer-core = { path = "crates/browerai-renderer-core" }
