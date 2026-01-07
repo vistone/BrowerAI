@@ -116,7 +116,7 @@ impl HtmlModelIntegration {
             .try_extract_tensor::<f32>()
             .context("Failed to extract output tensor")?;
 
-        let output_data: Vec<f32> = output_tensor.1.iter().copied().collect();
+        let output_data: Vec<f32> = output_tensor.1.to_vec();
 
         if output_data.len() < 2 {
             log::warn!(
@@ -151,7 +151,7 @@ impl HtmlModelIntegration {
     }
 
     #[cfg(not(feature = "ai"))]
-    pub fn validate_structure(&self, _html: &str) -> Result<(bool, f32)> {
+    pub fn validate_structure(&mut self, _html: &str) -> Result<(bool, f32)> {
         Ok((true, 0.5))
     }
 
@@ -183,6 +183,7 @@ impl HtmlModelIntegration {
 /// Model integration helper for CSS parsing
 pub struct CssModelIntegration {
     #[cfg(feature = "ai")]
+    #[allow(dead_code)]
     session: Option<Session>,
     #[cfg_attr(not(feature = "ai"), allow(dead_code))]
     monitor: Option<PerformanceMonitor>,
@@ -266,6 +267,7 @@ impl CssModelIntegration {
 /// Model integration helper for JavaScript parsing
 pub struct JsModelIntegration {
     #[cfg(feature = "ai")]
+    #[allow(dead_code)]
     session: Option<Session>,
     #[cfg_attr(not(feature = "ai"), allow(dead_code))]
     monitor: Option<PerformanceMonitor>,
@@ -441,7 +443,7 @@ impl CodeUnderstandingIntegration {
                 .try_extract_tensor::<f32>()
                 .context("Failed to extract output tensor")?;
 
-            let output_data: Vec<f32> = output_tensor.1.iter().copied().collect();
+            let output_data: Vec<f32> = output_tensor.1.to_vec();
 
             if let Some(m) = &self.monitor {
                 m.record_inference(InferenceMetrics {
@@ -454,7 +456,7 @@ impl CodeUnderstandingIntegration {
                 });
             }
 
-            return Ok(output_data);
+            Ok(output_data)
         }
 
         #[cfg(not(feature = "ai"))]
@@ -861,7 +863,7 @@ impl JsDeobfuscatorIntegration {
                 .try_extract_tensor::<i64>()
                 .context("Failed to extract output tensor")?;
 
-            let output_ids: Vec<i64> = output_tensor.1.iter().copied().collect();
+            let output_ids: Vec<i64> = output_tensor.1.to_vec();
 
             // Decode output, stop at EOS
             let decoded_tokens = self.tokenizer.decode(&output_ids);
