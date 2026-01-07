@@ -5,7 +5,13 @@
 use anyhow::Result;
 
 #[cfg(feature = "ai")]
-use ort::ExecutionProviderDispatch;
+use ort::execution_providers::{
+    cpu::CPUExecutionProvider,
+    coreml::{CoreMLComputeUnits, CoreMLExecutionProvider},
+    cuda::CUDAExecutionProvider,
+    directml::DirectMLExecutionProvider,
+    ExecutionProviderDispatch,
+};
 
 /// GPU execution provider configuration
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -141,21 +147,37 @@ impl GpuConfig {
                 if self.enable_logging {
                     log::info!("Using CUDA GPU (device: {})", device_id);
                 }
-                providers.push(ExecutionProviderDispatch::CUDA(Default::default()));
+                providers.push(
+                    CUDAExecutionProvider::default()
+                        .with_device_id(*device_id)
+                        .build(),
+                );
             }
             GpuProvider::DirectML { device_id } => {
                 if self.enable_logging {
                     log::info!("Using DirectML (device: {})", device_id);
                 }
                 #[cfg(target_os = "windows")]
-                providers.push(ExecutionProviderDispatch::DirectML(Default::default()));
+                providers.push(
+                    DirectMLExecutionProvider::default()
+                        .with_device_id(*device_id)
+                        .build(),
+                );
             }
             GpuProvider::CoreML { use_cpu_only } => {
                 if self.enable_logging {
                     log::info!("Using CoreML (CPU only: {})", use_cpu_only);
                 }
                 #[cfg(target_os = "macos")]
-                providers.push(ExecutionProviderDispatch::CoreML(Default::default()));
+                providers.push(
+                    CoreMLExecutionProvider::default()
+                        .with_compute_units(if *use_cpu_only {
+                            CoreMLComputeUnits::CPUOnly
+                        } else {
+                            CoreMLComputeUnits::All
+                        })
+                        .build(),
+                );
             }
             GpuProvider::Cpu => {
                 if self.enable_logging {
@@ -166,7 +188,7 @@ impl GpuConfig {
 
         // Always add CPU as fallback
         if self.enable_fallback && self.provider != GpuProvider::Cpu {
-            providers.push(ExecutionProviderDispatch::CPU(Default::default()));
+            providers.push(CPUExecutionProvider::default().build());
         }
 
         Ok(providers)
