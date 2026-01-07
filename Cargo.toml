@@ -19,6 +19,7 @@ members = [
     "crates/browerai-testing",
     "crates/browerai-plugins",
     "crates/browerai-ml",
+    "crates/browerai-metrics",
     "crates/browerai",
 ]
 
@@ -96,6 +97,7 @@ browerai-network = { path = "crates/browerai-network" }
 browerai-devtools = { path = "crates/browerai-devtools" }
 browerai-testing = { path = "crates/browerai-testing" }
 browerai-plugins = { path = "crates/browerai-plugins" }
+browerai-metrics = { path = "crates/browerai-metrics" }
 
 [profile.release]
 opt-level = 3

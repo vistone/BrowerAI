@@ -57,6 +57,10 @@ pub use browerai_network as network;
 pub use browerai_plugins as plugins;
 pub use browerai_testing as testing;
 
+// Re-export metrics (conditional)
+#[cfg(feature = "metrics")]
+pub use browerai_metrics as metrics;
+
 // Re-export ML toolkit (conditional)
 #[cfg(feature = "ml")]
 pub use browerai_ml as ml;

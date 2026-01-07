@@ -30,6 +30,7 @@ browerai-network = { workspace = true }
 browerai-devtools = { workspace = true }
 browerai-testing = { workspace = true }
 browerai-plugins = { workspace = true }
+browerai-metrics = { workspace = true, optional = true }
 
 anyhow = { workspace = true }
 log = { workspace = true }
@@ -44,6 +45,8 @@ ai-candle = ["browerai-ai-core", "browerai-ai-core/candle"]
 ml = ["browerai-ml"]
 # Enable V8 JavaScript engine (high performance, full ES2024+ support)
 v8 = ["browerai-js-v8"]
+# Enable Prometheus metrics collection
+metrics = ["browerai-metrics"]
 
 [dev-dependencies]
 tempfile = { workspace = true }
