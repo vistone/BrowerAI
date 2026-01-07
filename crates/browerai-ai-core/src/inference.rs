@@ -2,8 +2,13 @@ use anyhow::Result;
 use std::path::Path;
 
 #[cfg(feature = "ai")]
+use std::time::Instant;
+
+#[cfg(feature = "ai")]
 use ort::{session::input::SessionInputValue, session::Session, value::Value};
 
+#[cfg(feature = "ai")]
+use crate::performance_monitor::InferenceMetrics;
 use crate::performance_monitor::PerformanceMonitor;
 
 /// Inference engine for running ONNX models
@@ -18,10 +23,7 @@ impl InferenceEngine {
         #[cfg(feature = "ai")]
         {
             // Initialize global environment once
-            ort::init()
-                .with_name("BrowerAI")
-                .commit()
-                .map_err(|e| anyhow::anyhow!("Failed to initialize ONNX environment: {}", e))?;
+            ort::init().with_name("BrowerAI").commit()?;
 
             Ok(Self { monitor: None })
         }
@@ -85,7 +87,7 @@ impl InferenceEngine {
         shape: Vec<i64>,
     ) -> Result<Vec<f32>> {
         let input_bytes = input_data.len() * std::mem::size_of::<f32>();
-        let timer = self.monitor.as_ref().map(|m| m.start_inference(model_name));
+        let start_time = Instant::now();
 
         // Create input tensor (shape, data)
         let input_tensor = Value::from_array((shape.clone(), input_data.clone()))
@@ -93,28 +95,65 @@ impl InferenceEngine {
 
         // Run inference
         let inputs = [SessionInputValue::from(input_tensor)];
-        let outputs = session
-            .run(inputs)
-            .map_err(|e| anyhow::anyhow!("Failed to run inference: {}", e))?;
+        let outputs = match session.run(inputs) {
+            Ok(outputs) => outputs,
+            Err(e) => {
+                if let Some(monitor) = &self.monitor {
+                    monitor.record_inference(InferenceMetrics {
+                        model_name: model_name.to_string(),
+                        inference_time: start_time.elapsed(),
+                        input_size: input_bytes,
+                        output_size: 0,
+                        success: false,
+                        timestamp: start_time,
+                    });
+                }
+                return Err(anyhow::anyhow!("Failed to run inference: {}", e));
+            }
+        };
 
         // Extract output data
         if outputs.len() == 0 {
-            if let Some(t) = timer {
-                t.complete(input_bytes, 0, false);
+            if let Some(monitor) = &self.monitor {
+                monitor.record_inference(InferenceMetrics {
+                    model_name: model_name.to_string(),
+                    inference_time: start_time.elapsed(),
+                    input_size: input_bytes,
+                    output_size: 0,
+                    success: false,
+                    timestamp: start_time,
+                });
             }
             return Err(anyhow::anyhow!("No outputs from inference"));
         }
 
         let output = &outputs[0];
-        let output_data = output
-            .try_extract_array::<f32>()
-            .map_err(|e| anyhow::anyhow!("Failed to extract output data: {}", e))?;
+        let output_data = output.try_extract_array::<f32>().map_err(|e| {
+            if let Some(monitor) = &self.monitor {
+                monitor.record_inference(InferenceMetrics {
+                    model_name: model_name.to_string(),
+                    inference_time: start_time.elapsed(),
+                    input_size: input_bytes,
+                    output_size: 0,
+                    success: false,
+                    timestamp: start_time,
+                });
+            }
+            anyhow::anyhow!("Failed to extract output data: {}", e)
+        })?;
 
         let result: Vec<f32> = output_data.iter().copied().collect();
         let output_bytes = result.len() * std::mem::size_of::<f32>();
 
-        if let Some(t) = timer {
-            t.complete(input_bytes, output_bytes, true);
+        if let Some(monitor) = &self.monitor {
+            monitor.record_inference(InferenceMetrics {
+                model_name: model_name.to_string(),
+                inference_time: start_time.elapsed(),
+                input_size: input_bytes,
+                output_size: output_bytes,
+                success: true,
+                timestamp: start_time,
+            });
         }
 
         log::debug!("Inference completed successfully for model {}", model_name);
