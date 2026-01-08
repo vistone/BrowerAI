@@ -37,6 +37,13 @@ jobs:
       - name: Run benchmarks (criterion → bencher format)
         run: |
           cargo criterion --message-format bencher --workspace --exclude browerai-ml --exclude browerai-js-v8 | tee output.txt
+
+      - name: Fail if benchmark output is empty
+        run: |
+          if [ ! -s output.txt ]; then
+            echo "benchmark output.txt is empty" >&2
+            exit 1
+          fi
       
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
