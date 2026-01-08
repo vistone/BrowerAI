@@ -31,9 +31,12 @@ jobs:
           path: target
           key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
       
-      - name: Run benchmarks
+      - name: Install cargo-criterion
+        run: cargo install cargo-criterion --locked
+
+      - name: Run benchmarks (criterion → bencher format)
         run: |
-          cargo bench --workspace --exclude browerai-ml --exclude browerai-js-v8 -- --output-format bencher | tee output.txt
+          cargo criterion --message-format bencher --workspace --exclude browerai-ml --exclude browerai-js-v8 | tee output.txt
       
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
