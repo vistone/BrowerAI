@@ -28,6 +28,18 @@ if ! rustup component list | grep -q "clippy .* (installed)"; then
   rustup component add clippy
 fi
 
+# Install cargo-llvm-cov if not present
+if ! command -v cargo-llvm-cov &> /dev/null; then
+  echo "[pre-commit] Installing cargo-llvm-cov for code coverage..."
+  cargo install cargo-llvm-cov
+fi
+
+# Install cargo-audit if not present
+if ! command -v cargo-audit &> /dev/null; then
+  echo "[pre-commit] Installing cargo-audit for security checks..."
+  cargo install cargo-audit
+fi
+
 # 1) Format check
 section "Running cargo fmt --check"
 cargo fmt --all -- --check
@@ -51,6 +63,36 @@ cargo test --workspace --exclude browerai-ml --exclude browerai-js-v8
 # 6) Docs with warnings denied (same as CI docs job)
 section "Building docs with warnings denied"
 RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features --workspace --exclude browerai-ml --exclude browerai-js-v8
+
+# 7) Code coverage generation
+section "Generating code coverage report"
+cargo llvm-cov --all-features --workspace --exclude browerai-ml --exclude browerai-js-v8 --codecov --output-path codecov.json
+
+# 8) Security audit
+section "Running security audit (cargo-audit)"
+if cargo audit --json > /tmp/audit_report.json 2>&1; then
+  echo "✅ No vulnerabilities found"
+else
+  echo "⚠️  Security audit found issues:"
+  cat /tmp/audit_report.json | jq -r '.vulnerabilities.list[] | "  - \(.advisory.id): \(.advisory.title)"' 2>/dev/null || cat /tmp/audit_report.json
+  
+  # Check for critical vulnerabilities
+  CRITICAL_COUNT=$(cat /tmp/audit_report.json | jq '.vulnerabilities.count' 2>/dev/null || echo "0")
+  if [[ "$CRITICAL_COUNT" -gt 0 ]]; then
+    echo ""
+    echo "❌ Found $CRITICAL_COUNT critical vulnerability/vulnerabilities"
+    echo "Run 'cargo audit' for details"
+    echo "To skip this check, set SKIP_AUDIT=1"
+    
+    if [[ "${SKIP_AUDIT:-0}" != "1" ]]; then
+      rm -f /tmp/audit_report.json
+      exit 1
+    else
+      echo "⚠️  SKIP_AUDIT=1 set, continuing despite vulnerabilities (not recommended)"
+    fi
+  fi
+fi
+rm -f /tmp/audit_report.json
 
 section "All checks passed. Ready to commit ✅"
 exit 0
