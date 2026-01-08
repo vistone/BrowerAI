@@ -53,7 +53,7 @@ chrono = "0.4"
 regex = "1.10"
 
 # HTML/CSS parsing
-html5ever = "0.27"
+html5ever = "0.36"
 markup5ever_rcdom = "0.3"
 cssparser = "0.33"
 selectors = "0.25"
