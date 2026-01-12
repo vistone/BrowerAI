@@ -63,7 +63,7 @@ boa_parser = "0.20"
 boa_ast = "0.20"
 boa_interner = "0.20"
 boa_engine = "0.20"
-swc_core = "0.88"
+swc_core = "54.0"
 
 # Tch (PyTorch bindings for Rust)
 tch = { version = "0.14", features = ["download-libtorch"] }
