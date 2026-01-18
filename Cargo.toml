@@ -60,7 +60,7 @@ selectors = "0.25"
 
 # JavaScript parsing and execution
 boa_parser = "0.20"
-boa_ast = "0.20"
+boa_ast = "0.21"
 boa_interner = "0.20"
 boa_engine = "0.20"
 swc_core = "0.88"
