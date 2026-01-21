@@ -35,3 +35,4 @@ checkpoints/
 # OS
 .DS_Store
 Thumbs.db
+training/data/websites/*.jsonl
