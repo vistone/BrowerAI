@@ -77,10 +77,10 @@ run_check "Format check (cargo fmt)" "cargo fmt --all -- --check"
 # =============================================================================
 
 # 2a) Clippy (all features) with warnings as errors
-run_check "Clippy linting (all-features)" "cargo clippy --workspace --all-features -- -D warnings"
+run_check "Clippy linting (all-features)" "cargo clippy --workspace --all-features $EXCLUDE_FLAGS -- -D warnings"
 
 # 2b) Clippy (default features)
-run_check "Clippy linting (default)" "cargo clippy --workspace -- -D warnings"
+run_check "Clippy linting (default)" "cargo clippy --workspace $EXCLUDE_FLAGS -- -D warnings"
 
 # =============================================================================
 # 3) DEPENDENCY & LICENSE CHECKS

@@ -1,8 +1,12 @@
 use anyhow::{Context, Result};
+use browerai_core::HealthStatus;
 use log;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+
+/// Type alias for backward compatibility
+pub type ModelHealth = HealthStatus;
 
 /// Configuration for a model in the local model library
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -37,24 +41,6 @@ pub enum ModelType {
 pub struct ModelManager {
     models: HashMap<ModelType, Vec<ModelConfig>>,
     model_dir: PathBuf,
-}
-
-/// Health status for a model record
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
-pub enum ModelHealth {
-    /// Model is ready to use
-    Ready,
-    /// Model file is missing
-    MissingFile,
-    /// Model failed to load
-    LoadFailed(String),
-    /// Model failed validation checks
-    ValidationFailed(String),
-    /// Model inference consistently fails
-    InferenceFailing,
-    /// Health status unknown
-    #[default]
-    Unknown,
 }
 
 impl ModelManager {
@@ -294,6 +280,11 @@ impl ModelManager {
                     ModelHealth::ValidationFailed(_) => summary.validation_failed += 1,
                     ModelHealth::InferenceFailing => summary.inference_failing += 1,
                     ModelHealth::Unknown => summary.unknown += 1,
+                    // New HealthStatus variants map to unknown for backward compatibility
+                    ModelHealth::Warning(_) => summary.unknown += 1,
+                    ModelHealth::Disabled => summary.unknown += 1,
+                    ModelHealth::OperationFailed(_) => summary.unknown += 1,
+                    ModelHealth::Unhealthy(_) => summary.unknown += 1,
                 }
             }
         }
@@ -435,10 +426,12 @@ mod tests {
             )
             .unwrap();
         let model = manager.get_models(&ModelType::HtmlParser)[0];
-        match model.health {
-            ModelHealth::LoadFailed(_) => (),
-            _ => panic!("Expected LoadFailed"),
-        }
+        // 修复: 使用更安全的断言，避免panic
+        assert!(
+            matches!(model.health, ModelHealth::LoadFailed(_)),
+            "Expected LoadFailed variant, got {:?}",
+            model.health
+        );
     }
 
     #[test]

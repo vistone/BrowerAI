@@ -3,14 +3,21 @@ use anyhow::Context;
 use anyhow::Result;
 use std::collections::HashMap;
 use std::mem::size_of;
+#[cfg(feature = "ai")]
 use std::path::Path;
 use std::time::Instant;
 
 #[cfg(feature = "ai")]
 use ort::{session::input::SessionInputValue, session::Session, value::Value};
 
+#[cfg(feature = "ai")]
 use super::InferenceEngine;
 use browerai_ai_core::performance_monitor::{InferenceMetrics, PerformanceMonitor};
+#[cfg(feature = "ai")]
+use browerai_ai_core::tech_model_library::{ModelRegistry, TaskKind};
+#[cfg(feature = "ai")]
+use browerai_html_parser::HtmlParser;
+use browerai_html_parser::HtmlValidationHook;
 
 /// Number of features expected by the code understanding model
 const CODE_UNDERSTANDING_FEATURE_DIM: usize = 35;
@@ -36,41 +43,39 @@ pub struct HtmlModelIntegration {
 
 impl HtmlModelIntegration {
     /// Create a new HTML model integration
+    #[cfg(feature = "ai")]
     pub fn new(
         engine: &InferenceEngine,
         model_path: Option<&Path>,
         monitor: Option<PerformanceMonitor>,
     ) -> Result<Self> {
-        #[cfg(feature = "ai")]
-        {
-            let session = if let Some(path) = model_path {
-                if path.exists() {
-                    Some(engine.load_model(path)?)
-                } else {
-                    log::warn!("HTML model not found at {:?}, running without AI", path);
-                    None
-                }
+        let session = if let Some(path) = model_path {
+            if path.exists() {
+                Some(engine.load_model(path)?)
             } else {
+                log::warn!("HTML model not found at {:?}, running without AI", path);
                 None
-            };
+            }
+        } else {
+            None
+        };
 
-            let enabled = session.is_some();
+        let enabled = session.is_some();
 
-            Ok(Self {
-                session,
-                monitor,
-                enabled,
-            })
-        }
+        Ok(Self {
+            session,
+            monitor,
+            enabled,
+        })
+    }
 
-        #[cfg(not(feature = "ai"))]
-        {
-            let _ = (engine, model_path, monitor);
-            Ok(Self {
-                enabled: false,
-                monitor: None,
-            })
-        }
+    /// Create a disabled HTML model integration (when AI feature is not enabled)
+    #[cfg(not(feature = "ai"))]
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            enabled: false,
+            monitor: None,
+        })
     }
 
     /// Validate HTML structure using AI model
@@ -180,6 +185,140 @@ impl HtmlModelIntegration {
     }
 }
 
+/// Implementation of HtmlValidationHook backed by HtmlModelIntegration
+pub struct HtmlValidationHookImpl {
+    inner: HtmlModelIntegration,
+    feedback: Option<browerai_ai_core::feedback_pipeline::FeedbackPipeline>,
+}
+
+impl HtmlValidationHookImpl {
+    pub fn new(inner: HtmlModelIntegration) -> Self {
+        Self {
+            inner,
+            feedback: None,
+        }
+    }
+
+    pub fn new_with_feedback(
+        inner: HtmlModelIntegration,
+        feedback: browerai_ai_core::feedback_pipeline::FeedbackPipeline,
+    ) -> Self {
+        Self {
+            inner,
+            feedback: Some(feedback),
+        }
+    }
+}
+
+impl HtmlValidationHook for HtmlValidationHookImpl {
+    fn is_enabled(&self) -> bool {
+        self.inner.is_enabled()
+    }
+    fn validate_structure(&mut self, html: &str) -> anyhow::Result<(bool, f32)> {
+        let ai_used = self.inner.is_enabled();
+        let size = html.len();
+        match self.inner.validate_structure(html) {
+            Ok((valid, complexity)) => {
+                if let Some(fb) = &self.feedback {
+                    fb.record_html_parsing(valid, complexity, ai_used, None, None, size);
+                }
+                Ok((valid, complexity))
+            }
+            Err(e) => {
+                if let Some(fb) = &self.feedback {
+                    fb.record_html_parsing(false, 0.0, ai_used, Some(e.to_string()), None, size);
+                }
+                Err(e)
+            }
+        }
+    }
+}
+
+/// Convenience helper to attach an AI validation hook to HtmlParser using ModelRegistry
+#[cfg(feature = "ai")]
+pub fn attach_html_validation_hook(parser: &mut HtmlParser) {
+    // Try to create an InferenceEngine and select a model via registry
+    let engine = match InferenceEngine::new() {
+        Ok(e) => e,
+        Err(e) => {
+            log::warn!("Failed to init InferenceEngine: {}", e);
+            return;
+        }
+    };
+
+    let mut selected_path: Option<std::path::PathBuf> = None;
+    if let Ok(reg) = ModelRegistry::load_from("models/model_config.toml") {
+        if let Some(spec) = reg.preferred(TaskKind::ParseHtml) {
+            if let Some(p) = spec.path.to_str() {
+                let p = if p.contains('/') || p.contains('\\') {
+                    p.to_string()
+                } else {
+                    format!("models/local/{}", p)
+                };
+                let pb = std::path::PathBuf::from(&p);
+                if pb.exists() {
+                    selected_path = Some(pb);
+                }
+            }
+        }
+    }
+
+    let integration = match HtmlModelIntegration::new(&engine, selected_path.as_deref(), None) {
+        Ok(i) => i,
+        Err(e) => {
+            log::warn!("Failed to create HtmlModelIntegration: {}", e);
+            return;
+        }
+    };
+
+    let hook = HtmlValidationHookImpl::new(integration);
+    parser.set_validation_hook(Box::new(hook));
+}
+
+/// Variant of attach_html_validation_hook that records feedback events
+#[cfg(feature = "ai")]
+pub fn attach_html_validation_hook_with_feedback(
+    parser: &mut HtmlParser,
+    feedback: browerai_ai_core::feedback_pipeline::FeedbackPipeline,
+) {
+    // Try to create an InferenceEngine and select a model via registry
+    let engine = match InferenceEngine::new() {
+        Ok(e) => e,
+        Err(e) => {
+            log::warn!("Failed to init InferenceEngine: {}", e);
+            return;
+        }
+    };
+
+    let mut selected_path: Option<std::path::PathBuf> = None;
+    if let Ok(reg) = ModelRegistry::load_from("models/model_config.toml") {
+        if let Some(spec) = reg.preferred(TaskKind::ParseHtml) {
+            if let Some(p) = spec.path.to_str() {
+                let p = if p.contains('/') || p.contains('\\') {
+                    p.to_string()
+                } else {
+                    format!("models/local/{}", p)
+                };
+                let pb = std::path::PathBuf::from(&p);
+                if pb.exists() {
+                    selected_path = Some(pb);
+                }
+            }
+        }
+    }
+
+    let integration = match HtmlModelIntegration::new(&engine, selected_path.as_deref(), None) {
+        Ok(i) => i,
+        Err(e) => {
+            log::warn!("Failed to create HtmlModelIntegration: {}", e);
+            return;
+        }
+    };
+
+    let hook = HtmlValidationHookImpl::new_with_feedback(integration, feedback);
+    parser.set_validation_hook(Box::new(hook));
+}
+
 /// Model integration helper for CSS parsing
 pub struct CssModelIntegration {
     #[cfg(feature = "ai")]
@@ -191,42 +330,40 @@ pub struct CssModelIntegration {
 }
 
 impl CssModelIntegration {
+    #[cfg(feature = "ai")]
     #[allow(dead_code)]
     pub fn new(
         engine: &InferenceEngine,
         model_path: Option<&Path>,
         monitor: Option<PerformanceMonitor>,
     ) -> Result<Self> {
-        #[cfg(feature = "ai")]
-        {
-            let session = if let Some(path) = model_path {
-                if path.exists() {
-                    Some(engine.load_model(path)?)
-                } else {
-                    log::warn!("CSS model not found at {:?}, running without AI", path);
-                    None
-                }
+        let session = if let Some(path) = model_path {
+            if path.exists() {
+                Some(engine.load_model(path)?)
             } else {
+                log::warn!("CSS model not found at {:?}, running without AI", path);
                 None
-            };
+            }
+        } else {
+            None
+        };
 
-            let enabled = session.is_some();
+        let enabled = session.is_some();
 
-            Ok(Self {
-                session,
-                monitor,
-                enabled,
-            })
-        }
+        Ok(Self {
+            session,
+            monitor,
+            enabled,
+        })
+    }
 
-        #[cfg(not(feature = "ai"))]
-        {
-            let _ = (engine, model_path, monitor);
-            Ok(Self {
-                enabled: false,
-                monitor: None,
-            })
-        }
+    #[cfg(not(feature = "ai"))]
+    #[allow(dead_code)]
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            enabled: false,
+            monitor: None,
+        })
     }
 
     pub fn is_enabled(&self) -> bool {
@@ -275,42 +412,40 @@ pub struct JsModelIntegration {
 }
 
 impl JsModelIntegration {
+    #[cfg(feature = "ai")]
     #[allow(dead_code)]
     pub fn new(
         engine: &InferenceEngine,
         model_path: Option<&Path>,
         monitor: Option<PerformanceMonitor>,
     ) -> Result<Self> {
-        #[cfg(feature = "ai")]
-        {
-            let session = if let Some(path) = model_path {
-                if path.exists() {
-                    Some(engine.load_model(path)?)
-                } else {
-                    log::warn!("JS model not found at {:?}, running without AI", path);
-                    None
-                }
+        let session = if let Some(path) = model_path {
+            if path.exists() {
+                Some(engine.load_model(path)?)
             } else {
+                log::warn!("JS model not found at {:?}, running without AI", path);
                 None
-            };
+            }
+        } else {
+            None
+        };
 
-            let enabled = session.is_some();
+        let enabled = session.is_some();
 
-            Ok(Self {
-                session,
-                monitor,
-                enabled,
-            })
-        }
+        Ok(Self {
+            session,
+            monitor,
+            enabled,
+        })
+    }
 
-        #[cfg(not(feature = "ai"))]
-        {
-            let _ = (engine, model_path, monitor);
-            Ok(Self {
-                enabled: false,
-                monitor: None,
-            })
-        }
+    #[cfg(not(feature = "ai"))]
+    #[allow(dead_code)]
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            enabled: false,
+            monitor: None,
+        })
     }
 
     #[allow(dead_code)]
@@ -350,45 +485,43 @@ pub struct CodeUnderstandingIntegration {
 }
 
 impl CodeUnderstandingIntegration {
+    #[cfg(feature = "ai")]
     #[allow(dead_code)]
     pub fn new(
         engine: &InferenceEngine,
         model_path: Option<&Path>,
         monitor: Option<PerformanceMonitor>,
     ) -> Result<Self> {
-        #[cfg(feature = "ai")]
-        {
-            let session = if let Some(path) = model_path {
-                if path.exists() {
-                    Some(engine.load_model(path)?)
-                } else {
-                    log::warn!(
-                        "Code understanding model not found at {:?}, running without AI",
-                        path
-                    );
-                    None
-                }
+        let session = if let Some(path) = model_path {
+            if path.exists() {
+                Some(engine.load_model(path)?)
             } else {
+                log::warn!(
+                    "Code understanding model not found at {:?}, running without AI",
+                    path
+                );
                 None
-            };
+            }
+        } else {
+            None
+        };
 
-            let enabled = session.is_some();
+        let enabled = session.is_some();
 
-            Ok(Self {
-                session,
-                monitor,
-                enabled,
-            })
-        }
+        Ok(Self {
+            session,
+            monitor,
+            enabled,
+        })
+    }
 
-        #[cfg(not(feature = "ai"))]
-        {
-            let _ = (engine, model_path, monitor);
-            Ok(Self {
-                enabled: false,
-                monitor: None,
-            })
-        }
+    #[cfg(not(feature = "ai"))]
+    #[allow(dead_code)]
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            enabled: false,
+            monitor: None,
+        })
     }
 
     #[allow(dead_code)]
@@ -468,6 +601,7 @@ impl CodeUnderstandingIntegration {
 }
 
 #[cfg(test)]
+#[cfg(feature = "ai")]
 mod tests {
     use super::*;
     use browerai_ai_core::InferenceEngine;
@@ -501,6 +635,13 @@ mod tests {
     fn test_js_integration_creation() {
         let engine = InferenceEngine::new().unwrap();
         let integration = JsModelIntegration::new(&engine, None, None);
+        assert!(integration.is_ok());
+    }
+
+    #[test]
+    fn test_code_understanding_creation() {
+        let engine = InferenceEngine::new().unwrap();
+        let integration = CodeUnderstandingIntegration::new(&engine, None, None);
         assert!(integration.is_ok());
     }
 }
@@ -764,47 +905,44 @@ pub struct JsDeobfuscatorIntegration {
 }
 
 impl JsDeobfuscatorIntegration {
+    #[cfg(feature = "ai")]
     pub fn new(
         engine: &InferenceEngine,
         model_path: Option<&Path>,
         monitor: Option<PerformanceMonitor>,
     ) -> Result<Self> {
-        #[cfg(feature = "ai")]
-        {
-            let session = if let Some(path) = model_path {
-                if path.exists() {
-                    Some(engine.load_model(path)?)
-                } else {
-                    log::warn!(
-                        "JS deobfuscator model not found at {:?}, running without AI",
-                        path
-                    );
-                    None
-                }
+        let session = if let Some(path) = model_path {
+            if path.exists() {
+                Some(engine.load_model(path)?)
             } else {
+                log::warn!(
+                    "JS deobfuscator model not found at {:?}, running without AI",
+                    path
+                );
                 None
-            };
+            }
+        } else {
+            None
+        };
 
-            let enabled = session.is_some();
-            let tokenizer = JsTokenizer::new();
+        let enabled = session.is_some();
+        let tokenizer = JsTokenizer::new();
 
-            Ok(Self {
-                session,
-                tokenizer,
-                monitor,
-                enabled,
-            })
-        }
+        Ok(Self {
+            session,
+            tokenizer,
+            monitor,
+            enabled,
+        })
+    }
 
-        #[cfg(not(feature = "ai"))]
-        {
-            let _ = (engine, model_path);
-            Ok(Self {
-                enabled: false,
-                tokenizer: JsTokenizer::new(),
-                monitor,
-            })
-        }
+    #[cfg(not(feature = "ai"))]
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            enabled: false,
+            tokenizer: JsTokenizer::new(),
+            monitor: None,
+        })
     }
 
     pub fn is_enabled(&self) -> bool {

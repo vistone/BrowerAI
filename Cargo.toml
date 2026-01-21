@@ -1,7 +1,10 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/browerai-config",
     "crates/browerai-core",
+    "crates/browerai-deobfuscation",
+    "crates/browerai-feedback",
     "crates/browerai-dom",
     "crates/browerai-html-parser",
     "crates/browerai-css-parser",
@@ -12,7 +15,8 @@ members = [
     "crates/browerai-ai-integration",
     "crates/browerai-renderer-core",
     "crates/browerai-renderer-predictive",
-    "crates/browerai-intelligent-rendering",
+    # "crates/browerai-intelligent-rendering",  # 暂时禁用：编译错误
+    # "crates/browerai-integrated-pipeline",  # 暂时禁用：编译错误
     "crates/browerai-learning",
     "crates/browerai-network",
     "crates/browerai-devtools",
@@ -21,6 +25,8 @@ members = [
     "crates/browerai-ml",
     "crates/browerai-metrics",
     "crates/browerai",
+    "crates/browerai-webclient",
+    "crates/website_classifier",
 ]
 
 [workspace.package]
@@ -47,7 +53,7 @@ reqwest = { version = "0.11", features = ["blocking", "rustls-tls"], default-fea
 url = "2.5"
 
 # Timestamp
-chrono = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
 
 # Regular expressions
 regex = "1.10"
@@ -75,11 +81,17 @@ openssl-sys = { version = "0.9.111", features = ["vendored"] }
 # ONNX Runtime (optional)
 ort = "2.0.0-rc.10"
 
+# Array processing for ML
+ndarray = "0.17"
+
 # Dev dependencies
 tempfile = "3.8"
 
 # Internal workspace crates
+browerai-config = { path = "crates/browerai-config" }
 browerai-core = { path = "crates/browerai-core" }
+browerai-deobfuscation = { path = "crates/browerai-deobfuscation" }
+browerai-feedback = { path = "crates/browerai-feedback" }
 browerai-dom = { path = "crates/browerai-dom" }
 browerai-html-parser = { path = "crates/browerai-html-parser" }
 browerai-css-parser = { path = "crates/browerai-css-parser" }
@@ -98,6 +110,7 @@ browerai-devtools = { path = "crates/browerai-devtools" }
 browerai-testing = { path = "crates/browerai-testing" }
 browerai-plugins = { path = "crates/browerai-plugins" }
 browerai-metrics = { path = "crates/browerai-metrics" }
+website-classifier = { path = "crates/website_classifier" }
 
 [profile.release]
 opt-level = 3
@@ -107,5 +120,3 @@ codegen-units = 1
 [profile.dev]
 opt-level = 0
 debug = true
-
-

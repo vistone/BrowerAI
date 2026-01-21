@@ -96,7 +96,8 @@ impl HybridJsOrchestrator {
             match self.swc.extract_from_source(js) {
                 Ok(extracted) => {
                     info!("Parsed via SWC (module/tsx/ts supported)");
-                    let mut kind = if extracted.is_module {
+                    let is_module = js.contains("import ") || js.contains("export ");
+                    let mut kind = if is_module {
                         SourceKind::Module
                     } else {
                         SourceKind::Script

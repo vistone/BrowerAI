@@ -253,9 +253,15 @@ impl IntelligentGeneration {
             function_map.insert(
                 core_func.name.clone(),
                 FunctionMapping {
-                    original_id: core_func.name.clone(),
-                    new_id: format!("new-{}", core_func.name),
-                    is_mapped,
+                    original_function: core_func.name.clone(),
+                    new_function: format!("new-{}", core_func.name),
+                    preserved: is_mapped,
+                    reason: if is_mapped {
+                        "mapped from original"
+                    } else {
+                        "not found"
+                    }
+                    .to_string(),
                 },
             );
         }

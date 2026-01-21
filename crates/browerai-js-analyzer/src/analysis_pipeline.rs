@@ -5,11 +5,11 @@
 
 use super::controlflow_analyzer::ControlFlowAnalyzer;
 use super::dataflow_analyzer::DataFlowAnalyzer;
-use super::enhanced_call_graph::EnhancedCallGraphAnalyzer;
 use super::extractor::AstExtractor;
 use super::loop_analyzer::LoopAnalyzer;
 use super::performance_optimizer::{OptimizedAnalyzer, PerformanceMetrics};
 use super::scope_analyzer::ScopeAnalyzer;
+use super::unified_call_graph::UnifiedCallGraphBuilder;
 use anyhow::Result;
 use std::time::Instant;
 
@@ -42,7 +42,7 @@ pub struct AnalysisPipeline {
     dataflow_analyzer: DataFlowAnalyzer,
     cfg_analyzer: ControlFlowAnalyzer,
     loop_analyzer: LoopAnalyzer,
-    call_graph_analyzer: EnhancedCallGraphAnalyzer,
+    call_graph_analyzer: UnifiedCallGraphBuilder,
 }
 
 impl AnalysisPipeline {
@@ -55,7 +55,7 @@ impl AnalysisPipeline {
             dataflow_analyzer: DataFlowAnalyzer::new(),
             cfg_analyzer: ControlFlowAnalyzer::new(),
             loop_analyzer: LoopAnalyzer::new(),
-            call_graph_analyzer: EnhancedCallGraphAnalyzer::new(),
+            call_graph_analyzer: UnifiedCallGraphBuilder::new(),
         }
     }
 
@@ -105,11 +105,9 @@ impl AnalysisPipeline {
             self.loop_analyzer
                 .analyze(&ast, &scope_tree, &data_flow, &control_flow)?;
 
-        // Call graph analysis
-        let call_graph =
-            self.call_graph_analyzer
-                .analyze(&ast, &scope_tree, &data_flow, &control_flow)?;
-        let call_edges = call_graph.edges.len();
+        // Call graph analysis - use semantic info from extracted AST
+        let call_graph = self.call_graph_analyzer.build(&ast.semantic)?;
+        let call_edges = call_graph.nodes.len();
 
         let time_ms = start.elapsed().as_secs_f64() * 1000.0;
         self.optimizer.record_analysis(time_ms);
@@ -187,9 +185,9 @@ mod tests {
         let code = "function test() { return 42; }";
 
         let result = pipeline.analyze(code);
-        assert!(result.is_ok());
+        assert!(result.is_ok(), "Analysis should succeed");
 
-        let r = result.unwrap();
+        let r = result.expect("Analysis result should be available");
         assert!(!r.cached);
         assert!(r.ast_valid);
     }
@@ -199,12 +197,14 @@ mod tests {
         let mut pipeline = AnalysisPipeline::new();
         let code = "function test() { return 42; }";
 
-        // First analysis
-        let r1 = pipeline.analyze(code).unwrap();
+        let r1 = pipeline
+            .analyze(code)
+            .expect("First analysis should succeed");
         assert!(!r1.cached);
 
-        // Second analysis should hit cache
-        let r2 = pipeline.analyze(code).unwrap();
+        let r2 = pipeline
+            .analyze(code)
+            .expect("Second analysis should succeed");
         assert!(r2.cached);
     }
 
@@ -213,7 +213,7 @@ mod tests {
         let mut pipeline = AnalysisPipeline::new();
         let code = "function test() { return 42; }";
 
-        pipeline.analyze(code).unwrap();
+        pipeline.analyze(code).expect("Analysis should succeed");
 
         let stats = pipeline.stats();
         assert!(stats.total_analyses > 0);
@@ -234,9 +234,9 @@ mod tests {
         "#;
 
         let result = pipeline.analyze(code);
-        assert!(result.is_ok());
+        assert!(result.is_ok(), "Analysis should succeed");
 
-        let r = result.unwrap();
+        let r = result.expect("Analysis result should be available");
         assert!(r.scope_count > 0);
         assert!(r.cfg_nodes > 0);
     }
@@ -246,7 +246,7 @@ mod tests {
         let mut pipeline = AnalysisPipeline::new();
         let code = "function test() { return 42; }";
 
-        pipeline.analyze(code).unwrap();
+        pipeline.analyze(code).expect("Analysis should succeed");
         assert!(pipeline.stats().total_analyses > 0);
 
         pipeline.reset();

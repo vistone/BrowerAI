@@ -80,7 +80,12 @@ impl V8JsParser {
 
         let mut handle_scope = v8::HandleScope::new(isolate);
         let mut handle_scope = {
-            // SAFETY: handle_scope is stack allocated and not moved after pin
+            // SAFETY: V8 requires HandleScope to be pinned to the stack because it stores
+            // raw pointers to V8's internal handle data structure. The handle_scope is:
+            // 1. Stack-allocated and will not move for the duration of this scope
+            // 2. Valid for the entire lifetime of the V8 operations within
+            // 3. Dropped in the correct order (LIFO) when this block exits
+            // This is required by V8's C++ API and is safe when these conditions are met.
             let scope_pinned = unsafe { Pin::new_unchecked(&mut handle_scope) };
             scope_pinned.init()
         };
@@ -90,6 +95,8 @@ impl V8JsParser {
         // Inner handle scope bound to the context
         let mut inner_scope = v8::HandleScope::new(&mut context_scope);
         let scope = {
+            // SAFETY: Same reasoning as above - V8 requires pinned HandleScope.
+            // The inner_scope is contained within the outer scope and will be dropped first.
             let pinned = unsafe { Pin::new_unchecked(&mut inner_scope) };
             pinned.init()
         };
@@ -142,7 +149,12 @@ impl V8JsParser {
 
         let mut handle_scope = v8::HandleScope::new(isolate);
         let mut handle_scope = {
-            // SAFETY: handle_scope is stack allocated and not moved after pin
+            // SAFETY: V8 requires HandleScope to be pinned to the stack because it stores
+            // raw pointers to V8's internal handle data structure. The handle_scope is:
+            // 1. Stack-allocated and will not move for the duration of this scope
+            // 2. Valid for the entire lifetime of the V8 operations within
+            // 3. Dropped in the correct order (LIFO) when this block exits
+            // This is required by V8's C++ API and is safe when these conditions are met.
             let scope_pinned = unsafe { Pin::new_unchecked(&mut handle_scope) };
             scope_pinned.init()
         };
@@ -152,6 +164,8 @@ impl V8JsParser {
         // Inner handle scope bound to the context for execution
         let mut inner_scope = v8::HandleScope::new(&mut context_scope);
         let scope = {
+            // SAFETY: Same reasoning as above - V8 requires pinned HandleScope.
+            // The inner_scope is contained within the outer scope and will be dropped first.
             let pinned = unsafe { Pin::new_unchecked(&mut inner_scope) };
             pinned.init()
         };
@@ -180,7 +194,12 @@ impl V8JsParser {
 
 impl Default for V8JsParser {
     fn default() -> Self {
-        Self::new().expect("Failed to create V8JsParser")
+        Self::new().unwrap_or_else(|e| {
+            panic!(
+                "Failed to create V8JsParser: {}. Make sure V8 is properly initialized.",
+                e
+            )
+        })
     }
 }
 

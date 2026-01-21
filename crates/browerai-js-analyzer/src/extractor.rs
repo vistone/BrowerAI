@@ -7,6 +7,25 @@
 /// - 信息保留：不丢失关键的语义信息
 use super::types::*;
 use anyhow::Result;
+use once_cell::sync::Lazy;
+use regex::Regex;
+
+static FUNC_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"function\s+(\w+)\s*\(([^)]*)\)").expect("Invalid regex pattern"));
+
+static ARROW_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?\([^)]*\)\s*=>")
+        .expect("Invalid regex pattern")
+});
+
+static CLASS_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"class\s+(\w+)").expect("Invalid regex pattern"));
+
+static IMPORT_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"import\s+(?:\{[^}]*\}|.*?)\s+from").expect("Invalid regex pattern"));
+
+static GLOBAL_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^(?:const|let|var)\s+(\w+)").expect("Invalid regex pattern"));
 
 /// AST提取器 - 从 Boa 解析器提取 JavaScript 语义信息
 ///
@@ -56,11 +75,7 @@ impl AstExtractor {
 
     /// 从源代码中提取函数声明
     fn extract_functions_from_source(&mut self, source: &str, semantic: &mut JsSemanticInfo) {
-        use regex::Regex;
-
-        // 匹配 function 声明
-        let func_pattern = Regex::new(r"function\s+(\w+)\s*\(([^)]*)\)").unwrap();
-        for caps in func_pattern.captures_iter(source) {
+        for caps in FUNC_PATTERN.captures_iter(source) {
             let name = caps.get(1).map(|m| m.as_str().to_string());
             let params_str = caps.get(2).map(|m| m.as_str()).unwrap_or("");
 
@@ -94,10 +109,7 @@ impl AstExtractor {
             self.func_counter += 1;
         }
 
-        // 匹配箭头函数
-        let arrow_pattern =
-            Regex::new(r"(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?\([^)]*\)\s*=>").unwrap();
-        for caps in arrow_pattern.captures_iter(source) {
+        for caps in ARROW_PATTERN.captures_iter(source) {
             let name = caps.get(1).map(|m| m.as_str().to_string());
 
             semantic.functions.push(JsFunctionInfo {
@@ -122,10 +134,7 @@ impl AstExtractor {
 
     /// 从源代码中提取类声明
     fn extract_classes_from_source(&mut self, source: &str, semantic: &mut JsSemanticInfo) {
-        use regex::Regex;
-
-        let class_pattern = Regex::new(r"class\s+(\w+)").unwrap();
-        for caps in class_pattern.captures_iter(source) {
+        for caps in CLASS_PATTERN.captures_iter(source) {
             let name = caps
                 .get(1)
                 .map(|m| m.as_str().to_string())
@@ -149,23 +158,14 @@ impl AstExtractor {
 
     /// 从源代码中提取全局变量和导入
     fn extract_globals_from_source(&mut self, source: &str, semantic: &mut JsSemanticInfo) {
-        use regex::Regex;
+        IMPORT_PATTERN.is_match(source);
 
-        // 提取导入语句中的全局引用
-        let import_pattern = Regex::new(r"import\s+(?:\{[^}]*\}|.*?)\s+from").unwrap();
-        if import_pattern.is_match(source) {
-            // 标记为模块化代码
-        }
-
-        // 提取全局变量定义
-        let global_pattern = Regex::new(r"^(?:const|let|var)\s+(\w+)").unwrap();
-        for caps in global_pattern.captures_iter(source) {
+        for caps in GLOBAL_PATTERN.captures_iter(source) {
             if let Some(name_match) = caps.get(1) {
                 semantic.global_vars.push(name_match.as_str().to_string());
             }
         }
 
-        // 检测特殊全局变量
         if source.contains("eval(") {
             semantic.uses_eval = true;
         }

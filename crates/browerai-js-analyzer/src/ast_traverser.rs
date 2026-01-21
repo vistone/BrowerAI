@@ -6,7 +6,44 @@
 /// 3. TypeScript 类型的完整信息
 /// 4. 导出和导入语句的追踪
 
+use once_cell::sync::Lazy;
 use regex::Regex;
+
+static FUNCTION_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)").expect("Invalid regex pattern")
+});
+
+static ARROW_FUNCTION_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?\(([^)]*)\)\s*=>").expect("Invalid regex pattern")
+});
+
+static CLASS_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"class\s+(\w+)(?:\s+extends\s+(\w+))?\s*\{").expect("Invalid regex pattern")
+});
+
+static METHOD_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(?:static\s+)?(?:async\s+)?(\w+)\s*\(").expect("Invalid regex pattern")
+});
+
+static EXPORT_DEFAULT_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"export\s+default\s+(?:function\s+)?(\w+)").expect("Invalid regex pattern")
+});
+
+static EXPORT_NAMED_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"export\s+(?:const|let|var|function|class)\s+(\w+)").expect("Invalid regex pattern")
+});
+
+static IMPORT_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"import\s+(?:\{([^}]+)\}|(\w+))?\s+from\s+['\"]([^'\"]+)['\"]").expect("Invalid regex pattern")
+});
+
+static FUNC_COMPONENT_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(?:const|let|var)\s+(\w+)\s*=\s*(?:\(|function)").expect("Invalid regex pattern")
+});
+
+static CLASS_COMPONENT_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"class\s+(\w+)\s+extends\s+(?:React\.)?Component").expect("Invalid regex pattern")
+});
 
 /// AST 遍历结果
 #[derive(Debug, Clone, Default)]
@@ -112,208 +149,184 @@ impl AstTraverser {
     /// 提取所有函数定义
     fn extract_functions(source: &str) -> Vec<FunctionDef> {
         let mut functions = Vec::new();
-        
-        // 匹配 function 声明
-        if let Ok(re) = Regex::new(r"(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)") {
-            for (line_num, cap) in re.captures_iter(source).enumerate() {
-                if let Some(name) = cap.get(1) {
-                    let is_async = cap.get(0).unwrap().as_str().contains("async");
-                    let params_str = cap.get(2).unwrap().as_str();
-                    let params = Self::parse_params(params_str);
-                    
-                    functions.push(FunctionDef {
-                        name: name.as_str().to_string(),
-                        line: line_num + 1,
-                        column: 0,
-                        is_async,
-                        is_arrow: false,
-                        params,
-                    });
-                }
+
+        for cap in FUNCTION_PATTERN.captures_iter(source) {
+            if let Some(name) = cap.get(1) {
+                let is_async = cap.get(0).map(|m| m.as_str().contains("async")).unwrap_or(false);
+                let params_str = cap.get(2).map(|m| m.as_str()).unwrap_or("");
+                let params = Self::parse_params(params_str);
+
+                functions.push(FunctionDef {
+                    name: name.as_str().to_string(),
+                    line: source[..source.find(name.as_str()).unwrap_or(0)].lines().count(),
+                    column: 0,
+                    is_async,
+                    is_arrow: false,
+                    params,
+                });
             }
         }
-        
-        // 匹配箭头函数和常量函数
-        if let Ok(re) = Regex::new(r"(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?\(([^)]*)\)\s*=>") {
-            for (line_num, cap) in re.captures_iter(source).enumerate() {
-                if let Some(name) = cap.get(1) {
-                    let is_async = cap.get(0).unwrap().as_str().contains("async");
-                    let params_str = cap.get(2).unwrap().as_str();
-                    let params = Self::parse_params(params_str);
-                    
-                    functions.push(FunctionDef {
-                        name: name.as_str().to_string(),
-                        line: line_num + 1,
-                        column: 0,
-                        is_async,
-                        is_arrow: true,
-                        params,
-                    });
-                }
+
+        for cap in ARROW_FUNCTION_PATTERN.captures_iter(source) {
+            if let Some(name) = cap.get(1) {
+                let is_async = cap.get(0).map(|m| m.as_str().contains("async")).unwrap_or(false);
+                let params_str = cap.get(2).map(|m| m.as_str()).unwrap_or("");
+                let params = Self::parse_params(params_str);
+
+                functions.push(FunctionDef {
+                    name: name.as_str().to_string(),
+                    line: source[..source.find(name.as_str()).unwrap_or(0)].lines().count(),
+                    column: 0,
+                    is_async,
+                    is_arrow: true,
+                    params,
+                });
             }
         }
-        
+
         functions
     }
     
     /// 提取所有类定义
     fn extract_classes(source: &str) -> Vec<ClassDef> {
         let mut classes = Vec::new();
-        
-        if let Ok(re) = Regex::new(r"class\s+(\w+)(?:\s+extends\s+(\w+))?\s*\{") {
-            for (line_num, cap) in re.captures_iter(source).enumerate() {
-                if let Some(name) = cap.get(1) {
-                    let extends = cap.get(2).map(|m| m.as_str().to_string());
-                    let methods = Self::extract_methods(source, name.as_str());
-                    
-                    classes.push(ClassDef {
-                        name: name.as_str().to_string(),
-                        line: line_num + 1,
-                        column: 0,
-                        extends,
-                        methods,
-                    });
-                }
+
+        for cap in CLASS_PATTERN.captures_iter(source) {
+            if let Some(name) = cap.get(1) {
+                let extends = cap.get(2).map(|m| m.as_str().to_string());
+                let methods = Self::extract_methods(source, name.as_str());
+
+                classes.push(ClassDef {
+                    name: name.as_str().to_string(),
+                    line: source[..source.find(name.as_str()).unwrap_or(0)].lines().count(),
+                    column: 0,
+                    extends,
+                    methods,
+                });
             }
         }
-        
+
         classes
     }
-    
+
     /// 提取类的所有方法
     fn extract_methods(source: &str, class_name: &str) -> Vec<MethodDef> {
         let mut methods = Vec::new();
-        
-        // 查找类定义的范围（简化实现）
+
         if let Some(class_start) = source.find(&format!("class {}", class_name)) {
             if let Some(class_body_start) = source[class_start..].find('{') {
                 let search_end = class_start + class_body_start + 1000;
                 let search_str = &source[class_start + class_body_start + 1..search_end.min(source.len())];
-                
-                if let Ok(re) = Regex::new(r"(?:static\s+)?(?:async\s+)?(\w+)\s*\(") {
-                    for cap in re.captures_iter(search_str) {
-                        if let Some(method_name) = cap.get(1) {
-                            let full_match = cap.get(0).unwrap().as_str();
-                            methods.push(MethodDef {
-                                name: method_name.as_str().to_string(),
-                                is_async: full_match.contains("async"),
-                                is_static: full_match.contains("static"),
-                            });
-                        }
+
+                for cap in METHOD_PATTERN.captures_iter(search_str) {
+                    if let Some(method_name) = cap.get(1) {
+                        let full_match = cap.get(0).map(|m| m.as_str()).unwrap_or("");
+                        methods.push(MethodDef {
+                            name: method_name.as_str().to_string(),
+                            is_async: full_match.contains("async"),
+                            is_static: full_match.contains("static"),
+                        });
                     }
                 }
             }
         }
-        
+
         methods
     }
     
     /// 提取所有导出语句
     fn extract_exports(source: &str) -> Vec<ExportDef> {
         let mut exports = Vec::new();
-        
-        // export default
-        if let Ok(re) = Regex::new(r"export\s+default\s+(?:function\s+)?(\w+)") {
-            for (line_num, cap) in re.captures_iter(source).enumerate() {
-                if let Some(name) = cap.get(1) {
-                    exports.push(ExportDef {
-                        name: name.as_str().to_string(),
-                        kind: ExportKind::Default,
-                        line: line_num + 1,
-                    });
-                }
-            }
-        }
-        
-        // export named
-        if let Ok(re) = Regex::new(r"export\s+(?:const|let|var|function|class)\s+(\w+)") {
-            for (line_num, cap) in re.captures_iter(source).enumerate() {
-                if let Some(name) = cap.get(1) {
-                    exports.push(ExportDef {
-                        name: name.as_str().to_string(),
-                        kind: ExportKind::Named,
-                        line: line_num + 1,
-                    });
-                }
-            }
-        }
-        
-        exports
-    }
-    
-    /// 提取所有导入语句
-    fn extract_imports(source: &str) -> Vec<ImportDef> {
-        let mut imports = Vec::new();
-        
-        if let Ok(re) = Regex::new(r"import\s+(?:\{([^}]+)\}|(\w+))?\s+from\s+['\"]([^'\"]+)['\"]") {
-            for (line_num, cap) in re.captures_iter(source).enumerate() {
-                let named_imports = cap.get(1).map(|m| m.as_str());
-                let default_import = cap.get(2).map(|m| m.as_str());
-                let from = cap.get(3).unwrap().as_str().to_string();
-                
-                let mut names = Vec::new();
-                if let Some(named) = named_imports {
-                    names.extend(
-                        named
-                            .split(',')
-                            .map(|s| s.trim().to_string())
-                            .filter(|s| !s.is_empty()),
-                    );
-                }
-                if let Some(default) = default_import {
-                    names.push(default.to_string());
-                }
-                
-                imports.push(ImportDef {
-                    from,
-                    names,
-                    line: line_num + 1,
+
+        for cap in EXPORT_DEFAULT_PATTERN.captures_iter(source) {
+            if let Some(name) = cap.get(1) {
+                exports.push(ExportDef {
+                    name: name.as_str().to_string(),
+                    kind: ExportKind::Default,
+                    line: source[..source.find(name.as_str()).unwrap_or(0)].lines().count(),
                 });
             }
         }
-        
+
+        for cap in EXPORT_NAMED_PATTERN.captures_iter(source) {
+            if let Some(name) = cap.get(1) {
+                exports.push(ExportDef {
+                    name: name.as_str().to_string(),
+                    kind: ExportKind::Named,
+                    line: source[..source.find(name.as_str()).unwrap_or(0)].lines().count(),
+                });
+            }
+        }
+
+        exports
+    }
+
+    /// 提取所有导入语句
+    fn extract_imports(source: &str) -> Vec<ImportDef> {
+        let mut imports = Vec::new();
+
+        for cap in IMPORT_PATTERN.captures_iter(source) {
+            let named_imports = cap.get(1).map(|m| m.as_str());
+            let default_import = cap.get(2).map(|m| m.as_str());
+            let from = cap.get(3).map(|m| m.as_str().to_string()).unwrap_or_default();
+
+            let mut names = Vec::new();
+            if let Some(named) = named_imports {
+                names.extend(
+                    named
+                        .split(',')
+                        .map(|s| s.trim().to_string())
+                        .filter(|s| !s.is_empty()),
+                );
+            }
+            if let Some(default) = default_import {
+                names.push(default.to_string());
+            }
+
+            imports.push(ImportDef {
+                from,
+                names,
+                line: source[..source.find(&from).unwrap_or(0)].lines().count(),
+            });
+        }
+
         imports
     }
     
     /// 提取所有 React 组件
     fn extract_components(source: &str) -> Vec<ComponentDef> {
         let mut components = Vec::new();
-        
-        // 函数组件
-        if let Ok(re) = Regex::new(r"(?:const|let|var)\s+(\w+)\s*=\s*(?:\(|function)") {
-            for (line_num, cap) in re.captures_iter(source).enumerate() {
-                if let Some(name) = cap.get(1) {
-                    let name_str = name.as_str();
-                    // 简单启发式：首字母大写视为组件
-                    if name_str.chars().next().unwrap_or('a').is_uppercase() {
+
+        for cap in FUNC_COMPONENT_PATTERN.captures_iter(source) {
+            if let Some(name) = cap.get(1) {
+                let name_str = name.as_str();
+                if let Some(first_char) = name_str.chars().next() {
+                    if first_char.is_uppercase() {
                         let is_exported = source.contains(&format!("export {}", name_str))
                             || source.contains(&format!("export default {}", name_str));
-                        
+
                         components.push(ComponentDef {
                             name: name_str.to_string(),
                             kind: ComponentKind::Functional,
-                            line: line_num + 1,
+                            line: source[..source.find(name_str).unwrap_or(0)].lines().count(),
                             is_exported,
                         });
                     }
                 }
             }
         }
-        
-        // 类组件
-        if let Ok(re) = Regex::new(r"class\s+(\w+)\s+extends\s+(?:React\.)?Component") {
-            for (line_num, cap) in re.captures_iter(source).enumerate() {
-                if let Some(name) = cap.get(1) {
-                    components.push(ComponentDef {
-                        name: name.as_str().to_string(),
-                        kind: ComponentKind::Class,
-                        line: line_num + 1,
-                        is_exported: source.contains("export"),
-                    });
-                }
+
+        for cap in CLASS_COMPONENT_PATTERN.captures_iter(source) {
+            if let Some(name) = cap.get(1) {
+                components.push(ComponentDef {
+                    name: name.as_str().to_string(),
+                    kind: ComponentKind::Class,
+                    line: source[..source.find(name.as_str()).unwrap_or(0)].lines().count(),
+                    is_exported: source.contains("export"),
+                });
             }
         }
-        
+
         components
     }
     
