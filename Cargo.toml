@@ -1,10 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/browerai-config",
     "crates/browerai-core",
-    "crates/browerai-deobfuscation",
-    "crates/browerai-feedback",
     "crates/browerai-dom",
     "crates/browerai-html-parser",
     "crates/browerai-css-parser",
