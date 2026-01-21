@@ -1,5 +1,8 @@
 use anyhow::{Context, Result};
+use reqwest::blocking::Client as BlockingClient;
+use reqwest::redirect::Policy;
 use std::collections::HashMap;
+use std::env;
 use std::time::{Duration, Instant};
 
 /// HTTP request method
@@ -70,6 +73,7 @@ impl HttpResponse {
 pub struct HttpClient {
     user_agent: String,
     timeout: Duration,
+    use_stub: bool,
 }
 
 impl HttpClient {
@@ -78,6 +82,9 @@ impl HttpClient {
         Self {
             user_agent: "BrowerAI/0.1.0".to_string(),
             timeout: Duration::from_secs(30),
+            use_stub: env::var("BROWERAI_HTTP_STUB")
+                .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+                .unwrap_or(false),
         }
     }
 
@@ -90,6 +97,12 @@ impl HttpClient {
     /// Set request timeout
     pub fn with_timeout(mut self, timeout: Duration) -> Self {
         self.timeout = timeout;
+        self
+    }
+
+    /// Force stub mode (useful for tests without network)
+    pub fn with_stub_mode(mut self, stub: bool) -> Self {
+        self.use_stub = stub;
         self
     }
 
@@ -106,16 +119,70 @@ impl HttpClient {
 
         let start = Instant::now();
 
-        // Stub implementation - in real implementation, this would use reqwest or similar
-        let response = self.execute_stub(&request)?;
+        // If stub mode is enabled (tests/offline), fall back to stub
+        if self.use_stub {
+            let response = self.execute_stub(&request)?;
+            let response_time = start.elapsed();
+            log::info!("Request completed in {:?} (stub)", response_time);
+            return Ok(HttpResponse {
+                status_code: response.0,
+                headers: response.1,
+                body: response.2,
+                response_time,
+            });
+        }
+
+        let client = BlockingClient::builder()
+            .timeout(self.timeout)
+            .user_agent(self.user_agent.clone())
+            .redirect(Policy::limited(10))
+            .build()
+            .context("Failed to build HTTP client")?;
+
+        let mut req = match request.method {
+            HttpMethod::GET => client.get(&request.url),
+            HttpMethod::POST => client.post(&request.url),
+            HttpMethod::PUT => client.put(&request.url),
+            HttpMethod::DELETE => client.delete(&request.url),
+            HttpMethod::HEAD => client.head(&request.url),
+        };
+
+        for (k, v) in &request.headers {
+            req = req.header(k, v);
+        }
+
+        if let Some(body) = &request.body {
+            req = req.body(body.clone());
+        }
+
+        let resp = req.send().context("HTTP request failed")?;
+        let status_code = resp.status().as_u16();
+
+        // Collect headers
+        let mut headers = HashMap::new();
+        for (k, v) in resp.headers().iter() {
+            if let Ok(vs) = v.to_str() {
+                headers.insert(k.to_string(), vs.to_string());
+            }
+        }
+
+        let body = resp
+            .bytes()
+            .context("Failed to read response body")?
+            .to_vec();
 
         let response_time = start.elapsed();
-        log::info!("Request completed in {:?}", response_time);
+        log::info!(
+            "Request completed in {:?}, bytes={} status={}",
+            response_time,
+            body.len(),
+            status_code
+        );
 
         Ok(HttpResponse {
-            status_code: response.0,
-            headers: response.1,
-            body: response.2,
+            status_code,
+            headers,
+            body,
             response_time,
         })
     }
@@ -183,7 +250,7 @@ mod tests {
 
     #[test]
     fn test_http_client_execute() {
-        let client = HttpClient::new();
+        let client = HttpClient::new().with_stub_mode(true);
         let request = HttpRequest::get("https://example.com");
 
         let result = client.execute(request);
@@ -196,7 +263,7 @@ mod tests {
 
     #[test]
     fn test_http_response_text() {
-        let client = HttpClient::new();
+        let client = HttpClient::new().with_stub_mode(true);
         let response = client.get("https://example.com").unwrap();
 
         let text = response.text();

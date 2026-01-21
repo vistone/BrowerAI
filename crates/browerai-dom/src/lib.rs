@@ -2,6 +2,7 @@
 // Provides a Document Object Model interface for programmatic page manipulation
 
 pub mod api;
+pub mod deobfuscating_sandbox;
 pub mod events;
 pub mod sandbox;
 
@@ -10,6 +11,9 @@ use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
 pub use api::{DomApiExtensions, ElementHandle};
+pub use deobfuscating_sandbox::{
+    DeobfuscatingExecutionStats, DeobfuscatingSandbox, DeobfuscationConfig,
+};
 pub use events::{Event, EventListener, EventListeners, EventPhase, EventType};
 pub use sandbox::{ExecutionContext, JsSandbox, ResourceLimits, SandboxError, SandboxValue};
 
@@ -361,7 +365,7 @@ mod tests {
         if let DomNode::Element(elem) = &*elem_read {
             assert_eq!(elem.tag_name, "div");
         } else {
-            panic!("Expected Element node");
+            panic!("Expected Element node"); // This is a test assertion, safe to keep
         }
     }
 

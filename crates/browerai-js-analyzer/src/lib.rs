@@ -1,8 +1,6 @@
 pub mod analysis_pipeline; // Phase 3 Week 3 Task 4
-pub mod call_graph;
 pub mod controlflow_analyzer; // Phase 3 Week 2
 pub mod dataflow_analyzer;
-pub mod enhanced_call_graph; // Phase 3 Week 3
 pub mod extractor;
 pub mod loop_analyzer; // Phase 3 Week 3 Task 2
 pub mod performance_optimizer; // Phase 3 Week 3 Task 3
@@ -10,12 +8,12 @@ pub mod scope_analyzer; // Phase 3 Week 1
 pub mod semantic;
 pub mod swc_extractor; // Phase 2
 pub mod types;
+pub mod unified_call_graph; // Unified call graph implementation
 
 pub use analysis_pipeline::{AnalysisPipeline, FullAnalysisResult, PipelineStats}; // Phase 3 Week 3 Task 4 导出
-pub use call_graph::CallGraphBuilder;
+pub mod framework_detector; // New module for framework detection
 pub use controlflow_analyzer::ControlFlowAnalyzer; // Phase 3 Week 2 导出
 pub use dataflow_analyzer::DataFlowAnalyzer;
-pub use enhanced_call_graph::EnhancedCallGraphAnalyzer; // Phase 3 Week 3 导出
 pub use extractor::{AstExtractor, ExtractedAst};
 pub use loop_analyzer::LoopAnalyzer; // Phase 3 Week 3 Task 2 导出
 pub use performance_optimizer::{
@@ -26,7 +24,8 @@ pub use semantic::{AnalysisResult, SemanticAnalyzer};
 pub use swc_extractor::{
     EnhancedAst, JsxElementInfo, LocationInfo, SwcAstExtractor, TypeScriptInfo,
 }; // Phase 2 导出
-pub use types::*; // Phase 3 Day 3-4 导出
+pub use types::*;
+pub use unified_call_graph::UnifiedCallGraphBuilder;
 
 use anyhow::{Context, Result};
 use std::time::Instant;
@@ -52,8 +51,8 @@ pub struct JsDeepAnalyzer {
     /// 语义分析器
     semantic_analyzer: SemanticAnalyzer,
 
-    /// 调用图构建器
-    call_graph_builder: CallGraphBuilder,
+    /// 调用图构建器 (统一实现)
+    call_graph_builder: UnifiedCallGraphBuilder,
 
     /// 分析配置
     config: AnalysisConfig,
@@ -153,7 +152,7 @@ impl JsDeepAnalyzer {
         Self {
             extractor: AstExtractor::new(),
             semantic_analyzer: SemanticAnalyzer::new(),
-            call_graph_builder: CallGraphBuilder::new(),
+            call_graph_builder: UnifiedCallGraphBuilder::new(),
             config: AnalysisConfig::default(),
         }
     }
@@ -163,7 +162,7 @@ impl JsDeepAnalyzer {
         Self {
             extractor: AstExtractor::new(),
             semantic_analyzer: SemanticAnalyzer::new(),
-            call_graph_builder: CallGraphBuilder::new(),
+            call_graph_builder: UnifiedCallGraphBuilder::new(),
             config,
         }
     }

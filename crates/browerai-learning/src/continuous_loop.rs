@@ -2,13 +2,13 @@
 ///
 /// Implements the "learn-infer-generate" cycle for continuous improvement
 use anyhow::Result;
+use browerai_core::CodeType;
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 
-use super::{
-    CodeGenerator, CodeType, FeedbackCollector, GeneratedCode, JsDeobfuscator, LearningConfig,
-    OnlineLearner,
-};
+use super::{CodeGenerator, GeneratedCode, LearningConfig, OnlineLearner};
+use crate::deobfuscation::JsDeobfuscator;
+use crate::feedback::FeedbackCollector;
 
 /// Type alias for learning event callbacks
 type LearningCallback = Box<dyn Fn(&LearningEvent)>;
@@ -94,6 +94,8 @@ impl ContinuousLearningLoop {
             max_samples: 10000,
             min_samples_for_update: config.batch_size,
             auto_update: true,
+            l2_regularization: 0.0001,
+            momentum: 0.9,
         };
 
         Self {
@@ -130,8 +132,9 @@ impl ContinuousLearningLoop {
         if let Some(feedback) = self.feedback.get_recent_feedback(10).first() {
             if let Some(ref comment) = feedback.comment {
                 // Analyze obfuscation if it's JavaScript
-                if comment.contains("function") || comment.contains("var") {
-                    let analysis = self.deobfuscator.analyze_obfuscation(comment);
+                let comment_str: &str = comment.as_str();
+                if comment_str.contains("function") || comment_str.contains("var") {
+                    let analysis = self.deobfuscator.analyze_obfuscation(comment_str);
                     log::debug!(
                         "Obfuscation analysis: score={:.2}, techniques={}",
                         analysis.obfuscation_score,
@@ -256,13 +259,14 @@ impl ContinuousLearningLoop {
             // Use comment field if available
             if let Some(ref comment) = feedback.comment {
                 // Create training sample from feedback comment
-                let input_features = self.extract_features(comment);
+                let comment_str: &str = comment.as_str();
+                let input_features = self.extract_features(comment_str);
                 let output_features = input_features.clone(); // Placeholder
 
                 let sample =
                     super::online_learning::TrainingSample::new(input_features, output_features);
 
-                self.learner.add_sample(sample);
+                let _ = self.learner.add_sample(sample);
                 count += 1;
             }
         }
@@ -309,6 +313,10 @@ impl ContinuousLearningLoop {
                 constraints.insert("params".to_string(), "".to_string());
                 constraints.insert("body".to_string(), "console.log('test');".to_string());
                 "function"
+            }
+            _ => {
+                constraints.insert("content".to_string(), "test".to_string());
+                "generic code"
             }
         };
 

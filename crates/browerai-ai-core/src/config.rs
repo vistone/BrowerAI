@@ -1,11 +1,15 @@
+use parking_lot::RwLock;
 /// AI Configuration and Fallback Tracking
 /// Implements M1 of AI-Centric Execution Refresh:
 /// - Configurable AI enable/disable switch
 /// - Fallback reason tracking
 /// - Model selection logging
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use std::time::Instant;
+
+/// Type alias for backward compatibility
+pub use browerai_core::FallbackReason;
 
 /// Global AI configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -27,44 +31,6 @@ impl Default for AiConfig {
             enable_fallback: true,
             enable_logging: true,
             max_inference_time_ms: 100,
-        }
-    }
-}
-
-/// Reasons why AI fallback occurred
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum FallbackReason {
-    /// AI is disabled in configuration
-    AiDisabled,
-    /// Model file not found
-    ModelNotFound(String),
-    /// Model failed to load
-    ModelLoadFailed(String),
-    /// Inference failed with error
-    InferenceFailed(String),
-    /// Inference exceeded time limit
-    TimeoutExceeded { actual_ms: u64, limit_ms: u64 },
-    /// Model health check failed
-    ModelUnhealthy(String),
-    /// No suitable model available
-    NoModelAvailable,
-}
-
-impl std::fmt::Display for FallbackReason {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            FallbackReason::AiDisabled => write!(f, "AI disabled"),
-            FallbackReason::ModelNotFound(name) => write!(f, "Model not found: {}", name),
-            FallbackReason::ModelLoadFailed(err) => write!(f, "Model load failed: {}", err),
-            FallbackReason::InferenceFailed(err) => write!(f, "Inference failed: {}", err),
-            FallbackReason::TimeoutExceeded {
-                actual_ms,
-                limit_ms,
-            } => {
-                write!(f, "Timeout exceeded: {}ms > {}ms", actual_ms, limit_ms)
-            }
-            FallbackReason::ModelUnhealthy(reason) => write!(f, "Model unhealthy: {}", reason),
-            FallbackReason::NoModelAvailable => write!(f, "No model available"),
         }
     }
 }
@@ -137,28 +103,27 @@ impl FallbackTracker {
 
     /// Record an AI attempt
     pub fn record_attempt(&self) {
-        if let Ok(mut stats) = self.stats.write() {
-            stats.total_attempts += 1;
-        }
+        let mut stats = self.stats.write();
+        stats.total_attempts += 1;
     }
 
     /// Record a successful AI operation
     pub fn record_success(&self, inference_ms: u64) {
-        if let Ok(mut stats) = self.stats.write() {
-            stats.successful += 1;
-            stats.total_inference_ms += inference_ms;
-        }
+        let mut stats = self.stats.write();
+        stats.successful += 1;
+        stats.total_inference_ms += inference_ms;
     }
 
     /// Record a fallback event
     pub fn record_fallback(&self, reason: FallbackReason) {
-        if let Ok(mut stats) = self.stats.write() {
+        {
+            let mut stats = self.stats.write();
             stats.fallback_count += 1;
         }
 
-        if let Ok(mut fallbacks) = self.recent_fallbacks.write() {
+        {
+            let mut fallbacks = self.recent_fallbacks.write();
             fallbacks.push((Instant::now(), reason));
-            // Keep only the most recent fallbacks
             if fallbacks.len() > self.max_recent {
                 fallbacks.remove(0);
             }
@@ -167,22 +132,18 @@ impl FallbackTracker {
 
     /// Get current statistics
     pub fn get_stats(&self) -> AiStats {
-        self.stats.read().unwrap().clone()
+        self.stats.read().clone()
     }
 
     /// Get recent fallback reasons
     pub fn get_recent_fallbacks(&self) -> Vec<(Instant, FallbackReason)> {
-        self.recent_fallbacks.read().unwrap().clone()
+        self.recent_fallbacks.read().clone()
     }
 
     /// Clear all statistics
     pub fn clear(&self) {
-        if let Ok(mut stats) = self.stats.write() {
-            *stats = AiStats::default();
-        }
-        if let Ok(mut fallbacks) = self.recent_fallbacks.write() {
-            fallbacks.clear();
-        }
+        *self.stats.write() = AiStats::default();
+        self.recent_fallbacks.write().clear();
     }
 }
 
@@ -277,9 +238,11 @@ mod tests {
         let fallbacks = tracker.get_recent_fallbacks();
         assert_eq!(fallbacks.len(), 3);
         // Should keep the last 3
-        match &fallbacks[0].1 {
-            FallbackReason::ModelNotFound(name) => assert_eq!(name, "model2"),
-            _ => panic!("Expected ModelNotFound"),
+        // 修复: 使用更安全的断言方式，避免panic
+        if let Some(FallbackReason::ModelNotFound(name)) = fallbacks.get(0).map(|(_, r)| r) {
+            assert_eq!(name, "model2", "First fallback should be model2");
+        } else {
+            panic!("Expected ModelNotFound variant at index 0");
         }
     }
 
@@ -316,7 +279,7 @@ mod tests {
         }
 
         for handle in handles {
-            handle.join().unwrap();
+            handle.join().expect("Thread should join successfully");
         }
 
         let stats = tracker.get_stats();

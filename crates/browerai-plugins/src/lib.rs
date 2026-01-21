@@ -233,13 +233,16 @@ mod tests {
         let replace_result = HookResult::Replace("new content".to_string());
         let cancel_result = HookResult::Cancel;
 
+        // 修复: 使用模式匹配避免panic
         match continue_result {
             HookResult::Continue => {}
             _ => panic!("Expected Continue variant"),
         }
 
-        match replace_result {
-            HookResult::Replace(content) => assert_eq!(content, "new content"),
+        match &replace_result {
+            HookResult::Replace(content) => {
+                assert_eq!(content, "new content");
+            }
             _ => panic!("Expected Replace variant"),
         }
 

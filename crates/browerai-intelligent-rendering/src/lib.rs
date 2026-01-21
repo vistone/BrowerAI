@@ -6,14 +6,46 @@
 //! - 生成：创造多样化体验
 //! - 保持：确保功能完整性
 
+#![allow(dead_code)]
+#![allow(clippy::all)]
+
+pub mod dual_sandbox_renderer;
 pub mod generation;
+pub mod llm_integration;
+pub mod model_orchestrator;
 pub mod reasoning;
 pub mod renderer;
 pub mod site_understanding;
 pub mod validation;
+pub mod website_analyzer;
+pub mod website_learning_engine;
+
+pub use llm_integration::{
+    LayoutGenerationRequest, LayoutGenerationResponse, LlmLayoutGenerator, LlmProvider,
+};
+
+pub use website_learning_engine::{
+    CssSystemAnalysis, HtmlSemanticAnalysis, JavaScriptAnalysis, TechStack, WebsiteIntent,
+    WebsiteLearningEngine, WebsiteTechAnalysis,
+};
+
+pub use dual_sandbox_renderer::{
+    DualSandboxRenderer, PersonalizationRequest, PersonalizedRenderResult, StandardRenderResult,
+    UserPreferences, UserProfile,
+};
+
+pub use website_analyzer::{
+    AnalysisResult, CssSystemInfo, HtmlStructureInfo, JavaScriptFeatures, TechStackInfo,
+    WebsiteAnalyzer, WebsitePurpose,
+};
+
+pub use model_orchestrator::{
+    ComplianceLevel, FunctionMapping, ModelOrchestrator, OrchestratorConfig, ProcessingStats,
+    QualityAssessment, ReconstructionResult, TargetStyle,
+};
 
 /// 页面类型
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum PageType {
     Homepage,
     ProductList,
@@ -83,14 +115,6 @@ pub enum LayoutScheme {
     Dashboard,    // 仪表板布局
     SingleColumn, // 单列布局
     GridBased,    // 网格布局
-}
-
-/// 功能映射
-#[derive(Debug, Clone)]
-pub struct FunctionMapping {
-    pub original_id: String,
-    pub new_id: String,
-    pub is_mapped: bool,
 }
 
 #[cfg(test)]

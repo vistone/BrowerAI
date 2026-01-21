@@ -365,11 +365,19 @@ mod tests {
 
         let cfg = analyzer.analyze(&ast).expect("Analysis should succeed");
 
-        let entry_id = cfg.entry.as_ref().unwrap();
-        let exit_id = cfg.exit.as_ref().unwrap();
+        let entry_id = cfg.entry.as_ref().expect("CFG should have entry node");
+        let exit_id = cfg.exit.as_ref().expect("CFG should have exit node");
 
-        let entry_node = cfg.nodes.iter().find(|n| n.id == *entry_id).unwrap();
-        let exit_node = cfg.nodes.iter().find(|n| n.id == *exit_id).unwrap();
+        let entry_node = cfg
+            .nodes
+            .iter()
+            .find(|n| n.id == *entry_id)
+            .expect("Entry node should exist");
+        let exit_node = cfg
+            .nodes
+            .iter()
+            .find(|n| n.id == *exit_id)
+            .expect("Exit node should exist");
 
         assert_eq!(entry_node.node_type, CFGNodeType::Entry);
         assert_eq!(exit_node.node_type, CFGNodeType::Exit);
@@ -382,12 +390,9 @@ mod tests {
 
         let cfg = analyzer.analyze(&ast).expect("Analysis should succeed");
 
-        // Should have edges connecting entry to statements to exit
         assert!(!cfg.edges.is_empty());
-        assert!(cfg
-            .edges
-            .iter()
-            .any(|e| e.from == *cfg.entry.as_ref().unwrap()));
+        let entry_id = cfg.entry.as_ref().expect("CFG should have entry node");
+        assert!(cfg.edges.iter().any(|e| e.from == *entry_id));
     }
 
     #[test]
@@ -397,8 +402,7 @@ mod tests {
 
         let cfg = analyzer.analyze(&ast).expect("Analysis should succeed");
 
-        // Entry should be reachable
-        let entry_id = cfg.entry.as_ref().unwrap();
+        let entry_id = cfg.entry.as_ref().expect("CFG should have entry node");
         assert!(cfg.is_reachable(entry_id));
     }
 
@@ -409,8 +413,6 @@ mod tests {
 
         let cfg = analyzer.analyze(&ast).expect("Analysis should succeed");
 
-        // Unreachable nodes should be collected
-        // In this simple test, all nodes should be reachable from entry
         let unreachable_count = cfg.unreachable_nodes.len();
         assert_eq!(unreachable_count, 0);
     }
@@ -422,7 +424,6 @@ mod tests {
 
         let cfg = analyzer.analyze(&ast).expect("Analysis should succeed");
 
-        // Should have nodes for local variables
         let var_nodes: Vec<_> = cfg
             .nodes
             .iter()
@@ -444,7 +445,6 @@ mod tests {
 
         let cfg = analyzer.analyze(&ast).expect("Analysis should succeed");
 
-        // Should have nodes for function calls
         let call_nodes: Vec<_> = cfg
             .nodes
             .iter()
@@ -466,9 +466,7 @@ mod tests {
 
         let cfg = analyzer.analyze(&ast).expect("Analysis should succeed");
 
-        // Framework is in place, even if no loops detected in simple code
-        // This verifies the loop detection infrastructure works
-        assert!(cfg.loops.is_empty() || !cfg.loops.is_empty()); // Always true, but shows framework exists
+        assert!(cfg.loops.is_empty() || !cfg.loops.is_empty());
     }
 
     #[test]
@@ -478,7 +476,6 @@ mod tests {
 
         let cfg = analyzer.analyze(&ast).expect("Analysis should succeed");
 
-        // Most nodes should be reachable in normal flow
         let reachable_nodes = cfg.nodes.iter().filter(|n| n.is_reachable).count();
         assert!(reachable_nodes > 0);
     }
@@ -490,10 +487,8 @@ mod tests {
 
         let cfg = analyzer.analyze(&ast).expect("Analysis should succeed");
 
-        // Get entry node and its successors
         if let Some(entry_id) = &cfg.entry {
             let successors = cfg.get_successors(entry_id);
-            // Entry should have at least one successor
             assert!(!successors.is_empty());
         }
     }
@@ -506,7 +501,6 @@ mod tests {
         let cfg = analyzer.analyze(&ast).expect("Analysis should succeed");
 
         let unreachable = cfg.find_unreachable_code();
-        // In normal code, should have no unreachable code
         assert_eq!(unreachable.len(), 0);
     }
 }

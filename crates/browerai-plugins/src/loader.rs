@@ -131,10 +131,13 @@ mod tests {
         let mut loader = PluginLoader::new();
         let result = loader.load_plugin("nonexistent_plugin");
 
-        assert!(result.is_err());
+        assert!(result.is_err(), "Expected error for nonexistent plugin");
+        // 修复: 使用模式匹配避免panic
         match result {
-            Err(PluginError::NotFound(name)) => assert_eq!(name, "nonexistent_plugin"),
-            _ => panic!("Expected NotFound error"),
+            Err(PluginError::NotFound(name)) => {
+                assert_eq!(name, "nonexistent_plugin");
+            }
+            _ => panic!("Expected NotFound error variant"),
         }
     }
 

@@ -2,6 +2,8 @@ use anyhow::Result;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
+pub mod reskin;
+
 use markup5ever_rcdom::{Handle, NodeData, RcDom};
 
 /// DOM node information for inspection
@@ -232,6 +234,186 @@ impl Default for PerformanceProfiler {
         Self::new()
     }
 }
+
+/// 样式/布局切换面板接口（与智能渲染集成）
+pub mod style_switcher {
+    use anyhow::Result;
+
+    /// 候选摘要（与智能渲染侧结构对齐）
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+    pub struct CandidateSummary {
+        pub variant_id: String,
+        pub compatibility_score: f32,
+        pub accessibility_score: f32,
+        pub performance_score: f32,
+    }
+
+    /// 审计条目
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+    pub struct AuditEntry {
+        pub action: String,
+        pub variant_id: String,
+    }
+
+    /// 面板后端抽象（适配不同实现，如智能渲染器）
+    pub trait StyleSwitcherBackend {
+        fn list_candidates(&self) -> Result<Vec<CandidateSummary>>;
+        fn apply_candidate(&mut self, variant_id: &str) -> Result<()>;
+        fn audit_log(&self) -> Result<Vec<AuditEntry>>;
+    }
+
+    /// 简易内存后端（示例/测试用）
+    pub struct MemoryBackend {
+        candidates: Vec<CandidateSummary>,
+        audit: Vec<AuditEntry>,
+    }
+
+    impl MemoryBackend {
+        pub fn new(candidates: Vec<CandidateSummary>) -> Self {
+            Self {
+                candidates,
+                audit: Vec::new(),
+            }
+        }
+    }
+
+    impl StyleSwitcherBackend for MemoryBackend {
+        fn list_candidates(&self) -> Result<Vec<CandidateSummary>> {
+            Ok(self.candidates.clone())
+        }
+
+        fn apply_candidate(&mut self, variant_id: &str) -> Result<()> {
+            if self.candidates.iter().any(|c| c.variant_id == variant_id) {
+                self.audit.push(AuditEntry {
+                    action: "apply".to_string(),
+                    variant_id: variant_id.to_string(),
+                });
+                Ok(())
+            } else {
+                Err(anyhow::anyhow!("Candidate not found"))
+            }
+        }
+
+        fn audit_log(&self) -> Result<Vec<AuditEntry>> {
+            Ok(self.audit.clone())
+        }
+    }
+
+    /// 渲染器必须实现的能力：获取候选摘要
+    pub trait HasCandidates {
+        fn get_candidates(&self) -> Vec<CandidateSummary>;
+    }
+
+    /// 渲染器必须实现的能力：获取审计日志
+    pub trait HasAudit {
+        fn get_audit(&self) -> Vec<AuditEntry>;
+    }
+
+    /// 渲染器必须实现的能力：切换候选
+    pub trait CanSwitch {
+        fn switch_to(&self, variant_id: &str) -> Result<()>;
+    }
+
+    /// 泛型适配器，连接任何实现了三个能力 trait 的渲染器
+    pub struct RendererAdapterGeneric<R> {
+        pub renderer: R,
+    }
+
+    impl<R> RendererAdapterGeneric<R>
+    where
+        R: HasCandidates + HasAudit + CanSwitch,
+    {
+        pub fn new(renderer: R) -> Self {
+            Self { renderer }
+        }
+    }
+
+    impl<R> StyleSwitcherBackend for RendererAdapterGeneric<R>
+    where
+        R: HasCandidates + HasAudit + CanSwitch,
+    {
+        fn list_candidates(&self) -> Result<Vec<CandidateSummary>> {
+            Ok(self.renderer.get_candidates())
+        }
+
+        fn apply_candidate(&mut self, variant_id: &str) -> Result<()> {
+            self.renderer.switch_to(variant_id)
+        }
+
+        fn audit_log(&self) -> Result<Vec<AuditEntry>> {
+            Ok(self.renderer.get_audit())
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn test_memory_backend_flow() {
+            let mut backend = MemoryBackend::new(vec![CandidateSummary {
+                variant_id: "Minimal".to_string(),
+                compatibility_score: 0.9,
+                accessibility_score: 0.85,
+                performance_score: 0.95,
+            }]);
+
+            let cands = backend.list_candidates().unwrap();
+            assert_eq!(cands.len(), 1);
+
+            backend.apply_candidate("Minimal").unwrap();
+            let audit = backend.audit_log().unwrap();
+            assert_eq!(audit.len(), 1);
+            assert_eq!(audit[0].action, "apply");
+        }
+
+        #[test]
+        fn test_adapter_with_mock_renderer() {
+            struct MockRenderer {
+                candidates: Vec<CandidateSummary>,
+                audit: Vec<AuditEntry>,
+            }
+
+            impl HasCandidates for MockRenderer {
+                fn get_candidates(&self) -> Vec<CandidateSummary> {
+                    self.candidates.clone()
+                }
+            }
+
+            impl HasAudit for MockRenderer {
+                fn get_audit(&self) -> Vec<AuditEntry> {
+                    self.audit.clone()
+                }
+            }
+
+            impl CanSwitch for MockRenderer {
+                fn switch_to(&self, _variant_id: &str) -> Result<()> {
+                    Ok(())
+                }
+            }
+
+            let mock = MockRenderer {
+                candidates: vec![CandidateSummary {
+                    variant_id: "Test".to_string(),
+                    compatibility_score: 0.9,
+                    accessibility_score: 0.85,
+                    performance_score: 0.95,
+                }],
+                audit: vec![],
+            };
+
+            let adapter = RendererAdapterGeneric::new(mock);
+            let cands = adapter.list_candidates().unwrap();
+            assert_eq!(cands.len(), 1);
+            assert_eq!(cands[0].variant_id, "Test");
+        }
+    }
+}
+
+pub mod metrics_adapter;
+pub mod panel_ui;
+pub mod protocol;
+pub mod webview;
 
 #[cfg(test)]
 mod tests {

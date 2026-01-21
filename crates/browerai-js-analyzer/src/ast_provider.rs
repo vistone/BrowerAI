@@ -82,15 +82,17 @@ mod tests {
     fn test_parse_and_analyze() {
         let provider = AnalysisJsAstProvider::new();
         let result = provider.parse_and_analyze("import x from 'y'; export const a = 1;");
-        assert!(result.is_ok());
-        let analysis = result.unwrap();
+        assert!(result.is_ok(), "Parse should succeed");
+        let analysis = result.expect("Analysis result should be available");
         assert!(analysis.is_module);
     }
 
     #[test]
     fn test_validate_js() {
         let provider = AnalysisJsAstProvider::new();
-        let valid = provider.validate("const x = 1;").unwrap();
+        let result = provider.validate("const x = 1;");
+        assert!(result.is_ok(), "Validation should succeed");
+        let valid = result.expect("Validation result should be available");
         assert!(valid);
     }
 }

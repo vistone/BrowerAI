@@ -12,6 +12,9 @@ pub struct IntelligentRenderer {
 
     /// 所有可用体验
     available_experiences: Vec<GeneratedExperience>,
+
+    /// 审计日志
+    audit_log: Vec<AuditEntry>,
 }
 
 /// 渲染结果
@@ -38,6 +41,22 @@ pub struct RenderStats {
     pub functions_bridged: usize,
 }
 
+/// 候选摘要（用于 DevTools 面板）
+#[derive(Debug, Clone)]
+pub struct CandidateSummary {
+    pub variant_id: String,
+    pub compatibility_score: f32,
+    pub accessibility_score: f32,
+    pub performance_score: f32,
+}
+
+/// 审计条目
+#[derive(Debug, Clone)]
+pub struct AuditEntry {
+    pub action: String,
+    pub variant_id: String,
+}
+
 impl IntelligentRenderer {
     /// 创建渲染器
     pub fn new(
@@ -47,6 +66,7 @@ impl IntelligentRenderer {
         Self {
             current_experience,
             available_experiences,
+            audit_log: Vec::new(),
         }
     }
 
@@ -75,6 +95,10 @@ impl IntelligentRenderer {
             .ok_or_else(|| anyhow::anyhow!("Experience not found"))?;
 
         self.current_experience = (*experience).clone();
+        self.audit_log.push(AuditEntry {
+            action: "switch".to_string(),
+            variant_id: variant_id.to_string(),
+        });
         Ok(())
     }
 
@@ -84,6 +108,37 @@ impl IntelligentRenderer {
             .iter()
             .map(|e| e.variant_id.clone())
             .collect()
+    }
+
+    /// 获取候选摘要（简单评分示例）
+    pub fn list_candidates(&self) -> Vec<CandidateSummary> {
+        self.available_experiences
+            .iter()
+            .map(|e| {
+                let stats = RenderStats {
+                    html_size: e.html.len(),
+                    css_size: e.css.len(),
+                    js_size: e.bridge_js.len(),
+                    functions_bridged: e.function_validation.function_map.len(),
+                };
+                // 简单的打分逻辑：功能映射越多 → 兼容性分更高；
+                // CSS/JS 越小 → 性能分更高；可访问性分暂定固定值（示例）。
+                let compatibility = (stats.functions_bridged as f32).max(1.0);
+                let performance =
+                    1_000_000.0_f32.min((stats.html_size + stats.css_size + stats.js_size) as f32);
+                CandidateSummary {
+                    variant_id: e.variant_id.clone(),
+                    compatibility_score: compatibility / 10.0,
+                    accessibility_score: 0.8, // TODO: 接入可访问性检查
+                    performance_score: (1_000_000.0_f32 / performance).min(1.0),
+                }
+            })
+            .collect()
+    }
+
+    /// 获取审计日志
+    pub fn audit_log(&self) -> &[AuditEntry] {
+        &self.audit_log
     }
 
     fn assemble_page(&self) -> Result<String> {
@@ -203,6 +258,12 @@ mod tests {
         // 切换到不同的体验
         if available.len() > 1 {
             renderer.switch_experience(&available[1]).unwrap();
+            assert_eq!(renderer.audit_log().last().unwrap().action, "switch");
         }
+
+        // 候选摘要应可用
+        let candidates = renderer.list_candidates();
+        assert!(!candidates.is_empty());
+        assert!(candidates[0].compatibility_score >= 0.0);
     }
 }

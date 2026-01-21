@@ -5,11 +5,11 @@
 //! # Architecture
 //!
 //! The BrowerAI workspace consists of multiple specialized crates:
-//! - **Core**: `browerai-core`, `browerai-dom`
+//! - **Core**: `browerai-core`, `browerai-config`, `browerai-dom`
 //! - **Parsers**: `browerai-html-parser`, `browerai-css-parser`, `browerai-js-parser`, `browerai-js-analyzer`
 //! - **AI**: `browerai-ai-core`, `browerai-ai-integration` (optional, enabled with `ai` feature)
 //! - **Rendering**: `browerai-renderer-core`, `browerai-renderer-predictive`, `browerai-intelligent-rendering`
-//! - **Learning**: `browerai-learning`
+//! - **Learning**: `browerai-learning`, `browerai-deobfuscation`, `browerai-feedback`
 //! - **Utilities**: `browerai-network`, `browerai-devtools`, `browerai-testing`, `browerai-plugins`
 //!
 //! # Usage
@@ -50,6 +50,9 @@ pub use browerai_renderer_predictive as renderer_predictive;
 
 // Re-export learning
 pub use browerai_learning as learning;
+
+// Re-export config
+pub use browerai_config as config;
 
 // Re-export utilities
 pub use browerai_devtools as devtools;
@@ -92,7 +95,12 @@ pub mod prelude {
     pub use browerai_renderer_predictive::PredictiveRenderer;
 
     // Learning
-    pub use browerai_learning::{CodeGenerator, FeedbackCollector, JsDeobfuscator};
+    pub use browerai_deobfuscation::JsDeobfuscator;
+    pub use browerai_feedback::FeedbackCollector;
+    pub use browerai_learning::{deobfuscation, feedback, CodeGenerator};
+
+    // Config
+    pub use browerai_config::{Config, ConfigLoader};
 
     // Network
     pub use browerai_network::{HttpClient, ResourceCache};
