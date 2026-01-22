@@ -4,7 +4,7 @@
 /// - 语法正确性
 /// - 可执行性
 /// - 符合规范性
-use anyhow::{anyhow, Context, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -146,8 +146,8 @@ impl CodeVerifier {
         }
 
         // 使用简单的正则验证标签配对
-        let open_tags: HashMap<String, usize> = HashMap::new();
-        let close_tags: HashMap<String, usize> = HashMap::new();
+        let _open_tags: HashMap<String, usize> = HashMap::new();
+        let _close_tags: HashMap<String, usize> = HashMap::new();
 
         // 提取标签
         for cap in regex::Regex::new(r"<(\w+)").unwrap().captures_iter(html) {
@@ -452,7 +452,7 @@ impl CodeVerifier {
 
         // 组合评分：HTML 30%, CSS 20%, JS 50%
         let verification_score =
-            (html_result.score * 0.3 + css_result.score * 0.2 + js_result.score * 0.5);
+            html_result.score * 0.3 + css_result.score * 0.2 + js_result.score * 0.5;
 
         // 收集所有错误
         let mut all_errors = vec![];

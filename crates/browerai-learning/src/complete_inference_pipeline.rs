@@ -197,6 +197,8 @@ mod tests {
             overall_score: 0.9,
             issues: vec![],
             recommendations: vec![],
+            semantic_comparison: None,
+            code_equivalence_score: None,
         };
 
         let variables_result = crate::variable_semantics::InferenceResult {

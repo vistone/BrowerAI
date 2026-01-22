@@ -9,7 +9,9 @@ pub mod complete_inference_pipeline;
 pub mod continuous_loop;
 pub mod data_models;
 pub mod data_structure_inference;
+pub mod deobfuscation;
 pub mod external_resource_analyzer;
+pub mod feedback;
 pub mod framework_knowledge;
 pub mod generators;
 pub mod high_fidelity_generator;
@@ -24,6 +26,7 @@ pub mod personalization;
 pub mod pipeline;
 pub mod real_website_learner;
 pub mod safe_sandbox;
+pub mod semantic_comparator;
 pub mod v8_tracer;
 pub mod validation;
 pub mod variable_semantics;
@@ -83,6 +86,7 @@ pub use real_website_learner::{
     LearningSession, RealWebsiteLearner, SessionStatus, WebsiteLearningTask,
 };
 pub use safe_sandbox::{BehaviorRecorder, PageFetcher};
+pub use semantic_comparator::{SemanticComparator, SemanticComparisonResult};
 pub use v8_tracer::{
     CallRecord, DOMOperation, EventListener, ExecutionTrace, OperationChain, StateChange,
     UserEvent, V8Tracer,

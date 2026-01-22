@@ -5,7 +5,9 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
+use crate::code_verifier::{CodeVerificationResult, CodeVerifier};
 use crate::learning_quality::LearningQuality;
+use crate::semantic_comparator::{SemanticComparator, SemanticComparisonResult};
 use crate::v8_tracer::ExecutionTrace;
 use crate::workflow_extractor::{WorkflowExtractionResult, WorkflowExtractor};
 
@@ -32,6 +34,12 @@ pub struct DualSandboxLearningResult {
 
     /// 学习总结
     pub summary: LearningSummary,
+
+    /// 语义对比结果（可选）
+    pub semantic_comparison: Option<SemanticComparisonResult>,
+
+    /// 生成代码的验证结果（可选）
+    pub verification: Option<CodeVerificationResult>,
 }
 
 /// 学习总结
@@ -107,6 +115,90 @@ impl DualSandboxLearner {
             generated_css,
             generated_js,
             summary,
+            semantic_comparison: None,
+            verification: None,
+        })
+    }
+
+    /// 从执行追踪学习并生成代码，同时与原始代码进行语义对比
+    #[allow(clippy::too_many_arguments)]
+    pub async fn learn_and_generate_with_reference(
+        &self,
+        traces: ExecutionTrace,
+        original_html: &str,
+        original_css: &str,
+        original_js: &str,
+    ) -> Result<DualSandboxLearningResult> {
+        log::info!("🧠 双沙盒对比学习开始...");
+
+        // 第1步：提取工作流
+        let workflows = WorkflowExtractor::extract_workflows(&traces)?;
+
+        // 第2步：基础质量评估
+        let mut quality = LearningQuality::evaluate(&traces, &workflows)?;
+
+        // 第3步：生成语义化代码
+        let generated_html = self.generate_semantic_html(&workflows, &traces).ok();
+        let generated_css = self.generate_semantic_css(&workflows, &traces).ok();
+        let generated_js = self.generate_semantic_js(&workflows, &traces).ok();
+
+        // 第4步：生成学习总结（基础）
+        let summary = self.generate_learning_summary(&workflows, &traces, &quality)?;
+
+        // 第4.5步：语义对比 + 代码验证（如果生成代码存在）
+        let mut semantic_comparison = None;
+        let mut verification = None;
+        if let (Some(ref html), Some(ref css), Some(ref js)) =
+            (&generated_html, &generated_css, &generated_js)
+        {
+            semantic_comparison = Some(SemanticComparator::compare_all(
+                original_html,
+                original_css,
+                original_js,
+                html,
+                css,
+                js,
+                &workflows
+                    .workflows
+                    .iter()
+                    .flat_map(|w| w.key_functions.clone())
+                    .collect::<Vec<_>>(),
+            )?);
+
+            // 更新质量评分（加入等价性）
+            quality = LearningQuality::evaluate_with_comparison(
+                &traces,
+                &workflows,
+                original_html,
+                original_css,
+                original_js,
+                html,
+                css,
+                js,
+            )?;
+
+            verification = CodeVerifier::verify_all(html, css, js).ok();
+        }
+
+        log::info!(
+            "✓ 对比学习完成: 工作流 {}, 语义相似度 {:.1}%",
+            workflows.workflows.len(),
+            semantic_comparison
+                .as_ref()
+                .map(|c| c.overall_similarity * 100.0)
+                .unwrap_or(0.0)
+        );
+
+        Ok(DualSandboxLearningResult {
+            traces,
+            workflows,
+            quality,
+            generated_html,
+            generated_css,
+            generated_js,
+            summary,
+            semantic_comparison,
+            verification,
         })
     }
 
@@ -299,6 +391,8 @@ mod tests {
             overall_score: 0.0,
             issues: vec![],
             recommendations: vec![],
+            semantic_comparison: None,
+            code_equivalence_score: None,
         };
 
         let learner = DualSandboxLearner::new().unwrap();
@@ -308,5 +402,23 @@ mod tests {
 
         assert_eq!(summary.workflow_count, 0);
         assert_eq!(summary.overall_score, 0);
+    }
+
+    #[tokio::test]
+    async fn test_learn_and_generate_with_reference() {
+        let learner = DualSandboxLearner::new().unwrap();
+        let traces = ExecutionTrace::new();
+
+        let result = learner
+            .learn_and_generate_with_reference(
+                traces,
+                "<html><body><button onclick=\"hello()\">Hi</button></body></html>",
+                "button { color: red; }",
+                "function hello() { return true; }",
+            )
+            .await
+            .unwrap();
+
+        assert!(result.semantic_comparison.is_some());
     }
 }

@@ -7,10 +7,21 @@ license.workspace = true
 repository.workspace = true
 description = "Renderer core for BrowerAI"
 
+[features]
+default = []
+ai = ["dep:browerai-ai-integration"]
+ml = ["browerai-deobfuscation/ml"]
+"browerai-ai-integration" = []
+"browerai-deobfuscation" = []
+
+
 [dependencies]
 browerai-core = { workspace = true }
 browerai-dom = { workspace = true }
 browerai-css-parser = { workspace = true }
+browerai-deobfuscation = { workspace = true }
+browerai_deobfuscation = { package = "browerai-deobfuscation", path = "../browerai-deobfuscation" }
+browerai-ai-integration = { workspace = true, optional = true }
 markup5ever_rcdom = { workspace = true }
 anyhow = { workspace = true }
 log = { workspace = true }

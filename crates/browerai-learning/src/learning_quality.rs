@@ -8,6 +8,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
+use crate::semantic_comparator::{SemanticComparator, SemanticComparisonResult};
 use crate::v8_tracer::ExecutionTrace;
 use crate::workflow_extractor::WorkflowExtractionResult;
 
@@ -37,6 +38,12 @@ pub struct LearningQuality {
 
     /// 改进建议
     pub recommendations: Vec<String>,
+
+    /// 语义对比结果
+    pub semantic_comparison: Option<SemanticComparisonResult>,
+
+    /// 原始与生成代码的等价性评分（0-1）
+    pub code_equivalence_score: Option<f64>,
 }
 
 /// 质量问题
@@ -93,7 +100,46 @@ impl LearningQuality {
             overall_score,
             issues,
             recommendations,
+            semantic_comparison: None,
+            code_equivalence_score: None,
         })
+    }
+
+    /// 使用语义对比的增强评估
+    #[allow(clippy::too_many_arguments)]
+    pub fn evaluate_with_comparison(
+        traces: &ExecutionTrace,
+        workflows: &WorkflowExtractionResult,
+        original_html: &str,
+        original_css: &str,
+        original_js: &str,
+        generated_html: &str,
+        generated_css: &str,
+        generated_js: &str,
+    ) -> Result<Self> {
+        let mut base = Self::evaluate(traces, workflows)?;
+
+        let comparison = SemanticComparator::compare_all(
+            original_html,
+            original_css,
+            original_js,
+            generated_html,
+            generated_css,
+            generated_js,
+            &Self::extract_key_functions(workflows),
+        )?;
+
+        let equivalence = comparison.overall_similarity;
+        let overall_score = (base.function_coverage * 0.3
+            + base.workflow_completeness * 0.3
+            + base.functionality_preserved * 0.2
+            + equivalence * 0.2)
+            .clamp(0.0, 1.0);
+
+        base.overall_score = overall_score;
+        base.semantic_comparison = Some(comparison);
+        base.code_equivalence_score = Some(equivalence);
+        Ok(base)
     }
 
     /// 计算函数覆盖率
@@ -231,6 +277,17 @@ impl LearningQuality {
         uncovered
     }
 
+    fn extract_key_functions(workflows: &WorkflowExtractionResult) -> Vec<String> {
+        let mut keys: Vec<String> = workflows
+            .workflows
+            .iter()
+            .flat_map(|w| w.key_functions.clone())
+            .collect();
+        keys.sort();
+        keys.dedup();
+        keys
+    }
+
     fn generate_recommendations(issues: &[QualityIssue]) -> Vec<String> {
         let mut recommendations = vec![];
 
@@ -297,5 +354,31 @@ mod tests {
 
         let quality = LearningQuality::evaluate(&traces, &result).unwrap();
         assert!(quality.function_coverage < 1.0);
+    }
+
+    #[test]
+    fn test_evaluate_with_comparison() {
+        let traces = ExecutionTrace::new();
+        let workflows = WorkflowExtractionResult {
+            workflows: vec![],
+            total_user_interactions: 0,
+            total_function_calls: 0,
+            coverage_ratio: 0.0,
+        };
+
+        let quality = LearningQuality::evaluate_with_comparison(
+            &traces,
+            &workflows,
+            "<html><body><div></div></body></html>",
+            "div { color: red; }",
+            "function hello() { return true; }",
+            "<html><body><div></div></body></html>",
+            "div { color: red; }",
+            "function hello() { return true; }",
+        )
+        .unwrap();
+
+        assert!(quality.semantic_comparison.is_some());
+        assert!(quality.code_equivalence_score.unwrap() > 0.0);
     }
 }

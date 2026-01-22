@@ -12,6 +12,7 @@ members = [
     "crates/browerai-ai-integration",
     "crates/browerai-renderer-core",
     "crates/browerai-renderer-predictive",
+    "crates/browerai-deobfuscation",
     # "crates/browerai-intelligent-rendering",  # 暂时禁用：编译错误
     # "crates/browerai-integrated-pipeline",  # 暂时禁用：编译错误
     "crates/browerai-learning",
