@@ -1,0 +1,26 @@
+[package]
+name = "browerai-deobfuscation"
+version = "0.1.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "JavaScript deobfuscation utilities for BrowerAI"
+
+[features]
+default = []
+ai = ["ort"]
+ml = ["tch"]
+
+[dependencies]
+anyhow = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+lazy_static = "1.4"
+log = { workspace = true }
+ort = { workspace = true, optional = true }
+tch = { workspace = true, optional = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

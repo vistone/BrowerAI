@@ -749,7 +749,7 @@ mod tests {
         let mut manager = AuthManager::new(config);
 
         // 认证
-        let token = manager.authenticate().await.unwrap();
+        let _token = manager.authenticate().await.unwrap();
         assert!(!manager.is_token_expired("bearer"));
 
         // 清除令牌后检查
@@ -769,10 +769,10 @@ mod tests {
             token_storage: TokenStorage::Memory,
         };
 
-        let manager = AuthManager::new(config);
+        let manager = AuthManager::new(config.clone());
 
-        let (name, value) = manager.build_auth_header("nonexistent");
-        assert!(name.is_empty());
+        let result = manager.build_auth_header("nonexistent");
+        assert!(result.is_err(), "Should return error for nonexistent token");
 
         // 手动设置令牌
         let token = AuthToken {
