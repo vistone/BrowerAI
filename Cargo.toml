@@ -22,8 +22,6 @@ members = [
     "crates/browerai-ml",
     "crates/browerai-metrics",
     "crates/browerai",
-    "crates/browerai-webclient",
-    "crates/website_classifier",
 ]
 
 [workspace.package]
@@ -51,6 +49,12 @@ url = "2.5"
 
 # Timestamp
 chrono = { version = "0.4", features = ["serde"] }
+
+# UUID
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+# Hashing
+md5 = "0.7"
 
 # Regular expressions
 regex = "1.10"

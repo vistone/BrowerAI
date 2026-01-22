@@ -2,7 +2,7 @@
 // Provides a Document Object Model interface for programmatic page manipulation
 
 pub mod api;
-pub mod deobfuscating_sandbox;
+// pub mod deobfuscating_sandbox;  // 暂时禁用：需要browerai_deobfuscation crate
 pub mod events;
 pub mod sandbox;
 
@@ -11,9 +11,9 @@ use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
 pub use api::{DomApiExtensions, ElementHandle};
-pub use deobfuscating_sandbox::{
-    DeobfuscatingExecutionStats, DeobfuscatingSandbox, DeobfuscationConfig,
-};
+// pub use deobfuscating_sandbox::{
+//     DeobfuscatingExecutionStats, DeobfuscatingSandbox, DeobfuscationConfig,
+// };
 pub use events::{Event, EventListener, EventListeners, EventPhase, EventType};
 pub use sandbox::{ExecutionContext, JsSandbox, ResourceLimits, SandboxError, SandboxValue};
 

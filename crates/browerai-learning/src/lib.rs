@@ -4,6 +4,7 @@ pub mod auth_handler;
 pub mod browser_automation;
 pub mod browser_tech_detector;
 pub mod code_generator;
+pub mod code_verifier;
 pub mod complete_inference_pipeline;
 pub mod continuous_loop;
 pub mod data_models;
@@ -46,6 +47,10 @@ pub use browser_tech_detector::{
     BrowserTechDetector, BrowserTechnology, TechnologyDetectionResult,
 };
 pub use code_generator::{CodeGenerator, GeneratedCode, GenerationRequest};
+pub use code_verifier::{
+    CodeVerificationResult, CodeVerifier, CssVerification, HtmlVerification, JsVerification,
+    VerificationError,
+};
 pub use complete_inference_pipeline::{
     CodeGenerationHint, CompleteInferencePipeline, CompleteInferenceResult, HintType,
 };
@@ -96,5 +101,5 @@ pub use workflow_extractor::{Workflow, WorkflowExtractionResult, WorkflowExtract
 
 pub use dual_sandbox_learner::{DualSandboxLearner, DualSandboxLearningResult, LearningSummary};
 // Re-export from new standalone crates
-pub use browerai_deobfuscation as deobfuscation;
-pub use browerai_feedback as feedback;
+// pub use browerai_deobfuscation as deobfuscation;
+// pub use browerai_feedback as feedback;
