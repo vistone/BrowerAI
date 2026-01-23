@@ -3,6 +3,7 @@
 /// This module provides utilities for testing BrowerAI against real-world websites,
 /// measuring accuracy, performance, and compatibility.
 pub mod benchmark;
+pub mod website_test_suite;
 
 use browerai_css_parser::CssParser;
 use browerai_html_parser::HtmlParser;

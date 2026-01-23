@@ -34,6 +34,17 @@ pub enum ModelType {
     JsDeobfuscator,
     /// Large code LLMs (e.g., Qwen2.5-Coder) served via Candle/GGUF
     CodeLlm,
+    // Phase 2 模型（ONNX 格式）
+    /// CSS 选择器嵌入模型 - 2.83M 参数，Transformer+LSTM
+    SelectorEmbedding,
+    /// CSS 属性预测模型 - 2.66M 参数，多任务 LSTM
+    PropertyPredictor,
+    /// 颜色学习模型 - 4.40M 参数，CNN+FC
+    ColorLearning,
+    /// 完整页面模型 - 1.65M 参数，统一 Transformer
+    CompletePageModel,
+    /// 微调模型 - 0.27M 参数，LoRA 适配器
+    FinetunedModel,
 }
 
 /// Manages the local model library for AI-powered browser operations

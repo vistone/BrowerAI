@@ -1,0 +1,25 @@
+[package]
+name = "browerai-multilayer-cache"
+version = "0.2.0"
+edition = "2021"
+description = "Multi-layer caching strategy (L1/L2/L3) for BrowerAI"
+
+[dependencies]
+browerai-cache = { path = "../browerai-cache" }
+tokio = { version = "1.35", features = ["full"] }
+dashmap = "5.5"
+parking_lot = "0.12"
+prometheus = "0.13"
+serde = { version = "1.0", features = ["derive"] }
+anyhow = "1.0"
+tracing = "0.1"
+
+[dev-dependencies]
+tokio-test = "0.4"
+tracing-subscriber = "0.3"
+browerai-redis-integration = { path = "../browerai-redis-integration", features = ["cache-integration"] }
+criterion = { version = "0.5", features = ["async_tokio"] }
+
+[[bench]]
+name = "cache_bench"
+harness = false

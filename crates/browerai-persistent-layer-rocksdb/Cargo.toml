@@ -1,0 +1,25 @@
+[package]
+name = "browerai-persistent-layer-rocksdb"
+version = "0.2.0"
+edition = "2021"
+description = "RocksDB-based persistent cache layer for BrowerAI (production build required)"
+
+[dependencies]
+rocksdb = { version = "0.21", optional = true }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+tokio = { version = "1.35", features = ["rt", "macros","time"] }
+parking_lot = "0.12"
+tracing = "0.1"
+
+# Optional integration to MultiLayerCache
+browerai-multilayer-cache = { path = "../browerai-multilayer-cache", optional = true }
+
+[features]
+rocksdb-support = ["rocksdb"]
+cache-integration = ["browerai-multilayer-cache"]
+full = ["rocksdb-support", "cache-integration"]
+
+# 构建此 crate 需要本地开发环境包含 CMake、LLVM/Clang。
+# 在生产环境部署前，确保构建工具链完整。

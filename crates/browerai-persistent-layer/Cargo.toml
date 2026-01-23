@@ -1,0 +1,20 @@
+[package]
+name = "browerai-persistent-layer"
+version = "0.2.0"
+edition = "2021"
+description = "RocksDB-based persistent cache layer for BrowerAI"
+
+[dependencies]
+sled = "0.34"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+tokio = { version = "1.35", features = ["rt", "macros","time"] }
+parking_lot = "0.12"
+tracing = "0.1"
+
+# Optional integration to MultiLayerCache
+browerai-multilayer-cache = { path = "../browerai-multilayer-cache", optional = true }
+
+[features]
+cache-integration = ["browerai-multilayer-cache"]

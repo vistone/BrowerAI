@@ -11,6 +11,7 @@
 
 pub mod dual_sandbox_renderer;
 pub mod generation;
+pub mod js_handler;
 pub mod llm_integration;
 pub mod model_orchestrator;
 pub mod reasoning;

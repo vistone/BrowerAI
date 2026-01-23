@@ -1,12 +1,18 @@
 use anyhow::Result;
 use cssparser::{Parser, ParserInput, Token};
 #[cfg(feature = "ai")]
+use std::collections::HashMap;
+#[cfg(feature = "ai")]
 use std::path::PathBuf;
+#[cfg(feature = "ai")]
+use std::sync::{Arc, Mutex};
 
 #[cfg(feature = "ai")]
 use browerai_ai_core::model_manager::ModelType;
 #[cfg(feature = "ai")]
 use browerai_ai_core::{AiRuntime, InferenceEngine};
+#[cfg(all(feature = "ai", feature = "onnx"))]
+use browerai_ai_core::{Phase2ModelLoader, Phase2PropertyPredictor, Phase2SelectorEmbedding};
 
 /// CSS parser with AI enhancement capabilities
 pub struct CssParser {
@@ -21,6 +27,12 @@ pub struct CssParser {
     #[cfg(feature = "ai")]
     #[allow(dead_code)]
     model_name: Option<String>,
+    #[cfg(all(feature = "ai", feature = "onnx"))]
+    selector_embedding: Option<Arc<Phase2SelectorEmbedding>>,
+    #[cfg(all(feature = "ai", feature = "onnx"))]
+    property_predictor: Option<Arc<Phase2PropertyPredictor>>,
+    #[cfg(all(feature = "ai", feature = "onnx"))]
+    embedding_cache: Arc<Mutex<HashMap<String, Vec<f32>>>>,
 }
 
 impl CssParser {
@@ -35,7 +47,48 @@ impl CssParser {
             model_path: None,
             #[cfg(feature = "ai")]
             model_name: None,
+            #[cfg(all(feature = "ai", feature = "onnx"))]
+            selector_embedding: None,
+            #[cfg(all(feature = "ai", feature = "onnx"))]
+            property_predictor: None,
+            #[cfg(all(feature = "ai", feature = "onnx"))]
+            embedding_cache: Arc::new(Mutex::new(HashMap::new())),
         }
+    }
+
+    /// Create a new CSS parser with Phase 2 models
+    #[cfg(all(feature = "ai", feature = "onnx"))]
+    pub fn with_phase2_models(
+        selector_embedding: Phase2SelectorEmbedding,
+        property_predictor: Phase2PropertyPredictor,
+    ) -> Self {
+        Self {
+            inference_engine: None,
+            ai_runtime: None,
+            model_path: None,
+            model_name: None,
+            selector_embedding: Some(Arc::new(selector_embedding)),
+            property_predictor: Some(Arc::new(property_predictor)),
+            embedding_cache: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+
+    /// Create a new CSS parser from model directory
+    #[cfg(all(feature = "ai", feature = "onnx"))]
+    pub fn from_model_dir(model_dir: impl AsRef<std::path::Path>) -> Result<Self> {
+        let loader = Phase2ModelLoader::new(model_dir);
+        let selector_embedding = loader.load_selector_embedding()?;
+        let property_predictor = loader.load_property_predictor()?;
+
+        Ok(Self {
+            inference_engine: None,
+            ai_runtime: None,
+            model_path: None,
+            model_name: None,
+            selector_embedding: Some(Arc::new(selector_embedding)),
+            property_predictor: Some(Arc::new(property_predictor)),
+            embedding_cache: Arc::new(Mutex::new(HashMap::new())),
+        })
     }
 
     /// Create a new CSS parser with AI capabilities
@@ -87,6 +140,194 @@ impl CssParser {
         Ok(rules)
     }
 
+    /// Enhanced parse with AI selector embedding
+    #[cfg(all(feature = "ai", feature = "onnx"))]
+    pub fn parse_with_ai(&self, css: &str) -> Result<Vec<EnhancedCssRule>> {
+        let rules = self.parse(css)?;
+        let mut enhanced_rules = Vec::new();
+
+        for rule in rules {
+            let embedding = self.get_selector_embedding(&rule.selector)?;
+            enhanced_rules.push(EnhancedCssRule {
+                selector: rule.selector,
+                properties: rule.properties,
+                embedding,
+                predicted_properties: Vec::new(),
+            });
+        }
+
+        log::info!(
+            "Enhanced {} CSS rules with AI embeddings",
+            enhanced_rules.len()
+        );
+        Ok(enhanced_rules)
+    }
+
+    /// Get embedding for a CSS selector (with caching)
+    #[cfg(all(feature = "ai", feature = "onnx"))]
+    pub fn get_selector_embedding(&self, selector: &str) -> Result<Vec<f32>> {
+        // Check cache first
+        let cache_hit = {
+            let cache = self.embedding_cache.lock().unwrap();
+            cache.get(selector).cloned()
+        };
+
+        if let Some(embedding) = cache_hit {
+            log::debug!("Cache hit for selector: {}", selector);
+            return Ok(embedding);
+        }
+
+        log::debug!("Cache miss for selector: {}", selector);
+
+        // Compute embedding
+        let embedding = if let Some(ref model) = self.selector_embedding {
+            // Tokenize selector (simplified: use ASCII values as tokens)
+            let tokens: Vec<i64> = selector
+                .chars()
+                .take(50) // Max sequence length
+                .map(|c| c as i64)
+                .collect();
+
+            // Pad to fixed length
+            let mut padded_tokens = tokens;
+            padded_tokens.resize(50, 0);
+
+            // Run inference
+            let result = model.infer(&[padded_tokens])?;
+
+            // Flatten embedding (batch=1, seq_len=50, dim=128)
+            result.into_iter().flatten().collect()
+        } else {
+            // No model available, return zero embedding
+            vec![0.0; 50 * 128]
+        };
+
+        // Cache the result
+        {
+            let mut cache = self.embedding_cache.lock().unwrap();
+            cache.insert(selector.to_string(), embedding.clone());
+            log::debug!(
+                "Cached embedding for selector: {} (cache size: {})",
+                selector,
+                cache.len()
+            );
+        }
+
+        Ok(embedding)
+    }
+
+    /// Predict CSS properties for a selector
+    #[cfg(all(feature = "ai", feature = "onnx"))]
+    pub fn predict_properties(&self, selector: &str) -> Result<Vec<PredictedProperty>> {
+        let embedding = self.get_selector_embedding(selector)?;
+
+        if let Some(ref model) = self.property_predictor {
+            // Take first 1280 dimensions (10 * 128)
+            let input: Vec<f32> = embedding.into_iter().take(1280).collect();
+
+            // Run inference
+            let probabilities = model.infer(&[input])?;
+
+            // Convert to predicted properties
+            let properties = Self::probabilities_to_properties(&probabilities[0]);
+
+            log::info!(
+                "Predicted {} properties for selector '{}'",
+                properties.len(),
+                selector
+            );
+            Ok(properties)
+        } else {
+            Ok(Vec::new())
+        }
+    }
+
+    /// Convert probability vector to predicted CSS properties
+    #[cfg(all(feature = "ai", feature = "onnx"))]
+    fn probabilities_to_properties(probs: &[f32]) -> Vec<PredictedProperty> {
+        // Property names (top 50 most common CSS properties)
+        const PROPERTY_NAMES: &[&str] = &[
+            "color",
+            "background-color",
+            "font-size",
+            "margin",
+            "padding",
+            "width",
+            "height",
+            "display",
+            "position",
+            "top",
+            "left",
+            "border",
+            "border-radius",
+            "opacity",
+            "font-family",
+            "font-weight",
+            "text-align",
+            "line-height",
+            "overflow",
+            "z-index",
+            "box-shadow",
+            "flex",
+            "grid",
+            "align-items",
+            "justify-content",
+            "gap",
+            "transition",
+            "transform",
+            "animation",
+            "cursor",
+            "pointer-events",
+            "visibility",
+            "white-space",
+            "word-wrap",
+            "text-decoration",
+            "list-style",
+            "outline",
+            "resize",
+            "user-select",
+            "appearance",
+            "filter",
+            "backdrop-filter",
+            "mix-blend-mode",
+            "clip-path",
+            "mask",
+            "scroll-behavior",
+            "overscroll-behavior",
+            "aspect-ratio",
+            "contain",
+            "content-visibility",
+        ];
+
+        probs
+            .iter()
+            .enumerate()
+            .filter(|(_, &prob)| prob > 0.5) // Threshold
+            .map(|(idx, &prob)| {
+                let name = PROPERTY_NAMES.get(idx).unwrap_or(&"unknown").to_string();
+                PredictedProperty {
+                    name,
+                    confidence: prob,
+                }
+            })
+            .collect()
+    }
+
+    /// Clear embedding cache
+    #[cfg(all(feature = "ai", feature = "onnx"))]
+    pub fn clear_cache(&self) {
+        let mut cache = self.embedding_cache.lock().unwrap();
+        cache.clear();
+        log::info!("Cleared embedding cache");
+    }
+
+    /// Get cache size
+    #[cfg(all(feature = "ai", feature = "onnx"))]
+    pub fn cache_size(&self) -> usize {
+        let cache = self.embedding_cache.lock().unwrap();
+        cache.len()
+    }
+
     /// Validate CSS syntax
     pub fn validate(&self, css: &str) -> Result<bool> {
         let result = self.parse(css);
@@ -126,6 +367,24 @@ pub struct CssRule {
 pub struct CssProperty {
     pub name: String,
     pub value: String,
+}
+
+/// Enhanced CSS rule with AI embeddings
+#[cfg(all(feature = "ai", feature = "onnx"))]
+#[derive(Debug, Clone)]
+pub struct EnhancedCssRule {
+    pub selector: String,
+    pub properties: Vec<CssProperty>,
+    pub embedding: Vec<f32>,
+    pub predicted_properties: Vec<PredictedProperty>,
+}
+
+/// Predicted CSS property with confidence
+#[cfg(all(feature = "ai", feature = "onnx"))]
+#[derive(Debug, Clone)]
+pub struct PredictedProperty {
+    pub name: String,
+    pub confidence: f32,
 }
 
 #[cfg(test)]

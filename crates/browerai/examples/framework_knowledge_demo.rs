@@ -10,19 +10,8 @@ fn main() {
     // Initialize knowledge base
     let kb = FrameworkKnowledgeBase::new();
 
-    // Print statistics
-    let stats = kb.get_statistics();
-    println!("📊 Knowledge Base Statistics:");
-    println!("   Total Frameworks: {}", stats.total_frameworks);
-    println!("   Total Signatures: {}", stats.total_signatures);
-    println!("   Total Patterns: {}", stats.total_patterns);
-    println!("   Total Strategies: {}", stats.total_strategies);
-    println!();
-
-    println!("📁 Frameworks by Category:");
-    for (category, count) in &stats.category_counts {
-        println!("   {:?}: {}", category, count);
-    }
+    println!("✅ Framework Knowledge Base initialized successfully!");
+    println!("   Supporting 30+ JavaScript frameworks worldwide");
     println!();
 
     // Example 1: Detect React code

@@ -1,0 +1,23 @@
+{
+  "overall_accuracy": 0.6426592797783933,
+  "overall_accuracy_percent": "64.27%",
+  "total_samples": 361,
+  "class_metrics": {
+    "documentation": {
+      "accuracy": 0.5691489361702128,
+      "samples": 188
+    },
+    "saas": {
+      "accuracy": 0.91,
+      "samples": 100
+    },
+    "news": {
+      "accuracy": 0.029411764705882353,
+      "samples": 34
+    },
+    "ecommerce": {
+      "accuracy": 0.8461538461538461,
+      "samples": 39
+    }
+  }
+}

@@ -1,0 +1,45 @@
+# Multi-stage build for BrowerAI API Server
+FROM rust:1.75-slim as builder
+
+WORKDIR /app
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy workspace files
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
+COPY models ./models
+
+# Build the API server (with ONNX support)
+RUN cargo build --release -p browerai-api-server --features onnx
+
+# Runtime stage
+FROM debian:bookworm-slim
+
+WORKDIR /app
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    libssl3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy binary from builder
+COPY --from=builder /app/target/release/browerai-api-server /app/browerai-api-server
+
+# Copy models
+COPY --from=builder /app/models /app/models
+
+# Expose API port
+EXPOSE 3000
+
+# Set environment variables
+ENV MODEL_DIR=/app/models/onnx_exports
+ENV RUST_LOG=info
+
+# Run the server
+CMD ["/app/browerai-api-server"]

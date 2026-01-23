@@ -8,8 +8,7 @@
 
 use anyhow::{Context, Result};
 use browerai_js_analyzer::{
-    AnalysisConfig, CallGraph, DataFlowAnalysis, DependencyGraph, FunctionInfo, JsDeepAnalyzer,
-    VariableScope,
+    AnalysisResult as JsAnalysisResultInternal, JsDeepAnalyzer,
 };
 use browerai_js_parser::JsParser;
 use std::collections::{HashMap, HashSet};

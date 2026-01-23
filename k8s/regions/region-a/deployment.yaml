@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: browerai-api
+  namespace: browerai-region-a
+  labels:
+    app: browerai-api
+    region: a
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: browerai-api
+  template:
+    metadata:
+      labels:
+        app: browerai-api
+        region: a
+    spec:
+      containers:
+      - name: api
+        image: browerai-api:latest
+        ports:
+        - name: http
+          containerPort: 3000
+        env:
+        - name: RUST_LOG
+          value: "info"
+        - name: LISTEN_ADDR
+          value: "0.0.0.0:3000"
+        securityContext:
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true

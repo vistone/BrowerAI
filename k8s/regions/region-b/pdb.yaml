@@ -1,0 +1,10 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: browerai-api-pdb
+  namespace: browerai-region-b
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: browerai-api

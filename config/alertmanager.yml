@@ -1,0 +1,65 @@
+global:
+  resolve_timeout: 5m
+  slack_api_url: '${SLACK_WEBHOOK_URL}'  # 环境变量配置
+
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'default'
+  
+  routes:
+    # 严重告警
+    - match:
+        severity: critical
+      receiver: 'critical'
+      group_wait: 0s
+      repeat_interval: 5m
+    
+    # 警告告警
+    - match:
+        severity: warning
+      receiver: 'warning'
+      group_wait: 1m
+      repeat_interval: 30m
+
+receivers:
+  - name: 'default'
+    # Slack通知
+    slack_configs:
+      - channel: '#alerts'
+        title: '[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}'
+        text: '{{ .CommonAnnotations.description }}'
+        send_resolved: true
+
+  - name: 'critical'
+    slack_configs:
+      - channel: '#critical-alerts'
+        title: '🚨 [CRITICAL] {{ .GroupLabels.alertname }}'
+        text: '{{ .CommonAnnotations.description }}'
+        send_resolved: true
+    # Email通知
+    email_configs:
+      - to: 'ops-team@example.com'
+        from: 'alerts@example.com'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: 'alerts@example.com'
+        auth_password: '${EMAIL_PASSWORD}'
+        headers:
+          Subject: '[CRITICAL] {{ .GroupLabels.alertname }}'
+
+  - name: 'warning'
+    slack_configs:
+      - channel: '#warnings'
+        title: '[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}'
+        text: '{{ .CommonAnnotations.description }}'
+        send_resolved: true
+
+inhibit_rules:
+  # 如果critical告警已发送,则抑制warning告警
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'dev', 'instance']

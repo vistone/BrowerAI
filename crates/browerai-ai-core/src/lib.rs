@@ -17,6 +17,8 @@ pub mod model_manager;
 pub mod onnx_model;
 pub mod performance_monitor;
 #[cfg(feature = "onnx")]
+pub mod phase2_integration;
+#[cfg(feature = "onnx")]
 pub mod reporter;
 #[cfg(feature = "onnx")]
 pub mod runtime;
@@ -51,6 +53,11 @@ pub use model_loader::ModelLoader;
 pub use model_manager::{ModelHealth, ModelHealthSummary, ModelManager};
 #[cfg(feature = "onnx")]
 pub use onnx_model::{OnnxModel, OnnxModelStub};
+#[cfg(feature = "onnx")]
+pub use phase2_integration::{
+    Phase2ColorModel, Phase2CompleteModel, Phase2FinetunedModel, Phase2ModelLoader,
+    Phase2PropertyPredictor, Phase2SelectorEmbedding,
+};
 #[cfg(feature = "onnx")]
 pub use reporter::AiReporter;
 #[cfg(feature = "onnx")]

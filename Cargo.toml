@@ -12,9 +12,10 @@ members = [
     "crates/browerai-ai-integration",
     "crates/browerai-renderer-core",
     "crates/browerai-renderer-predictive",
+    "crates/browerai-renderer",
     "crates/browerai-deobfuscation",
-    # "crates/browerai-intelligent-rendering",  # 暂时禁用：编译错误
-    # "crates/browerai-integrated-pipeline",  # 暂时禁用：编译错误
+    "crates/browerai-intelligent-rendering",
+    # "crates/browerai-integrated-pipeline",  # TODO: Needs API updates for newer browerai-js-analyzer
     "crates/browerai-learning",
     "crates/browerai-network",
     "crates/browerai-devtools",
@@ -22,7 +23,13 @@ members = [
     "crates/browerai-plugins",
     "crates/browerai-ml",
     "crates/browerai-metrics",
+    "crates/browerai-cache",
+    "crates/browerai-db",
+    "crates/browerai-api-server",
     "crates/browerai",
+    "crates/browerai-multilayer-cache",
+    "crates/browerai-redis-integration",
+    "crates/browerai-persistent-layer",
 ]
 
 [workspace.package]
@@ -45,7 +52,7 @@ env_logger = "0.11"
 tokio = { version = "1.35", features = ["full"] }
 
 # HTTP client (use rustls instead of openssl)
-reqwest = { version = "0.11", features = ["blocking", "rustls-tls"], default-features = false }
+reqwest = { version = "0.11", features = ["blocking", "rustls-tls", "json"], default-features = false }
 url = "2.5"
 
 # Timestamp
@@ -60,6 +67,18 @@ md5 = "0.7"
 # Regular expressions
 regex = "1.10"
 
+# Synchronization primitives
+parking_lot = "0.12"
+
+# Directory utilities
+dirs = "5.0"
+
+# Concurrent data structures
+dashmap = "5.5"
+
+# Async utilities
+futures = "0.3"
+
 # HTML/CSS parsing
 html5ever = "0.27"
 markup5ever_rcdom = "0.3"
@@ -73,14 +92,10 @@ boa_interner = "0.20"
 boa_engine = "0.20"
 swc_core = "0.88"
 
-# Tch (PyTorch bindings for Rust)
-tch = { version = "0.14", features = ["download-libtorch"] }
+# Neuroxide - Ultrafast PyTorch-like AI Framework in Rust (replaces tch)
+neuroxide = { git = "https://github.com/DragonflyRobotics/Neuroxide.git", branch = "dev" }
 
-# Force vendored OpenSSL for crates that still require native TLS (e.g., tch download helper)
-openssl = { version = "0.10", features = ["vendored"] }
-openssl-sys = { version = "0.9.111", features = ["vendored"] }
-
-# ONNX Runtime (optional)
+# ONNX Runtime (optional, for model inference)
 ort = "2.0.0-rc.10"
 
 # Array processing for ML
@@ -90,29 +105,31 @@ ndarray = "0.17"
 tempfile = "3.8"
 
 # Internal workspace crates
-browerai-config = { path = "crates/browerai-config" }
-browerai-core = { path = "crates/browerai-core" }
-browerai-deobfuscation = { path = "crates/browerai-deobfuscation" }
-browerai-feedback = { path = "crates/browerai-feedback" }
-browerai-dom = { path = "crates/browerai-dom" }
-browerai-html-parser = { path = "crates/browerai-html-parser" }
-browerai-css-parser = { path = "crates/browerai-css-parser" }
-browerai-js-parser = { path = "crates/browerai-js-parser" }
-browerai-js-analyzer = { path = "crates/browerai-js-analyzer" }
-browerai-js-v8 = { path = "crates/browerai-js-v8" }
-browerai-ai-core = { path = "crates/browerai-ai-core" }
-browerai-ai-integration = { path = "crates/browerai-ai-integration" }
-browerai-renderer-core = { path = "crates/browerai-renderer-core" }
-browerai-renderer-predictive = { path = "crates/browerai-renderer-predictive" }
-browerai-intelligent-rendering = { path = "crates/browerai-intelligent-rendering" }
-browerai-learning = { path = "crates/browerai-learning" }
-browerai-ml = { path = "crates/browerai-ml" }
-browerai-network = { path = "crates/browerai-network" }
-browerai-devtools = { path = "crates/browerai-devtools" }
-browerai-testing = { path = "crates/browerai-testing" }
-browerai-plugins = { path = "crates/browerai-plugins" }
-browerai-metrics = { path = "crates/browerai-metrics" }
-website-classifier = { path = "crates/website_classifier" }
+browerai-config = { version = "0.2.0", path = "crates/browerai-config" }
+browerai-core = { version = "0.2.0", path = "crates/browerai-core" }
+browerai-deobfuscation = { version = "0.2.0", path = "crates/browerai-deobfuscation" }
+browerai-feedback = { version = "0.2.0", path = "crates/browerai-feedback" }
+browerai-dom = { version = "0.2.0", path = "crates/browerai-dom" }
+browerai-html-parser = { version = "0.2.0", path = "crates/browerai-html-parser" }
+browerai-css-parser = { version = "0.2.0", path = "crates/browerai-css-parser" }
+browerai-js-parser = { version = "0.2.0", path = "crates/browerai-js-parser" }
+browerai-js-analyzer = { version = "0.2.0", path = "crates/browerai-js-analyzer" }
+browerai-js-v8 = { version = "0.2.0", path = "crates/browerai-js-v8" }
+browerai-ai-core = { version = "0.2.0", path = "crates/browerai-ai-core" }
+browerai-ai-integration = { version = "0.2.0", path = "crates/browerai-ai-integration" }
+browerai-renderer-core = { version = "0.2.0", path = "crates/browerai-renderer-core" }
+browerai-renderer-predictive = { version = "0.2.0", path = "crates/browerai-renderer-predictive" }
+browerai-renderer = { version = "0.2.0", path = "crates/browerai-renderer" }
+browerai-intelligent-rendering = { version = "0.2.0", path = "crates/browerai-intelligent-rendering" }
+browerai-integrated-pipeline = { version = "0.2.0", path = "crates/browerai-integrated-pipeline" }
+browerai-learning = { version = "0.2.0", path = "crates/browerai-learning" }
+browerai-ml = { version = "0.2.0", path = "crates/browerai-ml" }
+browerai-network = { version = "0.2.0", path = "crates/browerai-network" }
+browerai-devtools = { version = "0.2.0", path = "crates/browerai-devtools" }
+browerai-testing = { version = "0.2.0", path = "crates/browerai-testing" }
+browerai-plugins = { version = "0.2.0", path = "crates/browerai-plugins" }
+browerai-metrics = { version = "0.2.0", path = "crates/browerai-metrics" }
+website-classifier = { version = "0.2.0", path = "crates/website_classifier" }
 
 [profile.release]
 opt-level = 3

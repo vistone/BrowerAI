@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: browerai-api
+  namespace: browerai-region-b
+  labels:
+    app: browerai-api
+    region: b
+spec:
+  type: ClusterIP
+  selector:
+    app: browerai-api
+  ports:
+  - name: http
+    port: 80
+    targetPort: 3000

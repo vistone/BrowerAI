@@ -31,7 +31,7 @@ impl CharTokenizer {
             serde_json::from_str(&content).context("Failed to parse vocab JSON")?;
         let char2idx: HashMap<char, i64> = raw
             .iter()
-            .filter_map(|(k, v)| k.chars().next().map(|c| (c, *v)))
+            .filter_map(|(k, v): (&String, &i64)| k.chars().next().map(|c| (c, *v)))
             .collect();
         let idx2char: HashMap<i64, char> = char2idx.iter().map(|(c, i)| (*i, *c)).collect();
         Ok(Self::from_maps(char2idx, idx2char))

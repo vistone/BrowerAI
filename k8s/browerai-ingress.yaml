@@ -1,0 +1,79 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: browerai-ingress
+  namespace: browerai
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - api.browerai.example.com
+    secretName: browerai-tls-cert
+  
+  rules:
+  - host: api.browerai.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: browerai-api
+            port:
+              number: 80
+
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: admin@example.com
+    privateKeySecretRef:
+      name: letsencrypt-prod-key
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: browerai-api
+  namespace: browerai
+  labels:
+    app: browerai-api
+spec:
+  selector:
+    matchLabels:
+      app: browerai-api
+  endpoints:
+  - port: http
+    path: /api/metrics
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: browerai-api-metrics
+  namespace: browerai
+  labels:
+    app: browerai-api
+spec:
+  type: ClusterIP
+  ports:
+  - name: metrics
+    port: 3000
+    targetPort: http
+    protocol: TCP
+  selector:
+    app: browerai-api

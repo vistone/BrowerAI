@@ -1,0 +1,267 @@
+# BrowerAI Professional Model Zoo Configuration
+# 专业模型库配置 - 小而精致，CPU 优化，浏览器技术专用
+
+# ============== HTML 系列 ==============
+
+[[models]]
+name = "html_structure_analyzer_v1"
+model_type = "HtmlAnalyzer"
+path = "html_structure_analyzer_v1.onnx"
+description = "HTML 结构分析器 - 1.2M 参数，2-5ms CPU 推理"
+version = "1.0.0"
+priority = 100
+enabled = true
+parameters = "1.2M"
+inference_time_cpu_ms = "2-5"
+task = "html"
+
+[[models]]
+name = "html_complexity_v1"
+model_type = "HtmlParser"
+path = "html_complexity_v1.onnx"
+description = "HTML 复杂度预测模型 - 轻量级"
+version = "1.0.0"
+priority = 90
+enabled = true
+task = "html"
+
+# ============== CSS 系列 ==============
+
+[[models]]
+name = "css_selector_optimizer_v1"
+model_type = "CssOptimizer"
+path = "css_selector_optimizer_v1.onnx"
+description = "CSS 选择器优化器 - 0.9M 参数，1-4ms CPU 推理"
+version = "1.0.0"
+priority = 100
+enabled = true
+parameters = "0.9M"
+inference_time_cpu_ms = "1-4"
+task = "css"
+
+# ============== Phase 2 模型系列（11.8M 参数） ==============
+
+[[models]]
+name = "selector_embedding_v2"
+model_type = "SelectorEmbedding"
+path = "onnx_exports/selector_embedding.onnx"
+description = "CSS选择器嵌入模型 - 2.83M参数，Transformer+LSTM"
+version = "2.0.0"
+priority = 110
+enabled = true
+parameters = "2.83M"
+task = "css_embedding"
+format = "onnx"
+
+[[models]]
+name = "property_predictor_v2"
+model_type = "PropertyPredictor"
+path = "onnx_exports/property_predictor.onnx"
+description = "CSS属性预测模型 - 2.66M参数，多任务LSTM"
+version = "2.0.0"
+priority = 110
+enabled = true
+parameters = "2.66M"
+task = "css_property"
+format = "onnx"
+
+[[models]]
+name = "color_model_v2"
+model_type = "ColorLearning"
+path = "onnx_exports/color_model.onnx"
+description = "颜色学习模型 - 4.40M参数，CNN+FC"
+version = "2.0.0"
+priority = 105
+enabled = true
+parameters = "4.40M"
+task = "css_color"
+format = "onnx"
+
+[[models]]
+name = "complete_model_v2"
+model_type = "CompletePageModel"
+path = "onnx_exports/complete_model.onnx"
+description = "完整页面模型 - 1.65M参数，统一Transformer"
+version = "2.0.0"
+priority = 110
+enabled = true
+parameters = "1.65M"
+task = "page_analysis"
+format = "onnx"
+
+[[models]]
+name = "finetuned_model_v2"
+model_type = "FinetunedModel"
+path = "onnx_exports/finetuned_model.onnx"
+description = "微调模型 - 0.27M参数，LoRA适配器"
+version = "2.0.0"
+priority = 100
+enabled = true
+parameters = "0.27M"
+task = "css_finetuning"
+format = "onnx"
+
+# ============== JavaScript 系列 ==============
+
+[[models]]
+name = "js_syntax_analyzer_v1"
+model_type = "JsAnalyzer"
+path = "js_syntax_analyzer_v1.onnx"
+description = "JS 语法分析器 - 2.3M 参数，5-8ms CPU 推理"
+version = "1.0.0"
+priority = 100
+enabled = true
+parameters = "2.3M"
+inference_time_cpu_ms = "5-8"
+task = "js-analyze"
+
+[[models]]
+name = "js_deobfuscator_lite_v1"
+model_type = "JsDeobfuscator"
+path = "js_deobfuscator_lite_v1.onnx"
+description = "JS 去混淆器轻量版 - 2.8M 参数，8-10ms CPU 推理"
+version = "1.0.0"
+priority = 95
+enabled = true
+parameters = "2.8M"
+inference_time_cpu_ms = "8-10"
+task = "deobf"
+
+[[models]]
+name = "js_deobfuscator_v1"
+model_type = "JsDeobfuscator"
+path = "js_deobfuscator_v1.onnx"
+description = "Seq2Seq JS去混淆模型 - LSTM编码器/解码器，vocab 160"
+version = "1.0.0"
+priority = 80
+enabled = true
+task = "deobf"
+
+# ============== 跨领域系列 ==============
+
+[[models]]
+name = "qwen2_5_coder_7b_gguf"
+model_type = "CodeLlm"
+path = "qwen2.5-coder-7b-instruct-q5_k_m.gguf"
+description = "Qwen2.5-Coder-7B (Q5_K_M 量化 GGUF, Candle 加载) - 适用于 JS/HTML/CSS 代码理解与生成"
+version = "1.0.0"
+priority = 70
+enabled = false
+parameters = "7B (MoE 2.4B active), quantized Q5_K_M"
+task = "js-analyze"
+
+[[models]]
+name = "code_understanding_v1"
+model_type = "CodeUnderstanding"
+path = "code_understanding_v1.onnx"
+description = "代码理解模型 - 15K参数，站点/技术栈分类"
+version = "1.0.0"
+priority = 90
+enabled = true
+task = "js-analyze"
+
+[[models]]
+name = "web_component_classifier_v1"
+model_type = "ComponentClassifier"
+path = "web_component_classifier_v1.onnx"
+description = "Web 组件分类器 - 1.3M 参数，识别 30+ 组件类型"
+version = "1.0.0"
+priority = 85
+enabled = false
+parameters = "1.3M"
+task = "html"
+
+# ============== 代码去混淆系列 ==============
+
+[[models]]
+name = "website_deobfuscator_v1"
+model_type = "Deobfuscator"
+path = "website_deobf_model.onnx"
+description = "网站代码去混淆模型 - 6.59M参数，Transformer，604训练对，Loss 1.81"
+version = "1.0.0"
+priority = 95
+enabled = true
+parameters = "6.59M"
+vocab_size = 1041
+max_length = 2048
+inference_time_cpu_ms = "50-200"
+task = "deobf"
+training_data = "604 website pairs"
+epoch = 30
+
+[[models]]
+name = "website_deobfuscator_augmented_v1"
+model_type = "Deobfuscator"
+path = "website_deobf_augmented.onnx"
+description = "增强型去混淆模型 - 6.17M参数，支持ES6/TS/JSX/WebGL，659训练对，Loss 2.11"
+version = "1.0.0"
+priority = 90
+enabled = true
+parameters = "6.17M"
+vocab_size = 229
+max_length = 2048
+inference_time_cpu_ms = "40-180"
+task = "deobf"
+training_data = "659 website pairs (augmented)"
+epoch = 30
+features = ["ES6", "TypeScript", "JSX", "WebGL", "SVG", "CSS-Grid"]
+
+# ============== 布局与样式生成系列 ==============
+
+[[models]]
+name = "layout_regeneration_v1"
+model_type = "LayoutGenerator"
+path = "layout_regen_v1.onnx"
+description = "布局重排生成器 - 保文本不变，重构DOM结构与布局"
+version = "1.0.0"
+priority = 85
+enabled = false
+task = "layout"
+parameters = "2.5M"
+inference_time_cpu_ms = "15-40"
+
+[[models]]
+name = "style_synthesis_v1"
+model_type = "StyleGenerator"
+path = "style_synth_v1.onnx"
+description = "样式合成器 - 生成现代化CSS配色/排版/响应式"
+version = "1.0.0"
+priority = 80
+enabled = false
+task = "style"
+parameters = "1.8M"
+inference_time_cpu_ms = "10-30"
+
+# ============== 代码预测与生成系列 ==============
+
+[[models]]
+name = "code_predictor_v3"
+model_type = "CodePredictor"
+path = "local/code_predictor_v3.pt"
+description = "代码预测器 Round 3 - Causal LM，2.55M参数，三轮训练"
+version = "3.0.0"
+priority = 90
+enabled = true
+task = "code-completion"
+parameters = "2.55M"
+inference_time_cpu_ms = "50-100"
+training_rounds = 3
+training_loss = "4.18 → 1.88 → 1.27 → 0.00"
+architecture = "Transformer Encoder (3 layers, 4 heads, 256 dim)"
+dataset = "10k diverse samples (HTML/CSS/JS/TS)"
+features = ["代码补全", "缺陷检测", "风格学习", "API预测"]
+
+# ============== 网站生成系列 ==============
+
+[[models]]
+name = "website_generator_production"
+model_type = "WebsiteGenerator"
+path = "local/website_generator_production.pt"
+description = "混合模型 v2 (325 样本) - 最优 Val Loss 0.0315, Epoch 25"
+version = "2.0.0"
+priority = 120
+enabled = true
+parameters = "26.1M"
+inference_time_cpu_ms = "<150"
+task = "website-generation"
+notes = "来自 checkpoints/website_generator_mixed_v2/best_model.pt"
