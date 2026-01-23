@@ -17,10 +17,15 @@ from .parsers import HTMLParser, CSSParser, JSParser
 from .deobfuscator import CodeDeobfuscator
 from .website_learner import (
     HolisticWebsiteLearner,
-    WebsiteIntentClassifier,
     CodeStyleAnalyzer,
     DependencyGraphLearner,
     DeviceAdaptationAnalyzer
+)
+from .website_generator import (
+    WebsiteGenerator,
+    CodeEncoder,
+    CodeDecoder,
+    WebsiteIntentClassifier
 )
 
 __all__ = [
@@ -35,8 +40,12 @@ __all__ = [
     "JSParser",
     "CodeDeobfuscator",
     "HolisticWebsiteLearner",
-    "WebsiteIntentClassifier",
     "CodeStyleAnalyzer",
     "DependencyGraphLearner",
     "DeviceAdaptationAnalyzer",
+    # 端到端网站生成（新增）
+    "WebsiteGenerator",
+    "CodeEncoder",
+    "CodeDecoder",
+    "WebsiteIntentClassifier",
 ]

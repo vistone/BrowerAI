@@ -5,6 +5,8 @@ pub mod browser_automation;
 pub mod browser_tech_detector;
 pub mod code_generator;
 pub mod code_verifier;
+pub mod comparative_learner;
+pub mod comparison_feedback;
 pub mod complete_inference_pipeline;
 pub mod continuous_loop;
 pub mod data_models;
@@ -103,6 +105,11 @@ pub use websocket_analyzer::{
 };
 pub use workflow_extractor::{Workflow, WorkflowExtractionResult, WorkflowExtractor};
 
+pub use comparative_learner::{ComparativeLearner, ComparativeLearningReport};
+pub use comparison_feedback::{
+    CodeVerificationFeedback, ComparisonFeedback, ComparisonFeedbackGenerator, ImprovementStrategy,
+    SemanticComparisonFeedback,
+};
 pub use dual_sandbox_learner::{DualSandboxLearner, DualSandboxLearningResult, LearningSummary};
 // Re-export from new standalone crates
 // pub use browerai_deobfuscation as deobfuscation;

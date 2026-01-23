@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
 """
-训练配对的网站生成器（原始→简化）
-不再是自编码器，而是真正的生成模型
+训练端到端网站生成器（原始→简化）
+
+使用新的 WebsiteGenerator 模型：
+- CodeEncoder: 理解原始网站 (HTML+CSS+JS 融合)
+- CodeDecoder: 生成简化版本
+- WebsiteIntentClassifier: 分类网站意图
+- 多任务学习: 代码重建 + 意图分类
+
+这符合项目设计要求：整体网站学习，而非独立的技术层面学习
 """
 
 import torch
@@ -10,16 +17,37 @@ from torch.utils.data import Dataset, DataLoader
 import json
 import logging
 from pathlib import Path
+import sys
+
+# 添加模型路径
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from core.models.website_generator import WebsiteGenerator
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class PairedWebsiteDataset(Dataset):
-    """配对网站数据集（原始→简化）"""
+    """
+    配对网站数据集（原始→简化）
     
-    def __init__(self, data_file, max_len=2048):
+    数据格式:
+    {
+        "original": "原始网站 HTML+CSS+JS 代码",
+        "simplified": "简化网站 HTML+CSS+JS 代码",
+        "intent": {
+            "layout": "flex|grid|float|table",
+            "interaction": "click_nav|form_submit|search|scroll|hover",
+            "components": "header|footer|sidebar|main|pagination",
+            "theme": "dark|light|colorful|minimal"
+        }
+    }
+    """
+    
+    def __init__(self, data_file, max_len=1024, token_mode='word'):
         self.max_len = max_len
+        self.token_mode = token_mode  # 'word' or 'char'
         
         # 加载配对数据
         logger.info(f"Loading paired websites from {data_file}")
@@ -27,31 +55,42 @@ class PairedWebsiteDataset(Dataset):
         with open(data_file, 'r', encoding='utf-8') as f:
             for line in f:
                 item = json.loads(line)
-                self.data.append({
-                    'original': item['original'],
-                    'simplified': item['simplified']
-                })
+                self.data.append(item)
         
         logger.info(f"Loaded {len(self.data)} website pairs")
         
-        # 构建字符词汇表（合并原始和简化的所有字符）
+        # 构建字符词汇表（简化版：使用字符级token）
         all_chars = set()
         for item in self.data:
             all_chars.update(item['original'])
             all_chars.update(item['simplified'])
         
-        self.char2idx = {'<PAD>': 0, '<SOS>': 1, '<EOS>': 2}
-        for i, char in enumerate(sorted(all_chars), 3):
+        self.char2idx = {'<PAD>': 0, '<SOS>': 1, '<EOS>': 2, '<UNK>': 3}
+        for i, char in enumerate(sorted(all_chars), 4):
             self.char2idx[char] = i
         
         self.idx2char = {v: k for k, v in self.char2idx.items()}
         self.vocab_size = len(self.char2idx)
         
+        # 意图标签映射
+        self.layout_to_idx = {
+            'flex': 0, 'grid': 1, 'float': 2, 'table': 3
+        }
+        self.interaction_to_idx = {
+            'click_nav': 0, 'form_submit': 1, 'search': 2, 'scroll': 3, 'hover': 4
+        }
+        self.components_to_idx = {
+            'header': 0, 'footer': 1, 'sidebar': 2, 'main': 3, 'pagination': 4
+        }
+        self.theme_to_idx = {
+            'dark': 0, 'light': 1, 'colorful': 2, 'minimal': 3
+        }
+        
         logger.info(f"Vocab size: {self.vocab_size}")
     
     def encode(self, text):
         """文本编码为token IDs"""
-        return [self.char2idx.get(c, 0) for c in text[:self.max_len-2]]
+        return [self.char2idx.get(c, self.char2idx['<UNK>']) for c in text[:self.max_len-2]]
     
     def decode(self, tokens):
         """token IDs解码为文本"""
@@ -64,182 +103,249 @@ class PairedWebsiteDataset(Dataset):
     def __getitem__(self, idx):
         """
         Returns:
-            src: 原始网站代码序列
-            tgt: 简化网站代码序列
+            original: 原始网站代码序列
+            simplified: 简化网站代码序列
+            intent_labels: 意图标签字典
         """
         item = self.data[idx]
         
         # 编码原始代码
-        src_encoded = [1] + self.encode(item['original']) + [2]  # SOS + content + EOS
-        src_tensor = torch.tensor(src_encoded, dtype=torch.long)
+        original_encoded = [1] + self.encode(item['original']) + [2]  # SOS + content + EOS
+        original_tensor = torch.tensor(original_encoded, dtype=torch.long)
         
         # 编码简化代码
-        tgt_encoded = [1] + self.encode(item['simplified']) + [2]
-        tgt_tensor = torch.tensor(tgt_encoded, dtype=torch.long)
+        simplified_encoded = [1] + self.encode(item['simplified']) + [2]
+        simplified_tensor = torch.tensor(simplified_encoded, dtype=torch.long)
         
-        return src_tensor, tgt_tensor
+        # 意图标签
+        intent = item.get('intent', {})
+        intent_labels = {
+            'layout': self.layout_to_idx.get(intent.get('layout', 'flex'), 0),
+            'interaction': self.interaction_to_idx.get(intent.get('interaction', 'click_nav'), 0),
+            'components': self.components_to_idx.get(intent.get('components', 'main'), 3),
+            'theme': self.theme_to_idx.get(intent.get('theme', 'light'), 1)
+        }
+        
+        return original_tensor, simplified_tensor, intent_labels
+
 
 
 def collate_fn(batch):
     """批处理，padding到相同长度"""
-    srcs, tgts = zip(*batch)
+    originals, simplified, intent_labels_list = zip(*batch)
     
     # 找到最大长度
-    max_src_len = max(len(s) for s in srcs)
-    max_tgt_len = max(len(t) for t in tgts)
+    max_orig_len = max(len(s) for s in originals)
+    max_simp_len = max(len(t) for t in simplified)
     
     # Padding
-    src_padded = torch.zeros(len(srcs), max_src_len, dtype=torch.long)
-    tgt_padded = torch.zeros(len(tgts), max_tgt_len, dtype=torch.long)
+    orig_padded = torch.zeros(len(originals), max_orig_len, dtype=torch.long)
+    simp_padded = torch.zeros(len(simplified), max_simp_len, dtype=torch.long)
     
-    for i, (src, tgt) in enumerate(zip(srcs, tgts)):
-        src_padded[i, :len(src)] = src
-        tgt_padded[i, :len(tgt)] = tgt
+    for i, (orig, simp) in enumerate(zip(originals, simplified)):
+        orig_padded[i, :len(orig)] = orig
+        simp_padded[i, :len(simp)] = simp
     
-    return src_padded, tgt_padded
+    # 堆叠意图标签
+    intent_batch = {
+        'layout': torch.tensor([labels['layout'] for labels in intent_labels_list], dtype=torch.long),
+        'interaction': torch.tensor([labels['interaction'] for labels in intent_labels_list], dtype=torch.long),
+        'components': torch.tensor([labels['components'] for labels in intent_labels_list], dtype=torch.long),
+        'theme': torch.tensor([labels['theme'] for labels in intent_labels_list], dtype=torch.long)
+    }
+    
+    return orig_padded, simp_padded, intent_batch
 
 
-class WebsiteGenerator(nn.Module):
-    """网站生成器（原始→简化）"""
+class WebsiteGeneratorTrainer:
+    """网站生成器训练器"""
     
-    def __init__(self, vocab_size, d_model=256, nhead=8, num_layers=4, max_len=2048):
-        super().__init__()
-        self.d_model = d_model
-        self.max_len = max_len
+    def __init__(self, model, optimizer, device):
+        self.model = model
+        self.optimizer = optimizer
+        self.device = device
+        self.criterion = nn.CrossEntropyLoss(ignore_index=0)  # 忽略PAD
+    
+    def train_epoch(self, dataloader, dataset, lambda_weights=None):
+        """训练一个epoch"""
+        if lambda_weights is None:
+            lambda_weights = {
+                'html': 1.0,
+                'css': 1.0,
+                'js': 1.0,
+                'reconstruction': 0.7,
+                'intent': 0.3
+            }
         
-        self.embedding = nn.Embedding(vocab_size, d_model)
-        self.pos_encoding = nn.Parameter(torch.randn(1, max_len, d_model))
-        
-        encoder_layer = nn.TransformerEncoderLayer(
-            d_model=d_model,
-            nhead=nhead,
-            dim_feedforward=d_model * 4,
-            dropout=0.1,
-            batch_first=True
-        )
-        self.encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
-        
-        decoder_layer = nn.TransformerDecoderLayer(
-            d_model=d_model,
-            nhead=nhead,
-            dim_feedforward=d_model * 4,
-            dropout=0.1,
-            batch_first=True
-        )
-        self.decoder = nn.TransformerDecoder(decoder_layer, num_layers=num_layers)
-        
-        self.fc_out = nn.Linear(d_model, vocab_size)
-    
-    def forward(self, src, tgt):
-        batch_size, src_len = src.shape
-        tgt_len = tgt.shape[1]
-        
-        # 创建mask
-        src_mask = (src == 0)
-        tgt_mask = (tgt == 0)
-        tgt_attn_mask = torch.triu(torch.ones(tgt_len, tgt_len), diagonal=1).bool().to(src.device)
-        
-        # Encode原始网站
-        src_emb = self.embedding(src) + self.pos_encoding[:, :src_len, :]
-        memory = self.encoder(src_emb, src_key_padding_mask=src_mask)
-        
-        # Decode生成简化版本
-        tgt_emb = self.embedding(tgt) + self.pos_encoding[:, :tgt_len, :]
-        output = self.decoder(
-            tgt_emb, 
-            memory,
-            tgt_mask=tgt_attn_mask,
-            tgt_key_padding_mask=tgt_mask,
-            memory_key_padding_mask=src_mask
-        )
-        
-        logits = self.fc_out(output)
-        return logits
-
-
-def train():
-    """训练配对生成模型"""
-    # 超参数
-    batch_size = 2
-    num_epochs = 30
-    learning_rate = 1e-4
-    
-    # 数据
-    dataset = PairedWebsiteDataset('data/website_paired.jsonl', max_len=1024)
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
-    
-    logger.info(f"Dataset: {len(dataset)} pairs, {len(dataloader)} batches per epoch")
-    
-    # 模型
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = WebsiteGenerator(
-        vocab_size=dataset.vocab_size,
-        d_model=256,
-        nhead=8,
-        num_layers=3,
-        max_len=2048
-    ).to(device)
-    
-    logger.info(f"Model: vocab={dataset.vocab_size}, d_model=256, layers=3, device={device}")
-    
-    # 优化器
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-    criterion = nn.CrossEntropyLoss(ignore_index=0)  # 忽略PAD
-    
-    # 训练
-    checkpoint_dir = Path('checkpoints/paired_generator')
-    checkpoint_dir.mkdir(parents=True, exist_ok=True)
-    
-    logger.info("Starting training (原始→简化)...")
-    
-    for epoch in range(num_epochs):
-        model.train()
+        self.model.train()
         total_loss = 0
+        total_recon_loss = 0
+        total_intent_loss = 0
         
-        for batch_idx, (src, tgt) in enumerate(dataloader):
-            src, tgt = src.to(device), tgt.to(device)
+        for batch_idx, (original, simplified, intent_labels) in enumerate(dataloader):
+            original = original.to(self.device)
+            simplified = simplified.to(self.device)
+            intent_labels = {k: v.to(self.device) for k, v in intent_labels.items()}
             
-            # Forward
-            tgt_input = tgt[:, :-1]  # 去掉最后一个token
-            tgt_output = tgt[:, 1:]  # 去掉第一个token (SOS)
+            # Forward pass
+            batch_size, tgt_len = simplified.shape
             
-            logits = model(src, tgt_input)
+            # 准备目标代码（去掉EOS token）
+            tgt_html = simplified[:, :-1]  # 简化版本作为HTML目标
+            tgt_css = simplified[:, :-1]   # 简化版本作为CSS目标
+            tgt_js = simplified[:, :-1]    # 简化版本作为JS目标
             
-            # Loss
-            loss = criterion(
-                logits.reshape(-1, dataset.vocab_size),
-                tgt_output.reshape(-1)
+            output = self.model(original, original, original)  # HTML, CSS, JS tokens都是原始代码
+            
+            # 计算损失
+            loss_result = self.model.compute_loss(
+                output,
+                tgt_html,
+                tgt_css,
+                tgt_js,
+                intent_labels,
+                lambda_weights
             )
             
-            # Backward
-            optimizer.zero_grad()
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-            optimizer.step()
+            loss = loss_result['total_loss']
             
-            total_loss += loss.item()
+            # Backward
+            self.optimizer.zero_grad()
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+            self.optimizer.step()
+            
+            # 提取标量值用于日志
+            loss_val = loss.item()
+            recon_loss_val = loss_result['reconstruction_loss'].item()
+            intent_loss_val = loss_result['intent_loss'].item()
+            
+            total_loss += loss_val
+            total_recon_loss += recon_loss_val
+            total_intent_loss += intent_loss_val
             
             # 日志
             if (batch_idx + 1) % 10 == 0:
-                logger.info(f"Epoch {epoch+1}/{num_epochs}, Batch {batch_idx+1}, Loss: {loss.item():.4f}")
+                logger.info(
+                    f"Batch {batch_idx+1} - "
+                    f"Loss: {loss_val:.4f}, "
+                    f"Recon: {recon_loss_val:.4f}, "
+                    f"Intent: {intent_loss_val:.4f}"
+                )
         
         avg_loss = total_loss / len(dataloader)
-        logger.info(f"Epoch {epoch+1}/{num_epochs} - Avg Loss: {avg_loss:.4f}")
+        avg_recon = total_recon_loss / len(dataloader)
+        avg_intent = total_intent_loss / len(dataloader)
         
-        # 保存检查点
-        checkpoint_path = checkpoint_dir / f'epoch_{epoch+1}.pt'
+        return {
+            'total_loss': avg_loss,
+            'recon_loss': avg_recon,
+            'intent_loss': avg_intent
+        }
+    
+    def save_checkpoint(self, checkpoint_path, epoch, metrics):
+        """保存检查点"""
         torch.save({
-            'epoch': epoch + 1,
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-            'loss': avg_loss,
-            'vocab_size': dataset.vocab_size,
-            'char2idx': dataset.char2idx,
-            'idx2char': dataset.idx2char
+            'epoch': epoch,
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            'metrics': metrics
         }, checkpoint_path)
         logger.info(f"Saved checkpoint: {checkpoint_path}")
+
+
+def train():
+    """训练端到端网站生成器"""
+    # 超参数
+    batch_size = 4
+    num_epochs = 50
+    learning_rate = 1e-4
+    d_model = 256
+    vocab_size = None
     
+    # 数据
+    data_file = 'data/website_paired.jsonl'
+    if not Path(data_file).exists():
+        logger.warning(f"Data file {data_file} not found, using dummy data for testing")
+        # 创建测试数据
+        Path('data').mkdir(parents=True, exist_ok=True)
+        with open(data_file, 'w') as f:
+            f.write('{"original": "<html><body>Test</body></html>", "simplified": "<html><body>T</body></html>", "intent": {"layout": "flex", "interaction": "click_nav", "components": "main", "theme": "light"}}\n')
+    
+    dataset = PairedWebsiteDataset(data_file, max_len=512)
+    dataloader = DataLoader(
+        dataset, 
+        batch_size=batch_size, 
+        shuffle=True, 
+        collate_fn=collate_fn,
+        num_workers=0
+    )
+    vocab_size = dataset.vocab_size
+    
+    logger.info(f"Dataset: {len(dataset)} pairs, {len(dataloader)} batches per epoch")
+    logger.info(f"Vocab size: {vocab_size}")
+    
+    # 模型 - 创建配置字典
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model_config = {
+        'vocab_size': vocab_size,
+        'd_model': d_model,
+        'num_encoder_layers': 3,
+        'num_decoder_layers': 3
+    }
+    
+    model = WebsiteGenerator(model_config).to(device)
+    
+    logger.info(f"Model initialized on {device}")
+    logger.info(f"Total parameters: {sum(p.numel() for p in model.parameters()):,}")
+    
+    # 优化器
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    
+    # 训练器
+    trainer = WebsiteGeneratorTrainer(model, optimizer, device)
+    
+    # 训练
+    checkpoint_dir = Path('checkpoints/website_generator')
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    
+    logger.info("=" * 60)
+    logger.info("Starting Training: End-to-End Website Generation")
+    logger.info("Architecture: CodeEncoder -> IntentClassifier + CodeDecoder")
+    logger.info("Learning: Holistic website generation (HTML+CSS+JS)")
+    logger.info("=" * 60)
+    
+    lambda_weights = {
+        'html': 1.0,
+        'css': 1.0,
+        'js': 1.0,
+        'reconstruction': 0.7,
+        'intent': 0.3
+    }
+    
+    for epoch in range(num_epochs):
+        logger.info(f"\nEpoch {epoch+1}/{num_epochs}")
+        
+        metrics = trainer.train_epoch(dataloader, dataset, lambda_weights)
+        
+        logger.info(
+            f"  Total Loss: {metrics['total_loss']:.4f}, "
+            f"  Recon Loss: {metrics['recon_loss']:.4f}, "
+            f"  Intent Loss: {metrics['intent_loss']:.4f}"
+        )
+        
+        # 保存检查点
+        if (epoch + 1) % 10 == 0:
+            checkpoint_path = checkpoint_dir / f'epoch_{epoch+1}.pt'
+            trainer.save_checkpoint(checkpoint_path, epoch + 1, metrics)
+    
+    logger.info("\n" + "=" * 60)
     logger.info("✅ Training completed!")
+    logger.info("=" * 60)
+    
+    # 保存最终模型
+    final_model_path = checkpoint_dir / 'final_model.pt'
+    trainer.save_checkpoint(final_model_path, num_epochs, metrics)
 
 
 if __name__ == '__main__':
