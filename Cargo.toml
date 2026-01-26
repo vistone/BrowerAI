@@ -62,7 +62,7 @@ regex = "1.10"
 # HTML/CSS parsing
 html5ever = "0.27"
 markup5ever_rcdom = "0.3"
-cssparser = "0.33"
+cssparser = "0.36"
 selectors = "0.25"
 
 # JavaScript parsing and execution
