@@ -60,7 +60,7 @@ md5 = "0.7"
 regex = "1.10"
 
 # HTML/CSS parsing
-html5ever = "0.27"
+html5ever = "0.37"
 markup5ever_rcdom = "0.3"
 cssparser = "0.33"
 selectors = "0.25"
