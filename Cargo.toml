@@ -69,7 +69,7 @@ selectors = "0.25"
 boa_parser = "0.20"
 boa_ast = "0.20"
 boa_interner = "0.20"
-boa_engine = "0.20"
+boa_engine = "0.21"
 swc_core = "0.88"
 
 # Tch (PyTorch bindings for Rust)
