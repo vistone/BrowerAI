@@ -22,7 +22,7 @@ candle-core = { git = "https://github.com/huggingface/candle", optional = true, 
 # CPU-only: CUDA compilation fails on GTX 1060 (compute 6.1) with current Candle kernels
 # For GPU: consider using llama.cpp server + HTTP API instead
 candle-transformers = { git = "https://github.com/huggingface/candle", optional = true }
-tokenizers = { version = "0.15", optional = true }
+tokenizers = { version = "0.22", optional = true }
 
 [dependencies.ort]
 workspace = true
