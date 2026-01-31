@@ -1,0 +1,24 @@
+{
+  "total_samples": 80,
+  "techniques": [
+    "property_encryption",
+    "function_wrapping",
+    "regex_obfuscation",
+    "array_obfuscation",
+    "dead_code",
+    "control_flow",
+    "variable_rename",
+    "string_encoding"
+  ],
+  "technique_counts": {
+    "property_encryption": 10,
+    "function_wrapping": 10,
+    "regex_obfuscation": 10,
+    "array_obfuscation": 10,
+    "dead_code": 10,
+    "control_flow": 10,
+    "variable_rename": 10,
+    "string_encoding": 10
+  },
+  "avg_obfuscation_ratio": 2.2033870140570353
+}
