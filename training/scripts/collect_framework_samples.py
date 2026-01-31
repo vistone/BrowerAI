@@ -82,6 +82,21 @@ class FrameworkSampleCollector:
         self.frameworks = frameworks or list(FRAMEWORK_URLS.keys())
         self.samples_per_framework = samples_per_framework
         self.collected = []
+        # 扩展框架检测关键词
+        self.framework_indicators = {
+            'react': ['React', 'react-dom', 'next.js', 'gatsby', '__REACT_'],
+            'vue': ['Vue', 'vue.js', 'Vuex', '__VUE', 'v-'],
+            'angular': ['Angular', '@angular', 'ng-', '\\[ngIf\\]'],
+            'jquery': ['jQuery', 'jquery', '$\\.fn'],
+            'svelte': ['Svelte', 'svelte.js'],
+            'express': ['Express', 'express.js'],
+            'ember': ['Ember', 'ember.js', '@ember'],
+            'backbone': ['Backbone', 'backbone.js'],
+            'alpine': ['Alpine', 'alpine.js'],
+            'htmx': ['HTMX', 'htmx.org', 'hx-'],
+            'nextjs': ['Next.js', 'nextjs', '__NEXT', '_next'],
+            'nuxt': ['Nuxt', 'nuxt.js', '__NUXT'],
+        }
     
     async def fetch_url(self, session, url, framework):
         """异步获取单个 URL"""
@@ -116,23 +131,32 @@ class FrameworkSampleCollector:
             return None
     
     def _detect_framework(self, html: str) -> str:
-        """简单的框架检测"""
+        """改进的框架检测 - 多关键词匹配"""
+        scores = {}
         html_lower = html.lower()
         
-        # React
-        if 'react' in html_lower or 'jsx' in html_lower or '_react' in html_lower:
-            return 'react'
+        # 对每个框架计算得分
+        for framework, keywords in self.framework_indicators.items():
+            score = 0
+            for keyword in keywords:
+                # 精确匹配和模糊匹配
+                pattern = keyword.lower().replace('\\\\', '')
+                if pattern in html_lower:
+                    score += 2
+                # 检查前缀
+                if html_lower.count(pattern) > 0:
+                    score += len(pattern)
+            scores[framework] = score
         
-        # Vue
-        if 'vue' in html_lower or 'v-if' in html_lower or 'v-for' in html_lower:
-            return 'vue'
+        # 返回得分最高的框架，或返回 unknown
+        if scores and max(scores.values()) > 0:
+            best_framework = None
+            for fw, sc in scores.items():
+                if best_framework is None or sc > scores[best_framework]:
+                    best_framework = fw
+            return best_framework if best_framework else 'unknown'
         
-        # Angular
-        if 'angular' in html_lower or 'ng-app' in html_lower or '@angular' in html_lower:
-            return 'angular'
-        
-        # jQuery
-        if 'jquery' in html_lower or '$(document)' in html or '$.ajax' in html:
+        return 'unknown'
             return 'jquery'
         
         # Svelte

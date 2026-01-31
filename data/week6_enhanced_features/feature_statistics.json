@@ -1,0 +1,198 @@
+{
+  "total_samples": 1,
+  "feature_dimensions": 48,
+  "features_statistics": {
+    "html_size": {
+      "mean": 124.0,
+      "stdev": 0.0
+    },
+    "html_lines": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "tag_count": {
+      "mean": 3.0,
+      "stdev": 0.0
+    },
+    "unique_tags": {
+      "mean": 3.0,
+      "stdev": 0.0
+    },
+    "tag_diversity": {
+      "mean": 1.0,
+      "stdev": 0.0
+    },
+    "attr_count": {
+      "mean": 2.0,
+      "stdev": 0.0
+    },
+    "unique_attrs": {
+      "mean": 2.0,
+      "stdev": 0.0
+    },
+    "script_count": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "style_count": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "link_count": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "entity_count": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "comment_count": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "data_attr_count": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "class_count": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "id_count": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "js_size": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "inline_js_blocks": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "js_declarations": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "control_flow_density": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "obfuscation_indicators": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "string_count": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "string_length_avg": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "regex_count": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "css_size": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "style_blocks": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "selector_count": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "complex_selector_count": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "property_count": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "unique_properties": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "media_query_count": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "animation_count": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "complexity_score": {
+      "mean": 0.30000000000000004,
+      "stdev": 0.0
+    },
+    "script_ratio": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "style_ratio": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "var_underscore_ratio": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "iife_count": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "hex_string_count": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "obfuscated_array_count": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "bracket_ratio": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "paren_ratio": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "semicolon_density": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "code_entropy": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "framework_obfuscation_interaction": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "size_complexity_product": {
+      "mean": 3.72e-05,
+      "stdev": 0.0
+    },
+    "js_css_ratio": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "code_density": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "dynamic_score": {
+      "mean": 0.0,
+      "stdev": 0.0
+    },
+    "obfuscation_level": {
+      "mean": 0.0,
+      "stdev": 0.0
+    }
+  }
+}
