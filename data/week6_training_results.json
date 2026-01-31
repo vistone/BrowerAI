@@ -1,5 +1,5 @@
 {
-  "timestamp": "1769863612.8087485",
+  "timestamp": "1769871204.6115272",
   "model_type": "HybridEnsemble",
   "models": [
     "NeuralNetwork",
@@ -8,36 +8,36 @@
   "fold_results": [
     {
       "fold": 1,
-      "nn_accuracy": 0.5263157894736842,
+      "nn_accuracy": 0.47368421052631576,
       "rf_accuracy": 0.5789473684210527,
       "ensemble_accuracy": 0.3157894736842105
     },
     {
       "fold": 2,
-      "nn_accuracy": 0.2777777777777778,
-      "rf_accuracy": 0.5,
-      "ensemble_accuracy": 0.3333333333333333
+      "nn_accuracy": 0.6666666666666666,
+      "rf_accuracy": 0.6111111111111112,
+      "ensemble_accuracy": 0.3888888888888889
     },
     {
       "fold": 3,
-      "nn_accuracy": 0.4444444444444444,
+      "nn_accuracy": 0.6111111111111112,
       "rf_accuracy": 0.4444444444444444,
       "ensemble_accuracy": 0.2777777777777778
     },
     {
       "fold": 4,
       "nn_accuracy": 0.2777777777777778,
-      "rf_accuracy": 0.2777777777777778,
+      "rf_accuracy": 0.3333333333333333,
       "ensemble_accuracy": 0.7222222222222222
     },
     {
       "fold": 5,
       "nn_accuracy": 0.3888888888888889,
-      "rf_accuracy": 0.3888888888888889,
+      "rf_accuracy": 0.5555555555555556,
       "ensemble_accuracy": 0.5555555555555556
     }
   ],
-  "average_nn_accuracy": 0.38304093567251457,
-  "average_rf_accuracy": 0.43801169590643274,
-  "average_ensemble_accuracy": 0.4409356725146199
+  "average_nn_accuracy": 0.483625730994152,
+  "average_rf_accuracy": 0.5046783625730994,
+  "average_ensemble_accuracy": 0.45204678362573103
 }
