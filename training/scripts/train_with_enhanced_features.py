@@ -136,11 +136,13 @@ def train_models(X, y, scaler=None):
     else:
         X_scaled = scaler.transform(X)
     
+    small_data = len(X) < 30
+
     models = {
         'neural_network': MLPClassifier(
             hidden_layer_sizes=(256, 128, 64),
             max_iter=500,
-            early_stopping=True,
+            early_stopping=False if small_data else True,
             validation_fraction=0.1,
             batch_size=32,
             learning_rate_init=0.001,
@@ -190,7 +192,15 @@ def evaluate_with_cross_validation(X, y):
     print("\n📊 K-fold 交叉验证 (k=5)...")
     
     X_scaled = StandardScaler().fit_transform(X)
-    kfold = KFold(n_splits=5, shuffle=True, random_state=42)
+    # 小样本/类别不平衡时降低折数或跳过
+    class_counts = np.bincount(y)
+    min_count = class_counts[class_counts > 0].min() if len(class_counts[class_counts > 0]) > 0 else 0
+    if len(y) < 20 or min_count < 2:
+        print("  ⚠️  样本过少，跳过 K-fold，改用全量训练评估")
+        return {}
+
+    n_splits = min(5, len(y))
+    kfold = KFold(n_splits=n_splits, shuffle=True, random_state=42)
     
     results = {}
     
@@ -199,7 +209,7 @@ def evaluate_with_cross_validation(X, y):
     nn_model = MLPClassifier(
         hidden_layer_sizes=(256, 128, 64),
         max_iter=500,
-        early_stopping=True,
+        early_stopping=False,
         validation_fraction=0.1,
         batch_size=32,
         learning_rate_init=0.001,
@@ -288,6 +298,14 @@ def main():
         # 生成报告
         print("\n📈 生成综合报告...")
         
+        # 小样本时可能没有 K-fold 结果
+        if cv_results:
+            best_model = max(cv_results.items(), key=lambda x: x[1]['mean'])[0]
+            ensemble_mean = cv_results['ensemble']['mean']
+        else:
+            best_model = max(train_scores.items(), key=lambda x: x[1])[0]
+            ensemble_mean = None
+
         report = {
             'timestamp': datetime.now().isoformat(),
             'phase': 'Week 6 Phase 2 Step 6',
@@ -303,12 +321,12 @@ def main():
             'cross_validation_results': cv_results,
             'training_results': {name: float(score) for name, score in train_scores.items()},
             'performance_summary': {
-                'best_model': max(cv_results.items(), key=lambda x: x[1]['mean'])[0],
-                'ensemble_accuracy': cv_results['ensemble']['mean'],
+                'best_model': best_model,
+                'ensemble_accuracy': ensemble_mean,
                 'improvement_vs_baseline': {
                     'baseline_accuracy': 0.44,
-                    'current_accuracy': cv_results['ensemble']['mean'],
-                    'improvement_percentage': (cv_results['ensemble']['mean'] - 0.44) / 0.44 * 100
+                    'current_accuracy': ensemble_mean,
+                    'improvement_percentage': (ensemble_mean - 0.44) / 0.44 * 100 if ensemble_mean is not None else None
                 }
             }
         }
@@ -322,17 +340,22 @@ def main():
         print("\n" + "="*80)
         print("✅ 模型训练完成！")
         print("="*80)
-        print(f"\n📊 K-fold 交叉验证结果:")
-        print(f"  • 神经网络:  {cv_results['neural_network']['mean']:.4f} ± {cv_results['neural_network']['std']:.4f}")
-        print(f"  • 随机森林:  {cv_results['random_forest']['mean']:.4f} ± {cv_results['random_forest']['std']:.4f}")
-        print(f"  • 梯度提升:  {cv_results['gradient_boosting']['mean']:.4f} ± {cv_results['gradient_boosting']['std']:.4f}")
-        print(f"  • 集成模型:  {cv_results['ensemble']['mean']:.4f} ± {cv_results['ensemble']['std']:.4f} ⭐")
-        
-        improvement = (cv_results['ensemble']['mean'] - 0.44) / 0.44 * 100
-        print(f"\n📈 性能提升:")
-        print(f"  • 基础模型:  44.09%")
-        print(f"  • 当前集成:  {cv_results['ensemble']['mean']*100:.2f}%")
-        print(f"  • 提升幅度:  {improvement:+.1f}%")
+        if cv_results:
+            print(f"\n📊 K-fold 交叉验证结果:")
+            print(f"  • 神经网络:  {cv_results['neural_network']['mean']:.4f} ± {cv_results['neural_network']['std']:.4f}")
+            print(f"  • 随机森林:  {cv_results['random_forest']['mean']:.4f} ± {cv_results['random_forest']['std']:.4f}")
+            print(f"  • 梯度提升:  {cv_results['gradient_boosting']['mean']:.4f} ± {cv_results['gradient_boosting']['std']:.4f}")
+            print(f"  • 集成模型:  {cv_results['ensemble']['mean']:.4f} ± {cv_results['ensemble']['std']:.4f} ⭐")
+
+            improvement = (cv_results['ensemble']['mean'] - 0.44) / 0.44 * 100
+            print(f"\n📈 性能提升:")
+            print(f"  • 基础模型:  44.09%")
+            print(f"  • 当前集成:  {cv_results['ensemble']['mean']*100:.2f}%")
+            print(f"  • 提升幅度:  {improvement:+.1f}%")
+        else:
+            print("\n📊 训练集结果 (小样本，跳过 K-fold):")
+            for name, score in train_scores.items():
+                print(f"  • {name}: {score:.4f}")
         
         print(f"\n💾 结果已保存: {output_file}")
         print("="*80)

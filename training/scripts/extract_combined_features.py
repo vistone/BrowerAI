@@ -11,6 +11,7 @@ Week 6 Step 5 - 综合特征提取与增强
 import json
 import re
 import logging
+import math
 from pathlib import Path
 from typing import Dict, List, Tuple
 import hashlib
@@ -149,7 +150,8 @@ class CombinedFeatureExtractor:
             entropy = 0.0
             for count in freq.values():
                 p = count / len(code)
-                entropy -= p * (p.bit_length() if p > 0 else 0) / 8
+                if p > 0:
+                    entropy -= p * math.log2(p)
             features['code_entropy'] = float(entropy)
         else:
             features['code_entropy'] = 0.0
