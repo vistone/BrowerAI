@@ -4,6 +4,7 @@
 pub mod api;
 // pub mod deobfuscating_sandbox;  // 暂时禁用：需要browerai_deobfuscation crate
 pub mod events;
+pub mod modern_apis;
 pub mod sandbox;
 pub mod script_detector;
 
@@ -16,6 +17,9 @@ pub use api::{DomApiExtensions, ElementHandle};
 //     DeobfuscatingExecutionStats, DeobfuscatingSandbox, DeobfuscationConfig,
 // };
 pub use events::{Event, EventListener, EventListeners, EventPhase, EventType};
+pub use modern_apis::{
+    PerformanceAPI, PerformanceEntry, RelativeTimeFormat, StructuredClone, TemporalAPI, WebStorage,
+};
 pub use sandbox::{ExecutionContext, JsSandbox, ResourceLimits, SandboxError, SandboxValue};
 
 /// Represents a DOM element with attributes and children
