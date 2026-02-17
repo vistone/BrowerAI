@@ -1,0 +1,77 @@
+version: '3.9'
+
+services:
+  # API服务器
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "3000:3000"
+    environment:
+      RUST_LOG: info
+      API_HOST: 0.0.0.0
+      API_PORT: 3000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - browerai-network
+
+  # Redis缓存 (可选)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - browerai-network
+    volumes:
+      - redis-data:/data
+
+  # PostgreSQL数据库 (可选)
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: browerai
+      POSTGRES_USER: browerai
+      POSTGRES_PASSWORD: browerai
+    networks:
+      - browerai-network
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  # Prometheus监控 (可选)
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    networks:
+      - browerai-network
+
+  # Grafana仪表板 (可选)
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    networks:
+      - browerai-network
+    depends_on:
+      - prometheus
+
+networks:
+  browerai-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  postgres-data:

@@ -1,0 +1,20 @@
+[package]
+name = "browerai-cache"
+version = "0.2.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.35", features = ["full"] }
+redis = { version = "0.24", features = ["aio", "tokio-comp", "json"] }
+deadpool-redis = "0.14"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+thiserror = "1.0"
+log = "0.4"
+prometheus = "0.13"
+dashmap = "5.5.3"
+parking_lot = "0.12.1"
+
+[dev-dependencies]
+tokio-test = "0.4"

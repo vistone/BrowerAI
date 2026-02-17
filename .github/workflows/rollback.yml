@@ -1,0 +1,124 @@
+name: Rollback - Manual Deployment Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: 'Kubernetes rollout revision (leave empty for previous)'
+        required: false
+        default: ''
+      namespace:
+        description: 'Namespace to rollback'
+        required: true
+        default: 'browerai'
+        type: choice
+        options:
+          - browerai
+          - browerai-staging
+          - browerai-prod
+
+env:
+  DEPLOYMENT_NAME: browerai-api-deployment
+
+jobs:
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.namespace }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+      
+      - name: Configure kubectl
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+          kubectl config use-context ${{ secrets.KUBE_CONTEXT }}
+      
+      - name: Get rollout history
+        run: |
+          echo "Rollout history for ${{ env.DEPLOYMENT_NAME }}:"
+          echo ""
+          kubectl rollout history deployment/${{ env.DEPLOYMENT_NAME }} \
+            -n ${{ github.event.inputs.namespace }}
+      
+      - name: Perform rollback
+        run: |
+          REVISION="${{ github.event.inputs.revision }}"
+          NAMESPACE="${{ github.event.inputs.namespace }}"
+          
+          if [ -z "$REVISION" ]; then
+            echo "Rolling back to previous revision..."
+            kubectl rollout undo deployment/${{ env.DEPLOYMENT_NAME }} \
+              -n $NAMESPACE
+          else
+            echo "Rolling back to revision $REVISION..."
+            kubectl rollout undo deployment/${{ env.DEPLOYMENT_NAME }} \
+              --to-revision=$REVISION \
+              -n $NAMESPACE
+          fi
+      
+      - name: Wait for rollback
+        run: |
+          echo "Waiting for rollback to complete..."
+          kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} \
+            -n ${{ github.event.inputs.namespace }} \
+            --timeout=5m
+          
+          echo "✅ Rollback completed"
+      
+      - name: Verify rollback
+        run: |
+          echo "Verifying rollback..."
+          echo ""
+          echo "Deployment status:"
+          kubectl get deployment ${{ env.DEPLOYMENT_NAME }} \
+            -n ${{ github.event.inputs.namespace }}
+          
+          echo ""
+          echo "Pod status:"
+          kubectl get pods -n ${{ github.event.inputs.namespace }} \
+            -l app=browerai-api
+          
+          echo ""
+          echo "Recent rollout history:"
+          kubectl rollout history deployment/${{ env.DEPLOYMENT_NAME }} \
+            -n ${{ github.event.inputs.namespace }} | head -5
+      
+      - name: Health check
+        run: |
+          echo "Running health check..."
+          
+          # Port forward
+          kubectl port-forward -n ${{ github.event.inputs.namespace }} \
+            svc/browerai-api-service 5000:5000 > /dev/null 2>&1 &
+          
+          sleep 3
+          
+          # Check health
+          curl -f http://localhost:5000/health || exit 1
+          
+          echo "✅ Service is healthy"
+      
+      - name: Rollback summary
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ Rollback Successful"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Deployment: ${{ env.DEPLOYMENT_NAME }}"
+          echo "Namespace: ${{ github.event.inputs.namespace }}"
+          echo "Revision: ${{ github.event.inputs.revision || 'Previous' }}"
+          echo "Status: ✅ Healthy"
+          echo "Time: $(date)"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      
+      - name: Notify on rollback
+        if: always()
+        run: |
+          echo "ℹ️ Rollback completed for ${{ github.event.inputs.namespace }}"
+          echo "Please verify the application in the ${{ github.event.inputs.namespace }} environment"

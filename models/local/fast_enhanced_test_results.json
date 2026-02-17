@@ -1,0 +1,7 @@
+{
+  "model": "fast_enhanced.onnx",
+  "timestamp": "2026-01-30 09:47:32",
+  "accuracy": "0.00%",
+  "avg_inference_time_ms": 15.53,
+  "throughput_per_sec": 64.4
+}

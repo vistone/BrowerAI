@@ -1,0 +1,73 @@
+groups:
+  - name: framework_detection
+    interval: 30s
+    rules:
+      # 高错误率告警(5分钟内错误率>5%)
+      - alert: HighErrorRate
+        expr: rate(framework_detector_errors_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "框架检测API错误率过高"
+          description: "最近5分钟错误率: {{ $value | humanizePercentage }}"
+
+      # 请求响应时间过长(p95 > 1s)
+      - alert: HighRequestLatency
+        expr: histogram_quantile(0.95, rate(framework_detector_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "框架检测API响应时间过长"
+          description: "P95延迟: {{ $value | humanizeDuration }}"
+
+      # API不可用(连续2分钟无响应)
+      - alert: APIDown
+        expr: up{job="framework-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "框架检测API不可用"
+          description: "API服务在{{ $labels.instance }}已离线超过2分钟"
+
+      # 模型加载失败
+      - alert: ModelLoadFailure
+        expr: framework_detector_model_load_seconds == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "框架检测模型加载失败"
+          description: "{{ $labels.model_type }}模型未成功加载"
+
+      # CPU使用率过高(>80%)
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU使用率过高"
+          description: "{{ $labels.instance }}的CPU使用率: {{ $value | humanize }}%"
+
+      # 内存使用率过高(>85%)
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "内存使用率过高"
+          description: "{{ $labels.instance }}的内存使用率: {{ $value | humanize }}%"
+
+      # 磁盘使用率过高(>90%)
+      - alert: HighDiskUsage
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "磁盘使用率过高"
+          description: "{{ $labels.instance }}的磁盘使用率: {{ (1 - $value) * 100 | humanize }}%"

@@ -1,6 +1,6 @@
 [package]
 name = "browerai"
-version = "0.1.0"
+version = "0.2.0"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -11,6 +11,14 @@ description = "AI-powered browser with autonomous HTML/CSS/JS parsing and render
 name = "browerai"
 path = "src/main.rs"
 
+[[example]]
+name = "python_deobfuscation_demo"
+path = "../../examples/python_deobfuscation_demo.rs"
+
+[[example]]
+name = "framework_detection_demo"
+path = "../../examples/framework_detection_demo.rs"
+
 [dependencies]
 browerai-core = { workspace = true }
 browerai-dom = { workspace = true }
@@ -20,7 +28,7 @@ browerai-js-parser = { workspace = true }
 browerai-js-analyzer = { workspace = true }
 browerai-js-v8 = { workspace = true, optional = true }
 browerai-ai-core = { workspace = true, optional = true }
-browerai-ai-integration = { workspace = true, optional = true }
+browerai-ai-integration = { workspace = true }
 browerai-ml = { workspace = true, optional = true }
 browerai-renderer-core = { workspace = true }
 browerai-renderer-predictive = { workspace = true }
@@ -31,14 +39,19 @@ browerai-devtools = { workspace = true }
 browerai-testing = { workspace = true }
 browerai-plugins = { workspace = true }
 browerai-metrics = { workspace = true, optional = true }
+browerai-deobfuscation = { workspace = true }
 
 anyhow = { workspace = true }
 log = { workspace = true }
 env_logger = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+clap = { version = "4.5", features = ["derive"] }
+tokio = { workspace = true, features = ["full"] }
 
 [features]
 default = []
-ai = ["browerai-ai-core", "browerai-ai-core/onnx", "browerai-ai-integration"]
+ai = ["browerai-ai-core", "browerai-ai-core/onnx"]
 # Enable Candle-based GGUF LLMs (e.g., Qwen2.5-Coder) with browerai-ai-core
 ai-candle = ["browerai-ai-core", "browerai-ai-core/candle"]
 # Enable ML toolkit with tch-rs (PyTorch bindings)

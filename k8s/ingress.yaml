@@ -1,0 +1,95 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: browerai-api-ingress
+  namespace: browerai
+  labels:
+    app: browerai-api
+  annotations:
+    # Nginx Ingress Controller 配置
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    
+    # CORS 配置
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Content-Type, Authorization"
+    
+    # 速率限制
+    nginx.ingress.kubernetes.io/limit-connections: "10"
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    
+    # 超时配置
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
+    
+    # 缓冲配置
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-buffering: "on"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "4k"
+    
+    # 日志配置
+    nginx.ingress.kubernetes.io/enable-access-log: "true"
+    
+    # 认证 (可选)
+    # nginx.ingress.kubernetes.io/auth-type: basic
+    # nginx.ingress.kubernetes.io/auth-secret: basic-auth
+
+spec:
+  # Ingress Class
+  ingressClassName: nginx
+  
+  # TLS 配置 (生产环境使用)
+  # tls:
+  #   - hosts:
+  #       - browerai.example.com
+  #     secretName: browerai-tls-cert
+  
+  rules:
+    - host: browerai.localhost  # 开发环境
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: browerai-api-service
+                port:
+                  number: 5000
+    
+    # 生产环境配置示例
+    # - host: browerai.example.com
+    #   http:
+    #     paths:
+    #       - path: /api
+    #         pathType: Prefix
+    #         backend:
+    #           service:
+    #             name: browerai-api-service
+    #             port:
+    #               number: 5000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: browerai-api-loadbalancer
+  namespace: browerai
+  labels:
+    app: browerai-api
+spec:
+  type: LoadBalancer  # 生产环境可以改为 NodePort 配合 Ingress
+  ports:
+    - port: 80
+      targetPort: 5000
+      protocol: TCP
+      name: http
+  selector:
+    app: browerai-api
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600

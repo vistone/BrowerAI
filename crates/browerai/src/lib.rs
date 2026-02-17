@@ -40,7 +40,8 @@ pub use browerai_js_v8 as js_v8;
 // Re-export AI (conditional)
 #[cfg(feature = "ai")]
 pub use browerai_ai_core as ai;
-#[cfg(feature = "ai")]
+
+// Re-export AI integration (always available)
 pub use browerai_ai_integration as ai_integration;
 
 // Re-export renderers
@@ -50,9 +51,6 @@ pub use browerai_renderer_predictive as renderer_predictive;
 
 // Re-export learning
 pub use browerai_learning as learning;
-
-// Re-export config
-pub use browerai_config as config;
 
 // Re-export utilities
 pub use browerai_devtools as devtools;
@@ -96,11 +94,7 @@ pub mod prelude {
 
     // Learning
     pub use browerai_deobfuscation::JsDeobfuscator;
-    pub use browerai_feedback::FeedbackCollector;
-    pub use browerai_learning::{deobfuscation, feedback, CodeGenerator};
-
-    // Config
-    pub use browerai_config::{Config, ConfigLoader};
+    pub use browerai_learning::{deobfuscation, CodeGenerator};
 
     // Network
     pub use browerai_network::{HttpClient, ResourceCache};

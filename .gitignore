@@ -26,10 +26,20 @@ Thumbs.db
 
 # Logs
 *.log
+/logs/
+logs/
 
-# Model files (can be large)
-models/local/*.onnx
-models/local/*.pb
+# Python
+.venv/
+venv_test/
+.venv
+venv_test
+__pycache__/
+*.py[cod]
+
+# Code checkers cache
+.ruff_cache/
+.pytest_cache/
 
 # Temporary files
 /tmp

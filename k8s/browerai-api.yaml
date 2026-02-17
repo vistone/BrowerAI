@@ -1,0 +1,235 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: browerai
+  labels:
+    name: browerai
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: browerai-api-config
+  namespace: browerai
+data:
+  RUST_LOG: "info"
+  MODEL_DIR: "/app/models/onnx_exports"
+  LISTEN_ADDR: "0.0.0.0:3000"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: browerai-api-keys
+  namespace: browerai
+type: Opaque
+stringData:
+  admin-key: "browerai_admin_development_key_12345"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: browerai-api
+  namespace: browerai
+  labels:
+    app: browerai-api
+    version: v1
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: browerai-api
+  template:
+    metadata:
+      labels:
+        app: browerai-api
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3000"
+        prometheus.io/path: "/api/metrics"
+    spec:
+      serviceAccountName: browerai-api
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      
+      containers:
+      - name: api
+        image: browerai-api:latest
+        imagePullPolicy: Always
+        
+        ports:
+        - name: http
+          containerPort: 3000
+          protocol: TCP
+        
+        envFrom:
+        - configMapRef:
+            name: browerai-api-config
+        
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: models
+          mountPath: /app/models
+          readOnly: true
+      
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: models
+        configMap:
+          name: browerai-models
+          optional: true
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: browerai-api
+  namespace: browerai
+  labels:
+    app: browerai-api
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP
+  selector:
+    app: browerai-api
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: browerai-api-hpa
+  namespace: browerai
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: browerai-api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: browerai-api-pdb
+  namespace: browerai
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: browerai-api
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ServiceAccount
+metadata:
+  name: browerai-api
+  namespace: browerai
+
+---
+apiVersion: v1
+kind: NetworkPolicy
+metadata:
+  name: browerai-api-network-policy
+  namespace: browerai
+spec:
+  podSelector:
+    matchLabels:
+      app: browerai-api
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 3000
+  egress:
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+  - to:
+    - podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - protocol: TCP
+      port: 9090

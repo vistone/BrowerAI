@@ -1,0 +1,203 @@
+name: Rollback Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to rollback'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      revision:
+        description: 'Revision number to rollback to (0=previous, 1=2 versions back, etc.)'
+        required: false
+        default: '0'
+      reason:
+        description: 'Reason for rollback'
+        required: true
+
+env:
+  NAMESPACE: browerai
+  DEPLOYMENT_NAME: browerai-api-deployment
+
+jobs:
+  validate-rollback:
+    name: Validate Rollback Request
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Validate inputs
+        run: |
+          echo "🔄 Rollback Request"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Revision: ${{ github.event.inputs.revision }}"
+          echo "Reason: ${{ github.event.inputs.reason }}"
+          
+          # Check revision is a number
+          if ! [[ "${{ github.event.inputs.revision }}" =~ ^[0-9]+$ ]]; then
+            echo "❌ Invalid revision number"
+            exit 1
+          fi
+      
+      - name: Require approval
+        run: |
+          echo "⚠️ Manual approval required for rollback"
+          echo "This action will rollback the deployment"
+
+  execute-rollback:
+    name: Execute Rollback
+    runs-on: ubuntu-latest
+    needs: validate-rollback
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+      
+      - name: Configure kubectl
+        run: |
+          mkdir -p $HOME/.kube
+          if [ ! -z "${{ secrets.KUBE_CONFIG }}" ]; then
+            echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+            chmod 600 $HOME/.kube/config
+            kubectl cluster-info
+          else
+            echo "❌ No KUBE_CONFIG secret found"
+            exit 1
+          fi
+      
+      - name: Check deployment history
+        id: history
+        run: |
+          echo "Current deployment history:"
+          kubectl rollout history deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }}
+          
+          # Get current revision
+          CURRENT=$(kubectl get deployment ${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }} -o jsonpath='{.metadata.annotations.deployment\.kubernetes\.io/revision}')
+          echo "current_revision=${CURRENT}" >> $GITHUB_OUTPUT
+          echo "Current revision: ${CURRENT}"
+      
+      - name: Perform rollback
+        run: |
+          REVISION="${{ github.event.inputs.revision }}"
+          
+          if [ "$REVISION" == "0" ]; then
+            echo "Rolling back to previous revision..."
+            kubectl rollout undo deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }}
+          else
+            echo "Rolling back $REVISION revisions..."
+            # Calculate target revision
+            CURRENT=${{ steps.history.outputs.current_revision }}
+            TARGET=$((CURRENT - REVISION))
+            
+            if [ $TARGET -le 0 ]; then
+              echo "❌ Cannot rollback that far"
+              exit 1
+            fi
+            
+            kubectl rollout undo deployment/${{ env.DEPLOYMENT_NAME }} \
+              -n ${{ env.NAMESPACE }} \
+              --to-revision=$TARGET
+          fi
+      
+      - name: Wait for rollback to complete
+        run: |
+          echo "Waiting for rollback to complete..."
+          kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} \
+            -n ${{ env.NAMESPACE }} \
+            --timeout=5m
+          
+          echo "✅ Rollback completed successfully"
+      
+      - name: Verify rollback
+        run: |
+          echo "Verifying deployment after rollback..."
+          
+          # Check pod status
+          kubectl get pods -n ${{ env.NAMESPACE }} -l app=browerai-api
+          
+          # Check deployment
+          kubectl get deployment ${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }}
+          
+          # Get new revision
+          NEW_REVISION=$(kubectl get deployment ${{ env.DEPLOYMENT_NAME }} \
+            -n ${{ env.NAMESPACE }} \
+            -o jsonpath='{.metadata.annotations.deployment\.kubernetes\.io/revision}')
+          
+          echo "New revision: ${NEW_REVISION}"
+          echo "Previous revision: ${{ steps.history.outputs.current_revision }}"
+
+  health-check:
+    name: Post-Rollback Health Check
+    runs-on: ubuntu-latest
+    needs: execute-rollback
+    
+    steps:
+      - name: Wait for stabilization
+        run: sleep 30
+      
+      - name: Check service health
+        run: |
+          if [ ! -z "${{ secrets.API_ENDPOINT }}" ]; then
+            echo "Checking health endpoint..."
+            
+            for i in {1..10}; do
+              if curl -f -s ${{ secrets.API_ENDPOINT }}/api/health > /dev/null; then
+                echo "✅ Health check passed (attempt $i)"
+                exit 0
+              fi
+              echo "⏳ Waiting for service... (attempt $i/10)"
+              sleep 5
+            done
+            
+            echo "❌ Health check failed after rollback"
+            exit 1
+          else
+            echo "ℹ️ No API_ENDPOINT configured, skipping health check"
+          fi
+      
+      - name: Rollback successful
+        run: |
+          echo "✅ Rollback completed and verified"
+          echo "Reason: ${{ github.event.inputs.reason }}"
+
+  notify-rollback:
+    name: Send Rollback Notification
+    runs-on: ubuntu-latest
+    needs: [execute-rollback, health-check]
+    if: always()
+    
+    steps:
+      - name: Create rollback report
+        run: |
+          cat << EOF > rollback_report.txt
+          🔄 Deployment Rollback Report
+          
+          Environment: ${{ github.event.inputs.environment }}
+          Revision: ${{ github.event.inputs.revision }} revisions back
+          Reason: ${{ github.event.inputs.reason }}
+          Triggered by: ${{ github.actor }}
+          Status: ${{ needs.health-check.result }}
+          Time: $(date -u)
+          
+          Repository: ${{ github.repository }}
+          Branch: ${{ github.ref }}
+          Commit: ${{ github.sha }}
+          EOF
+          
+          cat rollback_report.txt
+      
+      - name: Upload report
+        uses: actions/upload-artifact@v3
+        with:
+          name: rollback-report
+          path: rollback_report.txt
+          retention-days: 30

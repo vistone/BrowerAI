@@ -86,7 +86,7 @@ impl ReskinPipeline {
     fn extract_host(url: &str) -> Option<String> {
         url::Url::parse(url)
             .ok()
-            .and_then(|u| u.host_str().map(|s| s.to_string()))
+            .and_then(|u: url::Url| u.host_str().map(|s: &str| s.to_string()))
     }
 
     /// Generate overlay CSS (角色识别使用通用选择器，不改动功能属性)。

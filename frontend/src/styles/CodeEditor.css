@@ -1,0 +1,100 @@
+/* CodeEditor 组件样式 */
+
+.code-editor {
+  display: flex;
+  flex-direction: column;
+  height: 500px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: #f9f9f9;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.editor-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.line-count {
+  font-size: 12px;
+  color: #999;
+  font-weight: 500;
+}
+
+.editor-container {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.code-input {
+  flex: 1;
+  padding: 15px 20px;
+  border: none;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  background: white;
+  resize: none;
+  outline: none;
+  -moz-tab-size: 2;
+  tab-size: 2;
+}
+
+.code-input::placeholder {
+  color: #ccc;
+}
+
+.code-input:disabled {
+  background: #f5f5f5;
+  color: #999;
+}
+
+.editor-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: #f9f9f9;
+  border-top: 1px solid #e0e0e0;
+  gap: 15px;
+}
+
+.submit-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.char-count {
+  font-size: 12px;
+  color: #999;
+  margin-left: auto;
+  font-weight: 500;
+}

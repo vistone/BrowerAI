@@ -1,0 +1,68 @@
+[package]
+name = "browerai-api-server"
+version = "0.2.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "HTTP API server for BrowerAI Phase 3"
+
+[dependencies]
+browerai-core = { workspace = true }
+browerai-css-parser = { workspace = true }
+browerai-html-parser = { workspace = true }
+browerai-renderer-core = { workspace = true }
+browerai-ai-core = { workspace = true, optional = true }
+
+# Web framework
+axum = { version = "0.7", features = ["macros"] }
+tokio = { workspace = true, features = ["full"] }
+tower = { version = "0.4", features = ["util"] }
+tower-http = { version = "0.5", features = ["fs", "trace", "cors"] }
+
+# Serialization
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+# Error handling and logging
+anyhow = { workspace = true }
+thiserror = "1.0"
+tracing = "0.1"
+log = { workspace = true }
+parking_lot = { workspace = true }
+dashmap = "5.5"
+futures = "0.3"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Validation
+validator = { version = "0.18", features = ["derive"] }
+
+# Metrics
+prometheus = "0.13"
+lazy_static = "1.4"
+
+# Security and HTTPS
+tokio-rustls = "0.24"
+rustls-pemfile = "2.0"
+tokio-util = { version = "0.7", features = ["codec"] }
+
+# Rate limiting
+governor = "0.6"
+
+# UUID for API keys
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+# Async utilities
+async-trait = "0.1"
+
+# Date/time
+chrono = { version = "0.4", features = ["serde"] }
+
+[features]
+default = []
+ai = ["browerai-ai-core"]
+onnx = ["ai", "browerai-ai-core/onnx", "browerai-css-parser/onnx"]
+
+[dev-dependencies]
+reqwest = { version = "0.12", features = ["json"] }
+axum-test = "15.0"

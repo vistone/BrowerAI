@@ -1,6 +1,6 @@
 [package]
 name = "browerai-css-parser"
-version = "0.1.0"
+version = "0.2.0"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -19,13 +19,14 @@ selectors = { workspace = true }
 [features]
 default = []
 ai = ["browerai-ai-core"]
+onnx = ["ai", "browerai-ai-core/onnx"]
 
 [dev-dependencies]
 env_logger = { workspace = true }
 proptest = "1.0"
 criterion = { version = "0.5", features = ["html_reports"] }
+tempfile = { workspace = true }
 
 [[bench]]
 name = "css_parser_benchmarks"
 harness = false
-tempfile = { workspace = true }

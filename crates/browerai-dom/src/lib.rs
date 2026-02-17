@@ -5,6 +5,7 @@ pub mod api;
 // pub mod deobfuscating_sandbox;  // 暂时禁用：需要browerai_deobfuscation crate
 pub mod events;
 pub mod sandbox;
+pub mod script_detector;
 
 use markup5ever_rcdom::{Handle, NodeData, RcDom};
 use std::collections::HashMap;

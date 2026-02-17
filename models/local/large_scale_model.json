@@ -1,0 +1,53 @@
+{
+  "model_name": "large_scale_framework_detector",
+  "model_type": "LSTM",
+  "version": "1.0.0",
+  "input_shapes": {
+    "input_ids": [
+      1,
+      256
+    ],
+    "lengths": [
+      1
+    ]
+  },
+  "output_shapes": {
+    "logits": [
+      1,
+      23
+    ]
+  },
+  "vocab_size": 10000,
+  "num_classes": 23,
+  "embedding_dim": 512,
+  "hidden_dim": 512,
+  "num_layers": 2,
+  "class_names": [
+    "react",
+    "vue",
+    "angular",
+    "svelte",
+    "preact",
+    "solid",
+    "alpine",
+    "htmx",
+    "web-components",
+    "lit",
+    "ember",
+    "backbone",
+    "marko",
+    "riotjs",
+    "mithril",
+    "polymer",
+    "riot",
+    "dojo",
+    "knockout",
+    "inferno",
+    "unknown",
+    "vanilla",
+    "jquery"
+  ],
+  "training_samples": 17542,
+  "validation_accuracy": 0.9578,
+  "training_accuracy": 0.9838
+}

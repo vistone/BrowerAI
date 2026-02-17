@@ -1,4 +1,7 @@
 pub mod decoder;
+pub mod framework_detector;
+pub mod http_client;
+pub mod hybrid_framework_integration;
 pub mod integration;
 #[cfg(feature = "js_orchestrator")]
 pub mod js_orchestrator;
@@ -6,6 +9,11 @@ pub mod services;
 pub mod tokenizer;
 
 pub use decoder::beam_search::BeamSearchParams;
+pub use framework_detector::FrameworkDetectorIntegration;
+pub use http_client::{FrameworkDetectorClient, DetectResponse, BatchDetectResponse};
+pub use hybrid_framework_integration::{
+    HybridFrameworkIntegration, FrameworkDetectionResult, DetectionMethod,
+};
 pub use integration::{CssModelIntegration, HtmlModelIntegration, JsDeobfuscatorIntegration};
 #[cfg(feature = "js_orchestrator")]
 pub use js_orchestrator::{HybridJsOrchestrator, OrchestrationPolicy};

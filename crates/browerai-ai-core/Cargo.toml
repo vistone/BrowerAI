@@ -1,6 +1,6 @@
 [package]
 name = "browerai-ai-core"
-version = "0.1.0"
+version = "0.2.0"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -16,12 +16,17 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 toml = { workspace = true }
 chrono = { workspace = true }
+parking_lot = { workspace = true }
+reqwest = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+dirs = { workspace = true }
 
 # Optional Candle runtime for GGUF / quantized LLMs (e.g., Qwen2.5-Coder-7B)
-candle-core = { git = "https://github.com/huggingface/candle", optional = true, default-features = false }
-# CPU-only: CUDA compilation fails on GTX 1060 (compute 6.1) with current Candle kernels
-# For GPU: consider using llama.cpp server + HTTP API instead
-candle-transformers = { git = "https://github.com/huggingface/candle", optional = true }
+# NOTE: candle-core and candle-transformers use Git sources and cannot be published to crates.io
+# For development with Candle support, build locally: cargo build --features candle
+# For crates.io publication, use --no-default-features or restrict to onnx feature
+candle-core = { version = "0.5", optional = true, default-features = false }
+candle-transformers = { version = "0.5", optional = true }
 tokenizers = { version = "0.15", optional = true }
 
 [dependencies.ort]

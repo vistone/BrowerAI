@@ -1,6 +1,6 @@
 [package]
 name = "browerai-deobfuscation"
-version = "0.1.0"
+version = "0.2.0"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -9,8 +9,8 @@ description = "JavaScript deobfuscation utilities for BrowerAI"
 
 [features]
 default = []
-ai = ["ort"]
-ml = ["tch"]
+ai = ["ort"]  # Enable ONNX-based inference
+ml = ["neuroxide"]  # Enable Neuroxide-based inference
 
 [dependencies]
 anyhow = { workspace = true }
@@ -19,8 +19,14 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 lazy_static = "1.4"
 log = { workspace = true }
+base64 = "0.21"
 ort = { workspace = true, optional = true }
-tch = { workspace = true, optional = true }
+neuroxide = { workspace = true, optional = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "deobfuscation_benchmarks"
+harness = false
