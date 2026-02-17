@@ -4,6 +4,10 @@
 
 An experimental browser that uses machine learning to autonomously parse and render HTML/CSS/JS.
 
+> 💡 **核心设计哲学 | Core Design Philosophy**: 将传统浏览器技术与 AI 深度融合，创造能够理解、优化和重构 Web 内容的智能引擎。查看 [设计精髓](docs/DESIGN_ESSENCE.md) 或 [完整设计哲学](docs/CORE_DESIGN_PHILOSOPHY.md)。
+> 
+> Deeply integrating traditional browser technology with AI to create an intelligent engine that understands, optimizes, and reconstructs web content. See [Design Essence](docs/DESIGN_ESSENCE.md) or [Complete Philosophy](docs/CORE_DESIGN_PHILOSOPHY.md).
+
 ---
 
 ## 🚀 Quick Start
@@ -26,7 +30,9 @@ cargo test --workspace
 
 **All documentation is in `docs/` directory:**
 
-- **[Architecture](docs/ARCHITECTURE.md)** - System design & components
+- **[设计精髓 Design Essence](docs/DESIGN_ESSENCE.md)** - 核心设计哲学（一页版）| Core philosophy (one-page)
+- **[完整设计哲学 Complete Philosophy](docs/CORE_DESIGN_PHILOSOPHY.md)** - 详细设计思想 | Detailed design principles
+- **[Architecture](docs/architecture/ARCHITECTURE.md)** - System design & components
 - **[Getting Started](docs/en/GETTING_STARTED.md)** - Setup guide
 - **[Testing](docs/COMPREHENSIVE_TESTING.md)** - Test framework
 - **[Training](docs/en/ONNX_TRAINING_GUIDE.md)** - ML pipeline
