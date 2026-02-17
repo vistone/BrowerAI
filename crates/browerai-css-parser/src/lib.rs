@@ -14,6 +14,15 @@ use browerai_ai_core::{AiRuntime, InferenceEngine};
 #[cfg(all(feature = "ai", feature = "onnx"))]
 use browerai_ai_core::{Phase2ModelLoader, Phase2PropertyPredictor, Phase2SelectorEmbedding};
 
+// Modern CSS features module
+pub mod modern_features;
+
+// Re-export modern CSS features
+pub use modern_features::{
+    ContainerQuery, CssCustomProperties, CssProperty, CssRule, HasSelector, NestedCssRule,
+    SubgridAxis, SubgridDefinition,
+};
+
 /// CSS parser with AI enhancement capabilities
 pub struct CssParser {
     #[cfg(feature = "ai")]
@@ -351,22 +360,6 @@ impl Default for CssParser {
     fn default() -> Self {
         Self::new()
     }
-}
-
-/// Represents a CSS rule
-#[allow(dead_code)]
-#[derive(Debug, Clone)]
-pub struct CssRule {
-    pub selector: String,
-    pub properties: Vec<CssProperty>,
-}
-
-/// Represents a CSS property
-#[allow(dead_code)]
-#[derive(Debug, Clone)]
-pub struct CssProperty {
-    pub name: String,
-    pub value: String,
 }
 
 /// Enhanced CSS rule with AI embeddings

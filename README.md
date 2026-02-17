@@ -4,6 +4,10 @@
 
 An experimental browser that uses machine learning to autonomously parse and render HTML/CSS/JS.
 
+> 💡 **核心设计哲学 | Core Design Philosophy**: 将传统浏览器技术与 AI 深度融合，创造能够理解、优化和重构 Web 内容的智能引擎。查看 [设计精髓](docs/DESIGN_ESSENCE.md) 或 [完整设计哲学](docs/CORE_DESIGN_PHILOSOPHY.md)。
+> 
+> Deeply integrating traditional browser technology with AI to create an intelligent engine that understands, optimizes, and reconstructs web content. See [Design Essence](docs/DESIGN_ESSENCE.md) or [Complete Philosophy](docs/CORE_DESIGN_PHILOSOPHY.md).
+
 ---
 
 ## 🚀 Quick Start
@@ -26,7 +30,9 @@ cargo test --workspace
 
 **All documentation is in `docs/` directory:**
 
-- **[Architecture](docs/ARCHITECTURE.md)** - System design & components
+- **[设计精髓 Design Essence](docs/DESIGN_ESSENCE.md)** - 核心设计哲学（一页版）| Core philosophy (one-page)
+- **[完整设计哲学 Complete Philosophy](docs/CORE_DESIGN_PHILOSOPHY.md)** - 详细设计思想 | Detailed design principles
+- **[Architecture](docs/architecture/ARCHITECTURE.md)** - System design & components
 - **[Getting Started](docs/en/GETTING_STARTED.md)** - Setup guide
 - **[Testing](docs/COMPREHENSIVE_TESTING.md)** - Test framework
 - **[Training](docs/en/ONNX_TRAINING_GUIDE.md)** - ML pipeline
@@ -147,6 +153,13 @@ See [WEEK6_COMPLETION_SUMMARY.md](WEEK6_COMPLETION_SUMMARY.md) for details
 - **Learning System**: Feedback collection and model improvement
 - **Plugin System**: Extensible architecture
 - **Developer Tools**: Built-in profiling and debugging
+- **🆕 Modern JavaScript APIs (2026)**: Temporal API, structuredClone, Intl.RelativeTimeFormat, Web Storage, Performance API
+- **🆕 Modern CSS Features (2026)**: Container Queries, :has() selector, CSS Nesting, CSS Variables, Subgrid
+- **🆕 Performance Monitoring (2026)**: IntersectionObserver, MutationObserver, Long Animation Frames (LoAF), Navigation/Resource Timing APIs
+- **🆕 ES Module Support (2026)**: Full import/export, dynamic import(), top-level await, module resolution
+- **🆕 Modern Web APIs (2026)**: Console API, Timer APIs, URL/URLSearchParams, Clipboard API, AbortController
+
+See [Browser Technology Enhancement](docs/BROWSER_TECH_ENHANCEMENT.md) and [Phase 4 Report](docs/PHASE4_IMPLEMENTATION_REPORT.md) for details on 20+ modern APIs.
 
 ## 🎯 Build Features
 
