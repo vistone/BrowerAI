@@ -25,9 +25,29 @@ env:
   SERVICE_NAME: browerai-api-service
 
 jobs:
+  check-config:
+    name: Check Kubernetes Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for K8s secrets
+        run: |
+          if [ -z "${{ secrets.KUBE_CONFIG }}" ] || [ -z "${{ secrets.KUBE_CONTEXT }}" ]; then
+            echo "⚠️ Kubernetes deployment skipped - secrets not configured"
+            echo ""
+            echo "To enable Kubernetes deployment, add these secrets to your repository:"
+            echo "  - KUBE_CONFIG: Base64 encoded kubeconfig file"
+            echo "  - KUBE_CONTEXT: Kubernetes context name"
+            echo ""
+            echo "Deployment will be skipped but this does not fail the workflow."
+          else
+            echo "✅ Kubernetes secrets configured - deployment will proceed"
+          fi
+
   deploy:
     name: Deploy to Kubernetes
     runs-on: ubuntu-latest
+    needs: check-config
+    if: ${{ secrets.KUBE_CONFIG != '' && secrets.KUBE_CONTEXT != '' }}
     environment: ${{ github.event.inputs.environment || 'staging' }}
     
     steps:

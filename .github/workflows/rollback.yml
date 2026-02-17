@@ -24,6 +24,7 @@ jobs:
   rollback:
     name: Rollback Deployment
     runs-on: ubuntu-latest
+    if: ${{ secrets.KUBE_CONFIG != '' && secrets.KUBE_CONTEXT != '' }}
     environment: ${{ github.event.inputs.namespace }}
     
     steps:
