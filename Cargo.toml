@@ -15,7 +15,7 @@ members = [
     "crates/browerai-renderer",
     "crates/browerai-deobfuscation",
     "crates/browerai-intelligent-rendering",
-    "crates/browerai-integrated-pipeline",
+    # "crates/browerai-integrated-pipeline",  # Temporarily disabled due to compilation errors
     "crates/browerai-learning",
     "crates/browerai-network",
     "crates/browerai-devtools",

@@ -26,6 +26,7 @@ tokio = { workspace = true, features = ["full"] }
 parking_lot = { workspace = true }
 chrono = { workspace = true }
 regex = { workspace = true }
+reqwest = { workspace = true }
 
 [dev-dependencies]
 env_logger = { workspace = true }
