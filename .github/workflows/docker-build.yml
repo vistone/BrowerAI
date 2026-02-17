@@ -77,7 +77,7 @@ jobs:
           docker run --rm \
             -e FLASK_ENV=testing \
             ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:test \
-            python -m pytest browerai-api-server/tests/ -v 2>/dev/null || true
+            python -m pytest crates/browerai-api-server/tests/ -v 2>/dev/null || true
       
       - name: Check image size
         run: |

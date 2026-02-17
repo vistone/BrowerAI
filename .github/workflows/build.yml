@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, develop, week5-postgresql-persistence]
     paths:
-      - 'browerai-api-server/**'
+      - 'crates/browerai-api-server/**'
       - 'requirements.txt'
       - '.github/workflows/build.yml'
   pull_request:
@@ -45,23 +45,23 @@ jobs:
       
       - name: Code format check (black)
         run: |
-          black --check browerai-api-server/ || true
+          black --check crates/browerai-api-server/ || true
       
       - name: Import sorting check (isort)
         run: |
-          isort --check-only browerai-api-server/ || true
+          isort --check-only crates/browerai-api-server/ || true
       
       - name: Lint with pylint
         run: |
-          pylint browerai-api-server/ --exit-zero --disable=all --enable=E,F || true
+          pylint crates/browerai-api-server/ --exit-zero --disable=all --enable=E,F || true
       
       - name: Lint with flake8
         run: |
-          flake8 browerai-api-server/ --max-line-length=120 --exit-zero || true
+          flake8 crates/browerai-api-server/ --max-line-length=120 --exit-zero || true
       
       - name: Run unit tests
         run: |
-          pytest browerai-api-server/tests/ -v --tb=short 2>/dev/null || true
+          pytest crates/browerai-api-server/tests/ -v --tb=short 2>/dev/null || true
       
       - name: Run integration tests
         run: |
@@ -69,8 +69,8 @@ jobs:
       
       - name: Generate coverage report
         run: |
-          pytest browerai-api-server/tests/ \
-            --cov=browerai-api-server \
+          pytest crates/browerai-api-server/tests/ \
+            --cov=crates/browerai-api-server \
             --cov-report=html \
             --cov-report=xml \
             --cov-report=term 2>/dev/null || true
