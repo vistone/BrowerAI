@@ -5,6 +5,7 @@ pub mod api;
 // pub mod deobfuscating_sandbox;  // 暂时禁用：需要browerai_deobfuscation crate
 pub mod events;
 pub mod modern_apis;
+pub mod monitoring_apis;
 pub mod sandbox;
 pub mod script_detector;
 
@@ -19,6 +20,11 @@ pub use api::{DomApiExtensions, ElementHandle};
 pub use events::{Event, EventListener, EventListeners, EventPhase, EventType};
 pub use modern_apis::{
     PerformanceAPI, PerformanceEntry, RelativeTimeFormat, StructuredClone, TemporalAPI, WebStorage,
+};
+pub use monitoring_apis::{
+    DOMRect, IntersectionEntry, IntersectionObserver, LongAnimationFrame, MutationObserver,
+    MutationObserverConfig, MutationRecord, MutationType, NavigationTiming, NavigationType,
+    ResourceTiming, ScriptEntry, ServerTiming,
 };
 pub use sandbox::{ExecutionContext, JsSandbox, ResourceLimits, SandboxError, SandboxValue};
 
