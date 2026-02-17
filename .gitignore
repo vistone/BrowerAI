@@ -45,3 +45,14 @@ __pycache__/
 /tmp
 *.tmp
 
+# Model files (not versioned in git)
+models/local/**/*.onnx
+models/local/**/*.pt
+models/local/**/*.pth
+models/local/**/*.pkl
+models/local/**/*.neuroxide
+models/local/**/*.data
+models/local/**/checkpoints/
+models/local/**/generated_websites*/
+models/local/**/training_*
+
