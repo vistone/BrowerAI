@@ -2,6 +2,13 @@ use anyhow::{Context, Result};
 use boa_interner::Interner;
 use boa_parser::Source;
 
+// ES Module support
+pub mod es_modules;
+pub use es_modules::{
+    DynamicImport, ESModuleParser, ExportBinding, ExportDeclaration, ExportType, ImportBinding,
+    ImportDeclaration, ImportType, ParsedModule,
+};
+
 /// JavaScript parser with AI enhancement capabilities
 /// Uses Boa Parser - a pure Rust ECMAScript parser (part of boa JavaScript engine)
 pub struct JsParser {
@@ -82,28 +89,28 @@ impl JsParser {
     fn detect_compatibility_issues(js: &str) -> Vec<CompatibilityWarning> {
         let mut warnings = Vec::new();
 
-        // Boa parser here is used in script mode; ES modules are not supported in this path
+        // Note: ES modules are now supported via ESModuleParser
+        // Check if using module syntax - provide informational warning
         if js.contains("import ") || js.contains("export ") {
             warnings.push(CompatibilityWarning {
                 feature: "ES modules".to_string(),
-                detail: "Module syntax is not supported in script mode; use inline scripts or transpile.".to_string(),
+                detail: "Module syntax detected. Use ESModuleParser for full module support or HybridJsOrchestrator for automatic handling.".to_string(),
             });
         }
 
-        // Dynamic import not supported in this execution path
+        // Dynamic import is now supported via ESModuleParser
         if js.contains("import(") {
             warnings.push(CompatibilityWarning {
                 feature: "dynamic import".to_string(),
-                detail: "Dynamic import is not supported; consider bundling or static imports."
-                    .to_string(),
+                detail: "Dynamic import() detected. Use ESModuleParser for parsing or execute with V8/Boa sandbox.".to_string(),
             });
         }
 
-        // Top-level await not supported in script mode
-        if js.contains("await ") && !js.contains("function") {
+        // Top-level await is supported in module mode
+        if js.contains("await ") && !js.contains("function") && !js.contains("async ") {
             warnings.push(CompatibilityWarning {
                 feature: "top-level await".to_string(),
-                detail: "Top-level await is not supported in script mode.".to_string(),
+                detail: "Top-level await detected. This requires module mode - use ESModuleParser.".to_string(),
             });
         }
 
