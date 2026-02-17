@@ -249,20 +249,19 @@ impl RedisClusterPool {
 
     /// 检查 Cluster 健康。
     pub async fn is_healthy(&self) -> bool {
-        match tokio::time::timeout(self.operation_timeout, async {
-            let mut conn: ClusterConnection = self
-                .client
-                .get_connection()
-                .await
-                .map_err(|e| anyhow::anyhow!("{}", e))?;
-            let pong: Result<String, redis::RedisError> =
-                redis::cmd("PING").query_async(&mut conn).await;
-            pong.map_err(|e| anyhow::anyhow!("{}", e))
-        })
-        .await
-        {
-            Ok(Ok(_)) => true,
-            _ => false,
-        }
+        matches!(
+            tokio::time::timeout(self.operation_timeout, async {
+                let mut conn: ClusterConnection = self
+                    .client
+                    .get_connection()
+                    .await
+                    .map_err(|e| anyhow::anyhow!("{}", e))?;
+                let pong: Result<String, redis::RedisError> =
+                    redis::cmd("PING").query_async(&mut conn).await;
+                pong.map_err(|e| anyhow::anyhow!("{}", e))
+            })
+            .await,
+            Ok(Ok(_))
+        )
     }
 }

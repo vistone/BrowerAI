@@ -203,7 +203,7 @@ impl ControlFlowAnalyzer {
 
         for i in 0..node_count - 1 {
             let current = &self.cfg.nodes[i];
-            let next = &self.cfg.nodes[i + 1];
+            let _next = &self.cfg.nodes[i + 1];
 
             match current {
                 CFGNodeType::Entry => {
@@ -345,10 +345,9 @@ impl ControlFlowAnalyzer {
         for (node, doms) in dominators {
             if let Some(imdom) = doms
                 .iter()
-                .filter(|d| {
+                .find(|d| {
                     *d != node && !doms.iter().any(|other| other != *d && doms.contains(other))
                 })
-                .next()
             {
                 idom.insert(*node, *imdom);
             }
@@ -364,7 +363,7 @@ impl ControlFlowAnalyzer {
         for node in &self.cfg.nodes {
             if let CFGNodeType::Loop {
                 id,
-                loop_type,
+                loop_type: _,
                 condition,
             } = node
             {

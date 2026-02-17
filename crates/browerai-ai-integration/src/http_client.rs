@@ -68,6 +68,7 @@ impl FrameworkDetectorClient {
     }
 
     /// 使用默认本地地址创建
+    #[allow(clippy::should_implement_trait)]
     pub fn default() -> Self {
         Self::new("http://localhost:5000")
     }

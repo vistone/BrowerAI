@@ -227,7 +227,7 @@ impl ObfuscationPatternLibrary {
     fn add_pattern(&mut self, pattern_type: ObfuscationPatternType, pattern: ObfuscationPattern) {
         self.patterns
             .entry(pattern_type)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(pattern);
     }
 
@@ -241,7 +241,7 @@ impl ObfuscationPatternLibrary {
         let mut detected = Vec::new();
 
         // 检查所有内置模式
-        for (_, patterns) in &self.patterns {
+        for patterns in self.patterns.values() {
             for pattern in patterns {
                 detected.extend(self.detect_pattern(code, pattern));
             }
@@ -268,7 +268,7 @@ impl ObfuscationPatternLibrary {
                     let matched_text = cap.get(0).unwrap().as_str().to_string();
 
                     // 生成建议替换
-                    let suggested_replacement = self.generate_replacement(&pattern, &matched_text);
+                    let suggested_replacement = self.generate_replacement(pattern, &matched_text);
 
                     results.push(DetectedPattern {
                         pattern: pattern.clone(),

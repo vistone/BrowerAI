@@ -158,7 +158,7 @@ impl DataFlowAnalyzer {
     /// 构建数据流图
     fn build_data_flow_graph(
         &mut self,
-        code: &str,
+        _code: &str,
         result: &mut DataFlowAnalysisResult,
     ) -> Result<()> {
         // 遍历定义和使用，建立连接

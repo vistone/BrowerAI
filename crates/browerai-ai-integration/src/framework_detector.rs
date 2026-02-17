@@ -72,7 +72,7 @@ impl FrameworkDetectorIntegration {
     }
 
     /// ONNX推理 (需要onnxruntime支持)
-    #[cfg(feature = "onnx_inference")]
+    #[cfg(feature = "ai")]
     pub fn infer_onnx(&self, tokens: &[i64]) -> Result<Vec<f32>> {
         // TODO: 实现ONNX推理逻辑
         // 这需要onnxruntime Rust绑定

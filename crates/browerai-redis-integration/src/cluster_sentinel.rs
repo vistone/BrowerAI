@@ -68,23 +68,22 @@ impl RedisClusterPoolWithSentinel {
 
     /// 检查集群健康（PING）。
     pub async fn check_health(&self) -> bool {
-        match tokio::time::timeout(self.operation_timeout, async {
-            let client = self.client.read().await;
-            let mut conn = client
-                .get_connection()
-                .await
-                .map_err(|e| anyhow::anyhow!("{}", e))?;
-            let pong: Result<String, redis_cluster_async::redis::RedisError> =
-                redis_cluster_async::redis::cmd("PING")
-                    .query_async(&mut conn)
-                    .await;
-            pong.map_err(|e| anyhow::anyhow!("{}", e))
-        })
-        .await
-        {
-            Ok(Ok(_)) => true,
-            _ => false,
-        }
+        matches!(
+            tokio::time::timeout(self.operation_timeout, async {
+                let client = self.client.read().await;
+                let mut conn = client
+                    .get_connection()
+                    .await
+                    .map_err(|e| anyhow::anyhow!("{}", e))?;
+                let pong: Result<String, redis_cluster_async::redis::RedisError> =
+                    redis_cluster_async::redis::cmd("PING")
+                        .query_async(&mut conn)
+                        .await;
+                pong.map_err(|e| anyhow::anyhow!("{}", e))
+            })
+            .await,
+            Ok(Ok(_))
+        )
     }
 
     /// Sentinel 故障转移处理。

@@ -33,24 +33,31 @@ pub struct ExecutionContext {
     /// 变量值映射
     variables: HashMap<String, SymbolicValue>,
     /// 字符串表 (常用于追踪字符串解码)
+    #[allow(dead_code)]
     string_table: HashMap<String, String>,
     /// 数组表 (追踪数组初始化和访问)
     array_table: HashMap<String, Vec<String>>,
     /// 函数映射
+    #[allow(dead_code)]
     functions: HashMap<String, FunctionInfo>,
 }
 
 #[derive(Debug, Clone)]
 struct FunctionInfo {
+    #[allow(dead_code)]
     name: String,
+    #[allow(dead_code)]
     params: Vec<String>,
+    #[allow(dead_code)]
     body: String,
 }
 
 /// 符号执行引擎
 pub struct SymbolicExecutor {
     context: ExecutionContext,
+    #[allow(dead_code)]
     max_depth: usize,
+    #[allow(dead_code)]
     current_depth: usize,
 }
 
@@ -203,7 +210,7 @@ impl SymbolicExecutor {
         let re = Regex::new(r"function\s+(\w+)\s*\(([^)]*)\)\s*\{([^}]+)\}")?;
 
         for caps in re.captures_iter(code) {
-            if let (Some(name), Some(params), Some(body)) = (caps.get(1), caps.get(2), caps.get(3))
+            if let (Some(name), Some(params), Some(_body)) = (caps.get(1), caps.get(2), caps.get(3))
             {
                 let param_list: Vec<String> = params
                     .as_str()

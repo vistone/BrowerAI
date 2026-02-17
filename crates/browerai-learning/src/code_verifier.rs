@@ -204,7 +204,7 @@ impl CodeVerifier {
         } else {
             1.0
         };
-        let score = score.max(0.0).min(1.0);
+        let score = score.clamp(0.0, 1.0);
 
         Ok(HtmlVerification {
             valid: errors.is_empty(),
@@ -254,10 +254,8 @@ impl CodeVerifier {
         properties.dedup();
 
         // 检查常见的CSS错误
-        if !css.contains('{') || !css.contains('}') {
-            if css.trim().len() > 0 {
-                errors.push("CSS代码中缺少规则定义（{}）".to_string());
-            }
+        if (!css.contains('{') || !css.contains('}')) && !css.trim().is_empty() {
+            errors.push("CSS代码中缺少规则定义（{}）".to_string());
         }
 
         // 检查未关闭的括号
@@ -285,7 +283,7 @@ impl CodeVerifier {
         } else {
             1.0
         };
-        let score = score.max(0.0).min(1.0);
+        let score = score.clamp(0.0, 1.0);
 
         Ok(CssVerification {
             valid: errors.is_empty(),
@@ -428,7 +426,7 @@ impl CodeVerifier {
         } else {
             1.0
         };
-        let score = score.max(0.0).min(1.0);
+        let score = score.clamp(0.0, 1.0);
 
         Ok(JsVerification {
             syntax_valid: errors.is_empty(),

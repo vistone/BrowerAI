@@ -206,7 +206,7 @@ impl TypeInferencer {
     fn infer_operation_types(
         &mut self,
         code: &str,
-        result: &mut TypeInferenceResult,
+        _result: &mut TypeInferenceResult,
     ) -> Result<()> {
         // 字符串操作 + 结果是字符串
         let re = Regex::new(r#"(\w+)\s*\+\s*(["'].+?["'])"#)?;
@@ -234,7 +234,7 @@ impl TypeInferencer {
         // 比较操作 -> boolean
         let re = Regex::new(r#"(\w+)\s*(?:===|!==|==|!=|<|>|<=|>=)\s*(.+?)(?:;|\)|])"#)?;
         for caps in re.captures_iter(code) {
-            if let Some(var) = caps.get(1) {
+            if let Some(_var) = caps.get(1) {
                 // 比较结果的类型总是布尔值
                 // 这会影响使用比较结果的变量
             }

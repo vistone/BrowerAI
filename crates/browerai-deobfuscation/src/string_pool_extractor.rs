@@ -1,4 +1,5 @@
 use anyhow::Result;
+use base64::{engine::general_purpose, Engine as _};
 use regex::Regex;
 /// 字符串池析取器 (String Pool Extractor)
 ///
@@ -167,7 +168,7 @@ impl StringPoolExtractor {
                     if num_vec.len() > 2 {
                         // 至少 3 个字符
                         if let Ok(decoded) =
-                            String::from_utf8(num_vec.iter().map(|&n| n as u8).collect())
+                            String::from_utf8(num_vec.to_vec())
                         {
                             self.add_entry(StringPoolEntry {
                                 original: format!("[{}]", numbers_str),
@@ -195,7 +196,7 @@ impl StringPoolExtractor {
             if let Some(m) = caps.get(1) {
                 let b64_str = m.as_str();
 
-                if let Ok(decoded_bytes) = base64::decode(b64_str) {
+                if let Ok(decoded_bytes) = general_purpose::STANDARD.decode(b64_str) {
                     if let Ok(decoded) = String::from_utf8(decoded_bytes) {
                         // 检查解码后是否是可打印字符
                         if decoded
@@ -233,7 +234,7 @@ impl StringPoolExtractor {
             if let Some(m) = caps.get(1) {
                 let hex = m.as_str();
                 if let Ok(byte) = u8::from_str_radix(hex, 16) {
-                    if byte >= 32 && byte < 127 {
+                    if (32..127).contains(&byte) {
                         // 可打印 ASCII
                         hex_buffer.push(byte as char);
                     } else if byte == 0 {
@@ -372,7 +373,7 @@ impl StringPoolExtractor {
             if let Some(m) = caps.get(1) {
                 let b64_str = m.as_str();
 
-                if let Ok(decoded_bytes) = base64::decode(b64_str) {
+                if let Ok(decoded_bytes) = general_purpose::STANDARD.decode(b64_str) {
                     if let Ok(decoded) = String::from_utf8(decoded_bytes) {
                         self.add_entry(StringPoolEntry {
                             original: format!("atob(\"{}\")", b64_str),
@@ -404,7 +405,7 @@ impl StringPoolExtractor {
             self.pool
                 .string_usage_map
                 .entry(entry.decoded.clone())
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(index);
         }
     }

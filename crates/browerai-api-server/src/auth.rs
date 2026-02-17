@@ -35,7 +35,7 @@ impl ApiKeyStore {
 
     /// Generate a new API key
     pub fn generate(&self, name: &str) -> String {
-        let key = format!("browerai_{}", Uuid::new_v4().to_string());
+        let key = format!("browerai_{}", Uuid::new_v4());
         let info = ApiKeyInfo {
             key: key.clone(),
             name: name.to_string(),

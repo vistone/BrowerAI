@@ -43,18 +43,13 @@ impl DomNode {
 }
 
 /// 样式数据结构（从 CSS 匹配）
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 pub enum Display {
+    #[default]
     Block,
     Inline,
     InlineBlock,
     None,
-}
-
-impl Default for Display {
-    fn default() -> Self {
-        Display::Block
-    }
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

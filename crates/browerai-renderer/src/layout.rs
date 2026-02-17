@@ -39,6 +39,7 @@ impl LayoutEngine {
         Self::compute_recursive(dom, styles, &mut layout_ctx, 0.0, 0.0)
     }
 
+    #[allow(clippy::only_used_in_recursion)]
     fn compute_recursive(
         node: &DomNode,
         styles: &HashMap<String, ComputedStyle>,

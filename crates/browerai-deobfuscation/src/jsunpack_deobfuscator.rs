@@ -429,7 +429,7 @@ impl JSUnpackDeobfuscator {
 
         for caps in re.captures_iter(code) {
             if let Some(nums) = caps.get(1) {
-                let decoded = self.from_char_codes(nums.as_str());
+                let decoded = Self::char_codes_to_string(nums.as_str());
                 result = result.replace(&caps[0], &format!("\"{}\"", decoded));
                 replaced = true;
             }
@@ -443,7 +443,7 @@ impl JSUnpackDeobfuscator {
     }
 
     /// Convert char codes to string
-    fn from_char_codes(&self, codes: &str) -> String {
+    fn char_codes_to_string(codes: &str) -> String {
         codes
             .split(',')
             .filter_map(|s| s.trim().parse::<u32>().ok())
@@ -686,9 +686,7 @@ mod tests {
 
     #[test]
     fn test_from_char_code() {
-        let deobf = JSUnpackDeobfuscator::new();
-
-        let decoded = deobf.from_char_codes("72, 101, 108, 108, 111");
+        let decoded = JSUnpackDeobfuscator::char_codes_to_string("72, 101, 108, 108, 111");
 
         assert_eq!(decoded, "Hello");
     }

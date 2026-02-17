@@ -96,7 +96,7 @@ impl ComparisonFeedbackGenerator {
 
         // 计算学习置信度
         let confidence =
-            (verification.verification_score * 0.4 + comparison.overall_similarity * 0.6) as f64;
+            verification.verification_score * 0.4 + comparison.overall_similarity * 0.6;
 
         Ok(ComparisonFeedback {
             verification_feedback: verification_fb,

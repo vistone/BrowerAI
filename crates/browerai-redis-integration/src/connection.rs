@@ -273,20 +273,19 @@ impl RedisPool {
 
     /// 检查 Redis 连接是否可用。
     pub async fn is_healthy(&self) -> bool {
-        match tokio::time::timeout(self.operation_timeout, async {
-            let mut conn = self
-                .pool
-                .get()
-                .await
-                .map_err(|e| anyhow::anyhow!("{}", e))?;
-            let result: Result<String, redis::RedisError> =
-                redis::cmd("PING").query_async(&mut *conn).await;
-            result.map_err(|e| anyhow::anyhow!("{}", e))
-        })
-        .await
-        {
-            Ok(Ok(_)) => true,
-            _ => false,
-        }
+        matches!(
+            tokio::time::timeout(self.operation_timeout, async {
+                let mut conn = self
+                    .pool
+                    .get()
+                    .await
+                    .map_err(|e| anyhow::anyhow!("{}", e))?;
+                let result: Result<String, redis::RedisError> =
+                    redis::cmd("PING").query_async(&mut *conn).await;
+                result.map_err(|e| anyhow::anyhow!("{}", e))
+            })
+            .await,
+            Ok(Ok(_))
+        )
     }
 }

@@ -71,13 +71,11 @@ where
                 let now_ms = current_millis();
                 let mut to_delete: Vec<Vec<u8>> = Vec::new();
                 let iter = ttl_db.iter();
-                for item in iter {
-                    if let Ok((key, val)) = item {
-                        if let Ok(ts_str) = std::str::from_utf8(&val) {
-                            if let Ok(ts) = ts_str.parse::<u64>() {
-                                if ts <= now_ms {
-                                    to_delete.push(key.to_vec());
-                                }
+                for (key, val) in iter.flatten() {
+                    if let Ok(ts_str) = std::str::from_utf8(&val) {
+                        if let Ok(ts) = ts_str.parse::<u64>() {
+                            if ts <= now_ms {
+                                to_delete.push(key.to_vec());
                             }
                         }
                     }
@@ -85,8 +83,8 @@ where
                 let deleted_count = to_delete.len();
                 for k in &to_delete {
                     // 删除 ttl 索引与数据
-                    let _ = ttl_db.remove(&k);
-                    let _ = db.remove(&k);
+                    let _ = ttl_db.remove(k);
+                    let _ = db.remove(k);
                 }
                 debug!(layer = %name, deleted = deleted_count, "TTL cleanup run");
             }
@@ -148,7 +146,7 @@ where
             .map_err(|_| anyhow::anyhow!("Sled transaction data failed"))?;
         self.ttl_db
             .transaction(|tree| {
-                for (k, _) in &items {
+                for k in items.keys() {
                     tree.insert(k.as_bytes(), expire_at.to_string().as_bytes())
                         .map_err(|_| sled::transaction::ConflictableTransactionError::Abort(()))?;
                 }

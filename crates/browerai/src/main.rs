@@ -2,9 +2,7 @@
 //! 核心：从网站学习 → 训练ONNX模型 → 模型驱动解析/渲染
 
 use anyhow::{Context, Result};
-use chrono;
 use clap::{Parser, Subcommand};
-use serde_json;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
@@ -217,7 +215,7 @@ async fn learn_and_generate(url: &str, output_dir: &PathBuf, variant_count: usiz
     let real_learner = RealWebsiteLearner::new()?;
     let learning_task = WebsiteLearningTask {
         url: url.to_string(),
-        name: url.split('/').last().unwrap_or("website").to_string(),
+        name: url.split('/').next_back().unwrap_or("website").to_string(),
         target_workflows: vec![],
         max_interactions: 8,
     };
@@ -696,7 +694,7 @@ async fn run_integrated_demo(demo_type: &str) -> Result<()> {
         let _config = OrchestratorConfig::default();
 
         log::info!("检测混淆代码特征...");
-        let indicators = vec![
+        let indicators = [
             ("十六进制变量名 (_0x4e2c)", true),
             ("数组索引访问模式", true),
             ("eval 调用", true),

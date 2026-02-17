@@ -8,7 +8,6 @@
 /// - 性能监控与缓存
 use anyhow::{anyhow, Context, Result};
 use std::collections::HashMap;
-use std::path::Path;
 use std::sync::Arc;
 
 #[cfg(feature = "ai")]
@@ -185,32 +184,33 @@ impl FeatureExtractor {
     }
 
     /// 提取混淆特征 (19维)
+    #[allow(clippy::vec_init_then_push)]
     fn extract_obfuscation_features(&self, code: &str) -> Result<Vec<f32>> {
         let mut features = Vec::with_capacity(19);
 
         // 控制流特征 (5维)
-        features.push(self.detect_control_flow_flattening(code) as f32); // 0-1
+        features.push(self.detect_control_flow_flattening(code)); // 0-1
         features.push(code.matches("goto").count() as f32); // goto 标签
         features.push(self.count_nested_blocks(code) as f32); // 嵌套深度
         features.push(code.matches("switch").count() as f32); // switch 语句
         features.push(code.matches("case").count() as f32); // case 语句数
 
         // 死代码特征 (5维)
-        features.push(self.detect_unreachable_code(code) as f32);
+        features.push(self.detect_unreachable_code(code));
         features.push(code.matches("if(false)").count() as f32);
         features.push(code.matches("if(!0)").count() as f32);
-        features.push(self.detect_unused_variables(code) as f32);
-        features.push(self.detect_duplicate_code(code) as f32);
+        features.push(self.detect_unused_variables(code));
+        features.push(self.detect_duplicate_code(code));
 
         // 符号混淆特征 (5维)
-        features.push(self.detect_renamed_variables(code) as f32);
-        features.push(self.count_short_identifiers(code) as f32); // 短变量名
-        features.push(self.count_unicode_identifiers(code) as f32); // Unicode 标识符
-        features.push(self.detect_similar_identifiers(code) as f32);
-        features.push(self.calculate_identifier_entropy(code) as f32);
+        features.push(self.detect_renamed_variables(code));
+        features.push(self.count_short_identifiers(code)); // 短变量名
+        features.push(self.count_unicode_identifiers(code)); // Unicode 标识符
+        features.push(self.detect_similar_identifiers(code));
+        features.push(self.calculate_identifier_entropy(code));
 
         // 字符串编码特征 (4维)
-        features.push(self.detect_string_encoding(code) as f32);
+        features.push(self.detect_string_encoding(code));
         features.push(code.matches("\\x").count() as f32); // hex escape
         features.push(code.matches("\\u").count() as f32); // unicode escape
         features.push(code.matches("atob").count() as f32); // Base64 解码
@@ -340,7 +340,7 @@ impl FeatureExtractor {
     }
 
     fn detect_string_encoding(&self, code: &str) -> f32 {
-        let encoding_patterns = vec![
+        let encoding_patterns = [
             "atob",
             "btoa",
             "String.fromCharCode",
