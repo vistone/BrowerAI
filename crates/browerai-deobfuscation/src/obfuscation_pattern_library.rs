@@ -1,11 +1,10 @@
+use anyhow::Result;
+use regex::Regex;
 /// 通用混淆模式识别库 (Obfuscation Pattern Recognition Library)
-/// 
+///
 /// 识别常见的混淆技术，自动转换为清晰代码，
 /// 可扩展的规则系统。
-
 use std::collections::HashMap;
-use regex::Regex;
-use anyhow::Result;
 
 /// 混淆模式类型
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -212,7 +211,9 @@ impl ObfuscationPatternLibrary {
             ObfuscationPattern {
                 pattern_type: ObfuscationPatternType::LoopObfuscation,
                 name: "复杂循环结构".to_string(),
-                regex_pattern: r"for\s*\(\s*\w+\s*=\s*[\w.]+;[\w\s<>=!&|+\-*/().,]*;[\w\s<>=!&|+\-*/().,]*\)".to_string(),
+                regex_pattern:
+                    r"for\s*\(\s*\w+\s*=\s*[\w.]+;[\w\s<>=!&|+\-*/().,]*;[\w\s<>=!&|+\-*/().,]*\)"
+                        .to_string(),
                 deobfuscation_rule: "简化循环逻辑".to_string(),
                 severity: "medium".to_string(),
                 confidence: 0.7,
@@ -332,18 +333,11 @@ impl ObfuscationPatternLibrary {
         let mut stats = HashMap::new();
 
         for (pattern_type, patterns) in &self.patterns {
-            stats.insert(
-                format!("{:?}", pattern_type),
-                patterns.len(),
-            );
+            stats.insert(format!("{:?}", pattern_type), patterns.len());
         }
 
         PatternLibraryStatistics {
-            total_builtin_patterns: self
-                .patterns
-                .values()
-                .map(|v| v.len())
-                .sum(),
+            total_builtin_patterns: self.patterns.values().map(|v| v.len()).sum(),
             total_custom_patterns: self.custom_patterns.len(),
             pattern_type_stats: stats,
         }
@@ -397,7 +391,8 @@ impl ObfuscationPatternLibrary {
             for p in high {
                 report.push_str(&format!(
                     "  - {} (置信度: {:.0}%)\n",
-                    p.pattern.name, p.confidence * 100.0
+                    p.pattern.name,
+                    p.confidence * 100.0
                 ));
             }
             report.push('\n');
@@ -409,7 +404,8 @@ impl ObfuscationPatternLibrary {
             for p in medium {
                 report.push_str(&format!(
                     "  - {} (置信度: {:.0}%)\n",
-                    p.pattern.name, p.confidence * 100.0
+                    p.pattern.name,
+                    p.confidence * 100.0
                 ));
             }
             report.push('\n');
@@ -421,7 +417,8 @@ impl ObfuscationPatternLibrary {
             for p in low {
                 report.push_str(&format!(
                     "  - {} (置信度: {:.0}%)\n",
-                    p.pattern.name, p.confidence * 100.0
+                    p.pattern.name,
+                    p.confidence * 100.0
                 ));
             }
         }

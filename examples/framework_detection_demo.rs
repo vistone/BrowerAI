@@ -11,8 +11,8 @@
 //! cargo run --example framework_detection_demo
 //! ```
 
-use browerai::ai_integration::FrameworkDetectorClient;
 use anyhow::Result;
+use browerai::ai_integration::FrameworkDetectorClient;
 
 fn main() -> Result<()> {
     // 初始化日志
@@ -148,15 +148,18 @@ fn main() -> Result<()> {
     let websites = vec![
         (
             "https://example1.com".to_string(),
-            r#"<html><head><script src="/_next/static/main.js"></script></head></html>"#.to_string(),
+            r#"<html><head><script src="/_next/static/main.js"></script></head></html>"#
+                .to_string(),
         ),
         (
             "https://example2.com".to_string(),
-            r#"<html><body><div v-if="show" v-for="item in items"></div></body></html>"#.to_string(),
+            r#"<html><body><div v-if="show" v-for="item in items"></div></body></html>"#
+                .to_string(),
         ),
         (
             "https://example3.com".to_string(),
-            r#"<html><body><div ng-app="myApp" ng-controller="MainCtrl"></div></body></html>"#.to_string(),
+            r#"<html><body><div ng-app="myApp" ng-controller="MainCtrl"></div></body></html>"#
+                .to_string(),
         ),
     ];
 
@@ -168,8 +171,9 @@ fn main() -> Result<()> {
                 if let Some(err) = result.error {
                     println!("   ❌ {}: {}", result.url, err);
                 } else {
-                    println!("   ✓ {}: {} ({:.1}%)", 
-                        result.url, 
+                    println!(
+                        "   ✓ {}: {} ({:.1}%)",
+                        result.url,
                         result.framework,
                         result.confidence * 100.0
                     );

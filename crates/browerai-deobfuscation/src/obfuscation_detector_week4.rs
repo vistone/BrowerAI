@@ -1,12 +1,11 @@
 /// Week 4 - Obfuscation Detector with ONNX Integration
-/// 
+///
 /// 这个模块实现了完整的混淆代码检测系统，集成了 Week 3 导出的 ONNX 模型
 /// 支持：
 /// - 8 种混淆技术检测 (Control Flow, String Encoding, Dead Code 等)
 /// - 特征提取 (41维向量)
 /// - 代码恢复指导
 /// - 性能监控与缓存
-
 use anyhow::{anyhow, Context, Result};
 use std::collections::HashMap;
 use std::path::Path;
@@ -175,10 +174,7 @@ impl FeatureExtractor {
         let keywords = vec![
             "function", "var", "let", "const", "return", "if", "else", "for", "while",
         ];
-        let keyword_count: usize = keywords
-            .iter()
-            .map(|kw| code.matches(kw).count())
-            .sum();
+        let keyword_count: usize = keywords.iter().map(|kw| code.matches(kw).count()).sum();
         features.push(keyword_count as f32);
 
         // 5. 熵值 (1维)
@@ -345,10 +341,19 @@ impl FeatureExtractor {
 
     fn detect_string_encoding(&self, code: &str) -> f32 {
         let encoding_patterns = vec![
-            "atob", "btoa", "String.fromCharCode", "\\x", "\\u", "escape", "unescape",
+            "atob",
+            "btoa",
+            "String.fromCharCode",
+            "\\x",
+            "\\u",
+            "escape",
+            "unescape",
         ];
 
-        let count: usize = encoding_patterns.iter().map(|p| code.matches(p).count()).sum();
+        let count: usize = encoding_patterns
+            .iter()
+            .map(|p| code.matches(p).count())
+            .sum();
         (count as f32).min(1.0)
     }
 }
@@ -371,12 +376,9 @@ impl OnnxObfuscationDetector {
     /// 创建新的检测器，加载 ONNX 模型
     pub fn new<P: AsRef<std::path::Path>>(model_path: P) -> Result<Self> {
         let model_path = model_path.as_ref();
-        
+
         if !model_path.exists() {
-            return Err(anyhow!(
-                "ONNX 模型不存在: {}",
-                model_path.display()
-            ));
+            return Err(anyhow!("ONNX 模型不存在: {}", model_path.display()));
         }
 
         log::info!("ONNX 混淆检测器初始化: {}", model_path.display());
@@ -471,7 +473,7 @@ impl OnnxObfuscationDetector {
 
         // 基于特征的简单评分 (实际环境会使用真实 ONNX 模型)
         let mut scores = vec![0.0; 8];
-        
+
         // 利用特征空间估计混淆类型
         // 这是一个简化的启发式方法，实际应用中会使用真实模型
         // 特征构成: 0-13 基础特征, 14-33 混淆特征

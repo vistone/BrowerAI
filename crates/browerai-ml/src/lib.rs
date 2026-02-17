@@ -9,18 +9,18 @@ use anyhow::Result;
 use log::info;
 
 #[cfg(feature = "ml")]
-mod serialization;
-#[cfg(feature = "ml")]
 mod cuda_optimization;
+#[cfg(feature = "ml")]
+mod serialization;
 #[cfg(feature = "ml")]
 mod training;
 
 #[cfg(feature = "ml")]
+pub use cuda_optimization::{CudaConfig, CudaOptimizer};
+#[cfg(feature = "ml")]
 pub use serialization::ModelSerializer;
 #[cfg(feature = "ml")]
-pub use cuda_optimization::{CudaOptimizer, CudaConfig};
-#[cfg(feature = "ml")]
-pub use training::{TrainingPipeline, TrainingConfig};
+pub use training::{TrainingConfig, TrainingPipeline};
 
 /// ML Session using Neuroxide backend
 ///
@@ -141,19 +141,19 @@ mod tests {
         // Test that serialization module is accessible
         use crate::ModelSerializer;
         use std::env;
-        
+
         #[derive(Debug, serde::Serialize, serde::Deserialize, PartialEq)]
         struct TestData {
             value: i32,
         }
-        
+
         let temp_dir = env::temp_dir();
         let path = temp_dir.join("test_serialization.neuroxide");
-        
+
         let data = TestData { value: 42 };
         ModelSerializer::save(&data, &path).unwrap();
         let loaded: TestData = ModelSerializer::load(&path).unwrap();
-        
+
         assert_eq!(data, loaded);
         let _ = std::fs::remove_file(path);
     }
@@ -162,10 +162,10 @@ mod tests {
     #[cfg(feature = "ml")]
     fn test_cuda_optimizer_module() {
         use crate::CudaOptimizer;
-        
+
         let mut optimizer = CudaOptimizer::new();
         assert!(optimizer.initialize().is_ok());
-        
+
         let stats = optimizer.get_stats().unwrap();
         assert!(stats.is_initialized);
     }
@@ -174,10 +174,10 @@ mod tests {
     #[cfg(feature = "ml")]
     fn test_training_pipeline_module() {
         use crate::{TrainingConfig, TrainingPipeline};
-        
+
         let config = TrainingConfig::default();
         let mut pipeline = TrainingPipeline::new(config);
-        
+
         assert!(pipeline.initialize().is_ok());
     }
 

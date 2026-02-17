@@ -12,10 +12,6 @@ name = "browerai"
 path = "src/main.rs"
 
 [[example]]
-name = "python_deobfuscation_demo"
-path = "../../examples/python_deobfuscation_demo.rs"
-
-[[example]]
 name = "framework_detection_demo"
 path = "../../examples/framework_detection_demo.rs"
 

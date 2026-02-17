@@ -82,7 +82,7 @@ impl FrameworkDetectorClient {
     /// 检测单个网站框架
     pub fn detect(&self, html: &str) -> Result<DetectResponse> {
         let url = format!("{}/api/v1/detect", self.api_url);
-        
+
         let request = DetectRequest {
             html: html.to_string(),
             use_ml: None,
@@ -99,9 +99,7 @@ impl FrameworkDetectorClient {
             anyhow::bail!("API returned error: {}", response.status());
         }
 
-        let result: DetectResponse = response
-            .json()
-            .context("Failed to parse response")?;
+        let result: DetectResponse = response.json().context("Failed to parse response")?;
 
         Ok(result)
     }
@@ -130,9 +128,8 @@ impl FrameworkDetectorClient {
             anyhow::bail!("API returned error: {}", response.status());
         }
 
-        let result: BatchDetectResponse = response
-            .json()
-            .context("Failed to parse batch response")?;
+        let result: BatchDetectResponse =
+            response.json().context("Failed to parse batch response")?;
 
         Ok(result)
     }
@@ -154,7 +151,7 @@ mod tests {
     #[ignore] // 需要API服务器运行
     fn test_detect_react() {
         let client = FrameworkDetectorClient::default();
-        
+
         let react_html = r#"
             <!DOCTYPE html>
             <html>
@@ -173,7 +170,11 @@ mod tests {
         "#;
 
         let result = client.detect(react_html).unwrap();
-        println!("Detected: {} (confidence: {:.2}%)", result.framework, result.confidence * 100.0);
+        println!(
+            "Detected: {} (confidence: {:.2}%)",
+            result.framework,
+            result.confidence * 100.0
+        );
         assert_eq!(result.framework, "React");
         assert!(result.confidence > 0.5);
     }

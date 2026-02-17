@@ -1,10 +1,9 @@
+use anyhow::Result;
 /// 控制流图 (Control Flow Graph - CFG) 分析模块
-/// 
+///
 /// 追踪代码的执行路径，检测和简化冗余的控制流，
 /// 进行可达性分析以识别死代码。
-
 use std::collections::{HashMap, HashSet, VecDeque};
-use anyhow::Result;
 
 /// 控制流图中的节点类型
 #[derive(Debug, Clone, PartialEq)]
@@ -19,10 +18,7 @@ pub enum CFGNodeType {
         uses: HashSet<String>,
     },
     /// 条件分支 (if/else)
-    Conditional {
-        id: usize,
-        condition: String,
-    },
+    Conditional { id: usize, condition: String },
     /// 循环 (while/for/do-while)
     Loop {
         id: usize,
@@ -30,15 +26,9 @@ pub enum CFGNodeType {
         condition: String,
     },
     /// 函数调用
-    FunctionCall {
-        id: usize,
-        function_name: String,
-    },
+    FunctionCall { id: usize, function_name: String },
     /// 异常处理
-    Exception {
-        id: usize,
-        error_type: String,
-    },
+    Exception { id: usize, error_type: String },
     /// 程序入口
     Entry,
     /// 程序出口
@@ -306,10 +296,7 @@ impl ControlFlowAnalyzer {
             all_nodes.insert(self.get_node_id(i));
         }
 
-        let unreachable = all_nodes
-            .difference(&reachable)
-            .copied()
-            .collect();
+        let unreachable = all_nodes.difference(&reachable).copied().collect();
 
         // 计算支配关系 (简化版)
         let dominators = Self::compute_dominators(&self.cfg);
@@ -358,7 +345,9 @@ impl ControlFlowAnalyzer {
         for (node, doms) in dominators {
             if let Some(imdom) = doms
                 .iter()
-                .filter(|d| *d != node && !doms.iter().any(|other| other != *d && doms.contains(other)))
+                .filter(|d| {
+                    *d != node && !doms.iter().any(|other| other != *d && doms.contains(other))
+                })
                 .next()
             {
                 idom.insert(*node, *imdom);
@@ -440,10 +429,7 @@ impl ControlFlowAnalyzer {
         // 找到并标记死代码
         let reachability = self.reachability_analysis();
         for unreachable_id in &reachability.unreachable_nodes {
-            simplifications.push(format!(
-                "🗑️  移除无法到达的节点 (ID: {})",
-                unreachable_id
-            ));
+            simplifications.push(format!("🗑️  移除无法到达的节点 (ID: {})", unreachable_id));
         }
 
         // 合并连续的基本块

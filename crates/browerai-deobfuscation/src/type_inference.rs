@@ -64,7 +64,7 @@ impl std::fmt::Display for JSType {
 pub struct TypeInfo {
     pub variable: String,
     pub inferred_type: JSType,
-    pub confidence: f32, // 0.0 到 1.0
+    pub confidence: f32,       // 0.0 到 1.0
     pub evidence: Vec<String>, // 推断证据
 }
 
@@ -213,11 +213,7 @@ impl TypeInferencer {
         for caps in re.captures_iter(code) {
             if let Some(var) = caps.get(1) {
                 let var_name = var.as_str();
-                let current_type = self
-                    .types
-                    .get(var_name)
-                    .cloned()
-                    .unwrap_or(JSType::Unknown);
+                let current_type = self.types.get(var_name).cloned().unwrap_or(JSType::Unknown);
 
                 // 更新为 string 或 union
                 match current_type {
@@ -227,10 +223,7 @@ impl TypeInferencer {
                     JSType::Number | JSType::Boolean => {
                         self.types.insert(
                             var_name.to_string(),
-                            JSType::Union(vec![
-                                Box::new(JSType::String),
-                                Box::new(current_type),
-                            ]),
+                            JSType::Union(vec![Box::new(JSType::String), Box::new(current_type)]),
                         );
                     }
                     _ => {}
@@ -251,11 +244,7 @@ impl TypeInferencer {
     }
 
     /// 推断函数类型
-    fn infer_function_types(
-        &mut self,
-        code: &str,
-        result: &mut TypeInferenceResult,
-    ) -> Result<()> {
+    fn infer_function_types(&mut self, code: &str, result: &mut TypeInferenceResult) -> Result<()> {
         // 匹配函数定义
         let re = Regex::new(r"function\s+(\w+)\s*\(([^)]*)\)\s*\{([^}]+)\}")?;
 
@@ -290,11 +279,7 @@ impl TypeInferencer {
     }
 
     /// 推断返回类型
-    fn infer_return_types(
-        &mut self,
-        code: &str,
-        result: &mut TypeInferenceResult,
-    ) -> Result<()> {
+    fn infer_return_types(&mut self, code: &str, result: &mut TypeInferenceResult) -> Result<()> {
         // 匹配 return 语句
         let re = Regex::new(r"return\s+([^;]+);")?;
 

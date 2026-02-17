@@ -4,8 +4,7 @@
 //! 支持：符号执行、数据流分析、类型推断、多阶段处理
 
 use crate::{
-    DataFlowAnalyzer, SymbolicExecutor, TypeInferencer,
-    JSUnpackDeobfuscator, EnhancedDeobfuscator,
+    DataFlowAnalyzer, EnhancedDeobfuscator, JSUnpackDeobfuscator, SymbolicExecutor, TypeInferencer,
 };
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -20,12 +19,12 @@ pub struct AdvancedDeobfuscationPipeline {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PipelineStage {
-    Unpacking,           // Stage 1: JSUnpack 解包
-    Symbolic,            // Stage 2: 符号执行
-    DataFlow,            // Stage 3: 数据流分析
-    TypeInference,       // Stage 4: 类型推断
-    EnhancedDeobf,       // Stage 5: 增强反混淆
-    Optimization,        // Stage 6: 代码优化
+    Unpacking,     // Stage 1: JSUnpack 解包
+    Symbolic,      // Stage 2: 符号执行
+    DataFlow,      // Stage 3: 数据流分析
+    TypeInference, // Stage 4: 类型推断
+    EnhancedDeobf, // Stage 5: 增强反混淆
+    Optimization,  // Stage 6: 代码优化
 }
 
 /// 管道分析结果
@@ -91,13 +90,12 @@ impl AdvancedDeobfuscationPipeline {
         log::info!("Stage 1: Unpacking");
         let mut jsunpack = JSUnpackDeobfuscator::new();
         let unpack_result = jsunpack.unpack(&current_code)?;
-        
+
         result.unpacked_code = unpack_result.code.clone();
         result.total_obfuscation_layers = unpack_result.layers_unpacked;
-        result.analysis_summary.packer_detected = unpack_result
-            .packer_detected
-            .map(|p| format!("{:?}", p));
-        
+        result.analysis_summary.packer_detected =
+            unpack_result.packer_detected.map(|p| format!("{:?}", p));
+
         current_code = unpack_result.code;
 
         // Stage 2: 符号执行
@@ -105,18 +103,19 @@ impl AdvancedDeobfuscationPipeline {
             log::info!("Stage 2: Symbolic Execution");
             let mut executor = SymbolicExecutor::new();
             let sym_result = executor.analyze(&current_code)?;
-            
+
             result.analysis_summary.variables_count = sym_result.assignments.len();
             result.analysis_summary.functions_count = sym_result.function_calls.len();
 
             for decoded in &sym_result.decoded_strings {
                 result.insights.push(Insight {
                     category: "Decoded String".to_string(),
-                    description: format!("Found decoded string: {}", 
-                        if decoded.len() > 50 { 
-                            format!("{}...", &decoded[..50]) 
-                        } else { 
-                            decoded.clone() 
+                    description: format!(
+                        "Found decoded string: {}",
+                        if decoded.len() > 50 {
+                            format!("{}...", &decoded[..50])
+                        } else {
+                            decoded.clone()
                         }
                     ),
                     severity: "info".to_string(),
@@ -130,7 +129,7 @@ impl AdvancedDeobfuscationPipeline {
             log::info!("Stage 3: Data Flow Analysis");
             let mut dfa = DataFlowAnalyzer::new();
             let df_result = dfa.analyze(&current_code)?;
-            
+
             result.analysis_summary.critical_variables = df_result.critical_variables.clone();
             result.analysis_summary.data_flows_identified = df_result.def_use_chains.len();
 
@@ -156,7 +155,7 @@ impl AdvancedDeobfuscationPipeline {
             log::info!("Stage 4: Type Inference");
             let mut type_infer = TypeInferencer::new();
             let type_result = type_infer.infer(&current_code)?;
-            
+
             // 计算类型推断置信度
             let total_vars = type_result.type_info.len();
             if total_vars > 0 {
@@ -243,7 +242,8 @@ impl AdvancedDeobfuscationPipeline {
         // 基于混淆层数
         if result.total_obfuscation_layers > 3 {
             recommendations.push(
-                "Multiple obfuscation layers detected. Apply multi-stage deobfuscation.".to_string(),
+                "Multiple obfuscation layers detected. Apply multi-stage deobfuscation."
+                    .to_string(),
             );
         }
 
@@ -252,15 +252,16 @@ impl AdvancedDeobfuscationPipeline {
             recommendations.push(format!(
                 "Found {} critical variables. Monitor their usage carefully: {}",
                 result.analysis_summary.critical_variables.len(),
-                result.analysis_summary.critical_variables[..3.min(result.analysis_summary.critical_variables.len())].join(", ")
+                result.analysis_summary.critical_variables
+                    [..3.min(result.analysis_summary.critical_variables.len())]
+                    .join(", ")
             ));
         }
 
         // 基于类型推断信心
         if result.analysis_summary.type_confidence < 0.5 {
-            recommendations.push(
-                "Low type inference confidence. Code may use advanced patterns.".to_string(),
-            );
+            recommendations
+                .push("Low type inference confidence. Code may use advanced patterns.".to_string());
         }
 
         recommendations
@@ -313,7 +314,7 @@ mod tests {
     fn test_simple_code_processing() {
         let pipeline = AdvancedDeobfuscationPipeline::new();
         let code = "var x = 'hello'; console.log(x);";
-        
+
         let result = pipeline.process(code).unwrap();
         assert_eq!(result.original_code, code);
         assert!(!result.final_code.is_empty());

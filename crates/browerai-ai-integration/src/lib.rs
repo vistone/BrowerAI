@@ -10,9 +10,9 @@ pub mod tokenizer;
 
 pub use decoder::beam_search::BeamSearchParams;
 pub use framework_detector::FrameworkDetectorIntegration;
-pub use http_client::{FrameworkDetectorClient, DetectResponse, BatchDetectResponse};
+pub use http_client::{BatchDetectResponse, DetectResponse, FrameworkDetectorClient};
 pub use hybrid_framework_integration::{
-    HybridFrameworkIntegration, FrameworkDetectionResult, DetectionMethod,
+    DetectionMethod, FrameworkDetectionResult, HybridFrameworkIntegration,
 };
 pub use integration::{CssModelIntegration, HtmlModelIntegration, JsDeobfuscatorIntegration};
 #[cfg(feature = "js_orchestrator")]

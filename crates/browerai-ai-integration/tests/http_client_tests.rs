@@ -15,7 +15,7 @@ fn test_health_check() {
 #[ignore]
 fn test_detect_react() {
     let client = FrameworkDetectorClient::default();
-    
+
     let react_html = r#"
         <html>
         <head><title>React App</title></head>
@@ -41,8 +41,14 @@ fn test_batch_detect() {
     let client = FrameworkDetectorClient::default();
 
     let websites = vec![
-        ("https://example1.com".to_string(), r#"<script src="/_next/static/main.js"></script>"#.to_string()),
-        ("https://example2.com".to_string(), r#"<div v-if="true"></div>"#.to_string()),
+        (
+            "https://example1.com".to_string(),
+            r#"<script src="/_next/static/main.js"></script>"#.to_string(),
+        ),
+        (
+            "https://example2.com".to_string(),
+            r#"<div v-if="true"></div>"#.to_string(),
+        ),
     ];
 
     let response = client.batch_detect(websites).expect("批量检测失败");

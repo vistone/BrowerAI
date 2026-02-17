@@ -39,7 +39,7 @@ pub struct TaintInfo {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DataFlowGraph {
     pub nodes: Vec<DataFlowNode>,
-    pub edges: Vec<(usize, usize)>, // from_id -> to_id
+    pub edges: Vec<(usize, usize)>,           // from_id -> to_id
     pub variable_map: HashMap<String, usize>, // var_name -> node_id
 }
 
@@ -101,7 +101,7 @@ impl DataFlowAnalyzer {
         // 定义模式
         let def_patterns = vec![
             r"(?:var|let|const)\s+(\w+)\s*=",
-            r"(\w+)\s*=\s*[^=]",  // 赋值（不是比较，简化版）
+            r"(\w+)\s*=\s*[^=]", // 赋值（不是比较，简化版）
         ];
 
         for pattern in def_patterns {
@@ -110,7 +110,7 @@ impl DataFlowAnalyzer {
                 for caps in re.captures_iter(code_line) {
                     if let Some(var) = caps.get(1) {
                         let var_name = var.as_str().to_string();
-                        
+
                         result.definitions.push(VarReference {
                             variable: var_name.clone(),
                             line,
@@ -127,12 +127,12 @@ impl DataFlowAnalyzer {
         // 使用模式
         // 注意：移除了负后向断言，因为 Rust regex 不支持
         let use_patterns = vec![
-            r"(\w+)\s*\+",      // 加法
-            r"(\w+)\s*\-",      // 减法
-            r"(\w+)\s*\*",      // 乘法
-            r"(\w+)\s*\/",      // 除法
-            r"\.replace\([^,]+,\s*(\w+)\)",   // 替换使用
-            r"console\.log\(([^)]+)\)",       // 日志
+            r"(\w+)\s*\+",                  // 加法
+            r"(\w+)\s*\-",                  // 减法
+            r"(\w+)\s*\*",                  // 乘法
+            r"(\w+)\s*\/",                  // 除法
+            r"\.replace\([^,]+,\s*(\w+)\)", // 替换使用
+            r"console\.log\(([^)]+)\)",     // 日志
         ];
 
         for pattern in use_patterns {
@@ -141,7 +141,7 @@ impl DataFlowAnalyzer {
                 for caps in re.captures_iter(code_line) {
                     if let Some(var) = caps.get(1) {
                         let var_name = var.as_str().to_string();
-                        
+
                         result.uses.push(VarReference {
                             variable: var_name,
                             line,

@@ -11,8 +11,8 @@ use std::collections::HashMap;
 /// 符号值类型
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum SymbolicValue {
-    Constant(String),           // 常量值
-    Variable(String),            // 变量名
+    Constant(String), // 常量值
+    Variable(String), // 变量名
     BinaryOp {
         left: Box<SymbolicValue>,
         op: String,
@@ -90,13 +90,17 @@ impl SymbolicExecutor {
     }
 
     /// 提取变量赋值
-    fn extract_assignments(&mut self, code: &str, result: &mut SymbolicAnalysisResult) -> Result<()> {
+    fn extract_assignments(
+        &mut self,
+        code: &str,
+        result: &mut SymbolicAnalysisResult,
+    ) -> Result<()> {
         // 匹配 var/let/const x = value 模式
         let patterns = vec![
-            r#"(?:var|let|const)\s+(\w+)\s*=\s*['"]([^'"]+)['"]\s*;"#,  // 字符串赋值
-            r#"(?:var|let|const)\s+(\w+)\s*=\s*(\d+)\s*;"#,              // 数字赋值
-            r#"(?:var|let|const)\s+(\w+)\s*=\s*(\[.*?\])\s*;"#,          // 数组赋值
-            r#"(\w+)\s*=\s*['"]([^'"]+)['"]\s*;"#,                       // 重新赋值
+            r#"(?:var|let|const)\s+(\w+)\s*=\s*['"]([^'"]+)['"]\s*;"#, // 字符串赋值
+            r#"(?:var|let|const)\s+(\w+)\s*=\s*(\d+)\s*;"#,            // 数字赋值
+            r#"(?:var|let|const)\s+(\w+)\s*=\s*(\[.*?\])\s*;"#,        // 数组赋值
+            r#"(\w+)\s*=\s*['"]([^'"]+)['"]\s*;"#,                     // 重新赋值
         ];
 
         for pattern in patterns {
@@ -199,8 +203,7 @@ impl SymbolicExecutor {
         let re = Regex::new(r"function\s+(\w+)\s*\(([^)]*)\)\s*\{([^}]+)\}")?;
 
         for caps in re.captures_iter(code) {
-            if let (Some(name), Some(params), Some(body)) =
-                (caps.get(1), caps.get(2), caps.get(3))
+            if let (Some(name), Some(params), Some(body)) = (caps.get(1), caps.get(2), caps.get(3))
             {
                 let param_list: Vec<String> = params
                     .as_str()
@@ -224,7 +227,11 @@ impl SymbolicExecutor {
         // 识别可以传播的常量
         for assignment in &result.assignments {
             // 如果值是简单的字符串或数字，标记为常量
-            if assignment.value.chars().all(|c| c.is_numeric() || c == '.' || c == '-') {
+            if assignment
+                .value
+                .chars()
+                .all(|c| c.is_numeric() || c == '.' || c == '-')
+            {
                 result.constants.push(assignment.variable.clone());
             }
         }

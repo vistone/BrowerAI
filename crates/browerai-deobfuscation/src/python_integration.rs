@@ -4,8 +4,8 @@
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use std::process::Command;
 use std::path::PathBuf;
+use std::process::Command;
 
 /// Python反混淆结果
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -50,19 +50,19 @@ impl PythonDeobfuscationSystem {
             .parent()
             .context("Failed to get project root")?
             .join("training");
-        
+
         Ok(Self {
             python_path: "python3".to_string(),
             training_dir,
         })
     }
-    
+
     /// 设置Python解释器路径
     pub fn with_python_path(mut self, path: impl Into<String>) -> Self {
         self.python_path = path.into();
         self
     }
-    
+
     /// 反混淆JS代码
     pub fn deobfuscate(&self, code: &str) -> Result<PythonDeobfuscationResult> {
         // 创建临时Python脚本
@@ -93,26 +93,26 @@ print(json.dumps(output, ensure_ascii=False))
             self.training_dir.display(),
             serde_json::to_string(code)?
         );
-        
+
         // 执行Python脚本
         let output = Command::new(&self.python_path)
             .arg("-c")
             .arg(&script)
             .output()
             .context("Failed to execute Python")?;
-        
+
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
             anyhow::bail!("Python script failed: {}", stderr);
         }
-        
+
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let result: PythonDeobfuscationResult = serde_json::from_str(&stdout)
-            .context("Failed to parse Python output")?;
-        
+        let result: PythonDeobfuscationResult =
+            serde_json::from_str(&stdout).context("Failed to parse Python output")?;
+
         Ok(result)
     }
-    
+
     /// 检测混淆器类型
     pub fn detect_obfuscator(&self, code: &str) -> Result<Vec<ObfuscatorInfo>> {
         let script = format!(
@@ -142,25 +142,25 @@ print(json.dumps(output, ensure_ascii=False))
             self.training_dir.display(),
             serde_json::to_string(code)?
         );
-        
+
         let output = Command::new(&self.python_path)
             .arg("-c")
             .arg(&script)
             .output()
             .context("Failed to execute Python")?;
-        
+
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
             anyhow::bail!("Python script failed: {}", stderr);
         }
-        
+
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let result: Vec<ObfuscatorInfo> = serde_json::from_str(&stdout)
-            .context("Failed to parse Python output")?;
-        
+        let result: Vec<ObfuscatorInfo> =
+            serde_json::from_str(&stdout).context("Failed to parse Python output")?;
+
         Ok(result)
     }
-    
+
     /// 获取知识库统计信息
     pub fn get_statistics(&self) -> Result<KnowledgeBaseStatistics> {
         let script = format!(
@@ -178,22 +178,22 @@ print(json.dumps(stats, ensure_ascii=False))
 "#,
             self.training_dir.display()
         );
-        
+
         let output = Command::new(&self.python_path)
             .arg("-c")
             .arg(&script)
             .output()
             .context("Failed to execute Python")?;
-        
+
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
             anyhow::bail!("Python script failed: {}", stderr);
         }
-        
+
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let result: KnowledgeBaseStatistics = serde_json::from_str(&stdout)
-            .context("Failed to parse Python output")?;
-        
+        let result: KnowledgeBaseStatistics =
+            serde_json::from_str(&stdout).context("Failed to parse Python output")?;
+
         Ok(result)
     }
 }
@@ -215,39 +215,39 @@ pub struct KnowledgeBaseStatistics {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_deobfuscate_hex_encoding() {
         let system = PythonDeobfuscationSystem::new().unwrap();
-        
+
         let code = r"var msg = '\x48\x65\x6c\x6c\x6f';";
         let result = system.deobfuscate(code).unwrap();
-        
+
         println!("Original: {}", result.original);
         println!("Deobfuscated: {}", result.deobfuscated);
         println!("Detected: {:?}", result.detected_obfuscators);
         println!("Rules: {:?}", result.applied_rules);
     }
-    
+
     #[test]
     fn test_detect_obfuscator() {
         let system = PythonDeobfuscationSystem::new().unwrap();
-        
+
         let code = r"var _0x1234 = '\x48\x65\x6c\x6c\x6f';";
         let obfuscators = system.detect_obfuscator(code).unwrap();
-        
+
         println!("Detected obfuscators:");
         for obf in obfuscators {
             println!("  - {} ({}) [{}]", obf.name, obf.country, obf.difficulty);
         }
     }
-    
+
     #[test]
     fn test_get_statistics() {
         let system = PythonDeobfuscationSystem::new().unwrap();
-        
+
         let stats = system.get_statistics().unwrap();
-        
+
         println!("Knowledge Base Statistics:");
         println!("  Total: {}", stats.total);
         println!("  Open Source: {}", stats.open_source);

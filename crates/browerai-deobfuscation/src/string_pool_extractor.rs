@@ -1,11 +1,10 @@
+use anyhow::Result;
+use regex::Regex;
 /// 字符串池析取器 (String Pool Extractor)
-/// 
+///
 /// 识别并提取所有字符串存储位置，支持多层编码解析，
 /// 建立完整的字符串映射表。
-
 use std::collections::HashMap;
-use regex::Regex;
-use anyhow::Result;
 
 /// 字符串来源类型
 #[derive(Debug, Clone, PartialEq)]
@@ -167,7 +166,9 @@ impl StringPoolExtractor {
                 if let Ok(num_vec) = numbers {
                     if num_vec.len() > 2 {
                         // 至少 3 个字符
-                        if let Ok(decoded) = String::from_utf8(num_vec.iter().map(|&n| n as u8).collect()) {
+                        if let Ok(decoded) =
+                            String::from_utf8(num_vec.iter().map(|&n| n as u8).collect())
+                        {
                             self.add_entry(StringPoolEntry {
                                 original: format!("[{}]", numbers_str),
                                 decoded,
@@ -197,7 +198,10 @@ impl StringPoolExtractor {
                 if let Ok(decoded_bytes) = base64::decode(b64_str) {
                     if let Ok(decoded) = String::from_utf8(decoded_bytes) {
                         // 检查解码后是否是可打印字符
-                        if decoded.chars().all(|c| c.is_ascii() && (c.is_alphanumeric() || c.is_whitespace())) {
+                        if decoded
+                            .chars()
+                            .all(|c| c.is_ascii() && (c.is_alphanumeric() || c.is_whitespace()))
+                        {
                             self.add_entry(StringPoolEntry {
                                 original: b64_str.to_string(),
                                 decoded,
@@ -316,10 +320,8 @@ impl StringPoolExtractor {
         for caps in re.captures_iter(line) {
             if let Some(m) = caps.get(1) {
                 let args = m.as_str();
-                let codes: Result<Vec<u8>, _> = args
-                    .split(',')
-                    .map(|s| s.trim().parse::<u8>())
-                    .collect();
+                let codes: Result<Vec<u8>, _> =
+                    args.split(',').map(|s| s.trim().parse::<u8>()).collect();
 
                 if let Ok(code_vec) = codes {
                     if let Ok(decoded) = String::from_utf8(code_vec) {
@@ -484,7 +486,11 @@ impl StringPoolExtractor {
             avg_encoding_depth: if self.pool.entries.is_empty() {
                 0.0
             } else {
-                self.pool.entries.iter().map(|e| e.encoding_depth as f32).sum::<f32>()
+                self.pool
+                    .entries
+                    .iter()
+                    .map(|e| e.encoding_depth as f32)
+                    .sum::<f32>()
                     / self.pool.entries.len() as f32
             },
             decoding_stats,

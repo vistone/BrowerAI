@@ -15,19 +15,19 @@ use serde::{Deserialize, Serialize};
 pub struct CudaConfig {
     /// Enable mixed precision (FP16) inference
     pub use_fp16: bool,
-    
+
     /// Enable kernel fusion for common operation patterns
     pub enable_kernel_fusion: bool,
-    
+
     /// Pre-allocate memory pool size in MB
     pub memory_pool_mb: usize,
-    
+
     /// Number of CUDA streams for concurrent execution
     pub num_streams: usize,
-    
+
     /// Enable TensorCore operations (requires Volta+ GPU)
     pub use_tensor_cores: bool,
-    
+
     /// Batch size hint for optimization
     pub batch_size: usize,
 }
@@ -84,26 +84,26 @@ impl CudaOptimizer {
         }
 
         info!("🚀 Initializing CUDA optimizer...");
-        
+
         // Check GPU availability (placeholder - would use actual CUDA calls)
         self.check_gpu_availability()?;
-        
+
         // Configure mixed precision
         if self.config.use_fp16 {
             info!("  ✓ Mixed precision (FP16) enabled");
         }
-        
+
         // Setup kernel fusion
         if self.config.enable_kernel_fusion {
             info!("  ✓ Kernel fusion enabled");
         }
-        
+
         // Allocate memory pool
         info!("  ✓ Memory pool: {}MB", self.config.memory_pool_mb);
-        
+
         // Create CUDA streams
         info!("  ✓ CUDA streams: {}", self.config.num_streams);
-        
+
         // TensorCore support
         if self.config.use_tensor_cores {
             info!("  ✓ TensorCore operations enabled");
@@ -121,11 +121,11 @@ impl CudaOptimizer {
         // - neuroxide::Device::CUDA.is_available()
         // - Query compute capability
         // - Check memory availability
-        
+
         info!("🔍 Detecting GPU...");
         info!("  Note: GPU detection placeholder (Neuroxide Alpha)");
         info!("  Real implementation will query CUDA runtime");
-        
+
         Ok(())
     }
 
@@ -135,7 +135,7 @@ impl CudaOptimizer {
     pub fn optimize_for_batch(&mut self, batch_size: usize) -> Result<()> {
         info!("⚙️  Optimizing for batch size: {}", batch_size);
         self.config.batch_size = batch_size;
-        
+
         // Adjust memory pool if needed
         let recommended_memory_mb = (batch_size * 4) / 10; // Heuristic
         if recommended_memory_mb > self.config.memory_pool_mb {
@@ -144,7 +144,7 @@ impl CudaOptimizer {
                 recommended_memory_mb, self.config.memory_pool_mb
             );
         }
-        
+
         Ok(())
     }
 
@@ -199,7 +199,7 @@ impl CudaOptimizer {
         if !self.is_initialized {
             anyhow::bail!("CUDA optimizer not initialized");
         }
-        
+
         info!("⏳ Synchronizing CUDA streams...");
         // Placeholder for actual cudaStreamSynchronize calls
         info!("✅ All streams synchronized");
@@ -277,7 +277,7 @@ mod tests {
     fn test_get_stats() {
         let mut optimizer = CudaOptimizer::new();
         optimizer.initialize().unwrap();
-        
+
         let stats = optimizer.get_stats().unwrap();
         assert!(stats.is_initialized);
         assert!(stats.using_fp16);
@@ -287,10 +287,10 @@ mod tests {
     #[test]
     fn test_enable_optimizations() {
         let mut optimizer = CudaOptimizer::new();
-        
+
         optimizer.enable_mixed_precision().unwrap();
         assert!(optimizer.config().use_fp16);
-        
+
         optimizer.enable_kernel_fusion().unwrap();
         assert!(optimizer.config().enable_kernel_fusion);
     }

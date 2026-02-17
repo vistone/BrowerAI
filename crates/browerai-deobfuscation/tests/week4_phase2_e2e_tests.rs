@@ -1,13 +1,10 @@
 /// Week 4 Phase 2: E2E 集成测试
-/// 
+///
 /// 验证完整的检测流程：代码 → 特征提取 → 推理 → 结果
 
 #[cfg(test)]
 mod week4_phase2_e2e_tests {
-    use browerai_deobfuscation::{
-        OnnxObfuscationDetector,
-        FeatureExtractor,
-    };
+    use browerai_deobfuscation::{FeatureExtractor, OnnxObfuscationDetector};
 
     // 测试样本定义
     const CONTROL_FLOW_SAMPLE: &str = r#"
@@ -31,10 +28,14 @@ console.log(secret);
     #[test]
     fn test_basic_detection_flow() {
         let model_path = "../../models/local/week3_obfuscation_detector.onnx";
-        
+
         // 步骤 1: 初始化检测器
         let detector = OnnxObfuscationDetector::new(model_path);
-        assert!(detector.is_ok(), "Failed to create detector: {:?}", detector.err());
+        assert!(
+            detector.is_ok(),
+            "Failed to create detector: {:?}",
+            detector.err()
+        );
         let detector = detector.unwrap();
 
         // 步骤 2: 提交简单代码样本
@@ -50,7 +51,7 @@ console.log(secret);
 
         // 步骤 4: 检查复杂度指标
         assert!(result.complexity_metrics.code_length > 0);
-        
+
         println!("✅ Basic flow test passed");
         println!("   Detected: {:?}", result.technique);
         println!("   Confidence: {:.2}%", result.confidence * 100.0);
@@ -79,24 +80,27 @@ console.log(secret);
 
         // 验证结果独立性
         assert_eq!(results.len(), test_codes.len());
-        
+
         // 检查每个结果
         for (i, result) in results.iter().enumerate() {
             assert_eq!(result.features.len(), 33, "Sample {} feature dim", i);
             assert!(result.confidence >= 0.0, "Sample {} confidence", i);
         }
 
-        println!("✅ Sequential processing test passed ({} samples)", test_codes.len());
+        println!(
+            "✅ Sequential processing test passed ({} samples)",
+            test_codes.len()
+        );
     }
 
     /// 测试 3: 缓存性能测试
     #[test]
     fn test_cache_hit_performance() {
         use std::time::Instant;
-        
+
         let model_path = "../../models/local/week3_obfuscation_detector.onnx";
         let detector = OnnxObfuscationDetector::new(model_path).unwrap();
-        
+
         let code = "function cached() { return 42; }";
 
         // 第一次：冷缓存
@@ -128,7 +132,7 @@ console.log(secret);
         println!("   Hot 1: {:?}", hot_time);
         println!("   Hot 2: {:?}", hot_time2);
         println!("   Cache entries: {}", cache_size);
-        
+
         // 缓存应该加速（虽然模拟推理很快，但缓存更快）
         if hot_time < cold_time {
             let speedup = cold_time.as_micros() as f32 / hot_time.as_micros() as f32;
@@ -143,23 +147,27 @@ console.log(secret);
         let detector = OnnxObfuscationDetector::new(model_path).unwrap();
 
         let samples = vec![CONTROL_FLOW_SAMPLE, STRING_ENCODING_SAMPLE];
-        
+
         for (i, code) in samples.iter().enumerate() {
             let result = detector.detect(code);
             assert!(result.is_ok(), "Sample {} failed", i);
-            
+
             let result = result.unwrap();
-            
+
             // 验证特征维度
             assert_eq!(result.features.len(), 33);
-            
+
             // 验证置信度范围
             assert!(result.confidence >= 0.0 && result.confidence <= 1.0);
-            
-            println!("Sample {}: {:?} ({:.1}%)", 
-                     i, result.technique, result.confidence * 100.0);
+
+            println!(
+                "Sample {}: {:?} ({:.1}%)",
+                i,
+                result.technique,
+                result.confidence * 100.0
+            );
         }
-        
+
         println!("✅ Control flow detection test passed");
     }
 
@@ -170,10 +178,10 @@ console.log(secret);
         let detector = OnnxObfuscationDetector::new(model_path).unwrap();
 
         let result = detector.detect(STRING_ENCODING_SAMPLE).unwrap();
-        
+
         assert_eq!(result.features.len(), 33);
         assert!(result.confidence >= 0.0);
-        
+
         println!("✅ String encoding detection test passed");
     }
 
@@ -197,7 +205,7 @@ console.log(secret);
             match detector.detect(code) {
                 Ok(result) => {
                     success_count += 1;
-                    
+
                     // 验证基本约束
                     assert_eq!(result.features.len(), 33);
                     assert!(result.confidence >= 0.0 && result.confidence <= 1.0);
@@ -211,8 +219,10 @@ console.log(secret);
         println!("✅ Batch test completed");
         println!("   Total samples: {}", test_samples.len());
         println!("   Successful: {}", success_count);
-        println!("   Success rate: {:.1}%", 
-                 (success_count as f32 / test_samples.len() as f32) * 100.0);
+        println!(
+            "   Success rate: {:.1}%",
+            (success_count as f32 / test_samples.len() as f32) * 100.0
+        );
 
         // 应该全部成功
         assert_eq!(success_count, test_samples.len());
@@ -233,17 +243,20 @@ console.log(secret);
         for (i, code) in test_codes.iter().enumerate() {
             let features = extractor.extract_features(code);
             assert!(features.is_ok(), "Feature extraction {} failed", i);
-            
+
             let features = features.unwrap();
             assert_eq!(features.len(), 33, "Feature dimension mismatch at {}", i);
-            
+
             // 验证特征值有效性
             for (j, &val) in features.iter().enumerate() {
                 assert!(val.is_finite(), "Feature {}[{}] is not finite", i, j);
             }
         }
 
-        println!("✅ Feature extractor test passed ({} codes)", test_codes.len());
+        println!(
+            "✅ Feature extractor test passed ({} codes)",
+            test_codes.len()
+        );
     }
 
     /// 测试 8: 空代码和边界条件
@@ -256,7 +269,11 @@ console.log(secret);
         let result = detector.detect("");
         if result.is_ok() {
             let r = result.unwrap();
-            println!("Empty code: {:?} ({:.1}%)", r.technique, r.confidence * 100.0);
+            println!(
+                "Empty code: {:?} ({:.1}%)",
+                r.technique,
+                r.confidence * 100.0
+            );
         } else {
             println!("Empty code rejected (expected)");
         }
@@ -320,11 +337,11 @@ console.log(secret);
         assert_eq!(result.features.len(), 33);
         assert_eq!(result.scores.len(), 8);
         assert_eq!(result.recovery_guidance.len(), 1024);
-        
+
         // 复杂度指标
         assert!(result.complexity_metrics.code_length > 0);
         assert!(result.complexity_metrics.string_count >= 0);
-        
+
         println!("✅ Result structure test passed");
         println!("   Technique: {:?}", result.technique);
         println!("   Confidence: {:.2}%", result.confidence * 100.0);

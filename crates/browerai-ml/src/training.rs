@@ -19,34 +19,34 @@ use crate::serialization::ModelSerializer;
 pub struct TrainingConfig {
     /// Number of training epochs
     pub epochs: usize,
-    
+
     /// Batch size for training
     pub batch_size: usize,
-    
+
     /// Learning rate
     pub learning_rate: f32,
-    
+
     /// Weight decay (L2 regularization)
     pub weight_decay: f32,
-    
+
     /// Gradient clipping threshold
     pub grad_clip_norm: Option<f32>,
-    
+
     /// Number of steps for gradient accumulation
     pub gradient_accumulation_steps: usize,
-    
+
     /// Checkpoint save frequency (in epochs)
     pub checkpoint_every: usize,
-    
+
     /// Directory for saving checkpoints
     pub checkpoint_dir: PathBuf,
-    
+
     /// Early stopping patience (epochs without improvement)
     pub early_stopping_patience: Option<usize>,
-    
+
     /// Use mixed precision training (FP16)
     pub use_mixed_precision: bool,
-    
+
     /// Validation split ratio (0.0 to 1.0)
     pub validation_split: f32,
 }
@@ -74,23 +74,15 @@ impl Default for TrainingConfig {
 pub enum LRScheduler {
     /// Constant learning rate
     Constant,
-    
+
     /// Linear warmup + cosine decay
-    CosineWithWarmup {
-        warmup_epochs: usize,
-    },
-    
+    CosineWithWarmup { warmup_epochs: usize },
+
     /// Step decay
-    StepDecay {
-        step_size: usize,
-        gamma: f32,
-    },
-    
+    StepDecay { step_size: usize, gamma: f32 },
+
     /// Reduce on plateau
-    ReduceOnPlateau {
-        patience: usize,
-        factor: f32,
-    },
+    ReduceOnPlateau { patience: usize, factor: f32 },
 }
 
 /// Training metrics for one epoch
@@ -142,24 +134,27 @@ impl TrainingPipeline {
     /// - GPU allocation
     pub fn initialize(&mut self) -> Result<()> {
         info!("🎓 Initializing training pipeline...");
-        
+
         // Create checkpoint directory
         std::fs::create_dir_all(&self.config.checkpoint_dir)
             .context("Failed to create checkpoint directory")?;
-        
-        info!("  ✓ Checkpoint dir: {}", self.config.checkpoint_dir.display());
+
+        info!(
+            "  ✓ Checkpoint dir: {}",
+            self.config.checkpoint_dir.display()
+        );
         info!("  ✓ Epochs: {}", self.config.epochs);
         info!("  ✓ Batch size: {}", self.config.batch_size);
         info!("  ✓ Learning rate: {}", self.config.learning_rate);
-        
+
         if self.config.use_mixed_precision {
             info!("  ✓ Mixed precision (FP16) enabled");
         }
-        
+
         if let Some(clip) = self.config.grad_clip_norm {
             info!("  ✓ Gradient clipping: {}", clip);
         }
-        
+
         info!("✅ Training pipeline initialized");
         Ok(())
     }
@@ -182,23 +177,27 @@ impl TrainingPipeline {
     where
         F: FnMut(usize) -> Result<f32>, // batch_idx -> loss
     {
-        info!("📚 Training epoch {}/{}", self.current_epoch + 1, self.config.epochs);
-        
+        info!(
+            "📚 Training epoch {}/{}",
+            self.current_epoch + 1,
+            self.config.epochs
+        );
+
         let mut total_loss = 0.0;
         let num_batches = 100; // Placeholder - would come from dataset
-        
+
         for batch_idx in 0..num_batches {
             let loss = train_fn(batch_idx)?;
             total_loss += loss;
-            
+
             if batch_idx % 10 == 0 {
                 info!("  Batch {}/{}: loss = {:.4}", batch_idx, num_batches, loss);
             }
         }
-        
+
         let avg_loss = total_loss / num_batches as f32;
         info!("  ✓ Average training loss: {:.4}", avg_loss);
-        
+
         Ok(avg_loss)
     }
 
@@ -214,18 +213,18 @@ impl TrainingPipeline {
         F: FnMut(usize) -> Result<f32>, // batch_idx -> loss
     {
         info!("🔍 Running validation...");
-        
+
         let mut total_loss = 0.0;
         let num_batches = 20; // Placeholder
-        
+
         for batch_idx in 0..num_batches {
             let loss = val_fn(batch_idx)?;
             total_loss += loss;
         }
-        
+
         let avg_loss = total_loss / num_batches as f32;
         info!("  ✓ Validation loss: {:.4}", avg_loss);
-        
+
         Ok(avg_loss)
     }
 
@@ -253,26 +252,26 @@ impl TrainingPipeline {
         T: serde::Serialize + Clone,
     {
         info!("🚀 Starting training for {} epochs", self.config.epochs);
-        
+
         let mut train_fn = train_fn;
         let mut val_fn = val_fn;
-        
+
         for epoch in 0..self.config.epochs {
             self.current_epoch = epoch;
-            
+
             // Get current learning rate
             let lr = self.get_learning_rate();
-            
+
             // Train one epoch
             let train_loss = self.train_epoch(&mut train_fn)?;
-            
+
             // Validate
             let val_loss = if self.config.validation_split > 0.0 {
                 Some(self.validate(&mut val_fn)?)
             } else {
                 None
             };
-            
+
             // Record metrics
             let metrics = EpochMetrics {
                 epoch,
@@ -282,7 +281,7 @@ impl TrainingPipeline {
                 samples_per_second: 1000.0, // Placeholder
             };
             self.metrics_history.push(metrics.clone());
-            
+
             // Check for improvement
             let improved = if let Some(val_loss) = val_loss {
                 if let Some(best) = self.best_val_loss {
@@ -301,16 +300,16 @@ impl TrainingPipeline {
             } else {
                 true
             };
-            
+
             if improved {
                 info!("  🌟 New best model!");
             }
-            
+
             // Save checkpoint
             if (epoch + 1) % self.config.checkpoint_every == 0 {
                 self.save_checkpoint(model_data, epoch)?;
             }
-            
+
             // Early stopping
             if let Some(patience) = self.config.early_stopping_patience {
                 if self.patience_counter >= patience {
@@ -319,22 +318,23 @@ impl TrainingPipeline {
                 }
             }
         }
-        
+
         info!("✅ Training complete!");
-        info!("  Best validation loss: {:.4}", self.best_val_loss.unwrap_or(0.0));
-        
+        info!(
+            "  Best validation loss: {:.4}",
+            self.best_val_loss.unwrap_or(0.0)
+        );
+
         Ok(self.metrics_history.clone())
     }
 
     /// Save training checkpoint
-    fn save_checkpoint<T: serde::Serialize>(
-        &self,
-        model_data: &T,
-        epoch: usize,
-    ) -> Result<()> {
-        let checkpoint_path = self.config.checkpoint_dir
+    fn save_checkpoint<T: serde::Serialize>(&self, model_data: &T, epoch: usize) -> Result<()> {
+        let checkpoint_path = self
+            .config
+            .checkpoint_dir
             .join(format!("checkpoint_epoch_{:04}.neuroxide", epoch + 1));
-        
+
         ModelSerializer::save_checkpoint(model_data, &checkpoint_path)
     }
 
@@ -342,7 +342,7 @@ impl TrainingPipeline {
     fn get_learning_rate(&self) -> f32 {
         match &self.scheduler {
             LRScheduler::Constant => self.config.learning_rate,
-            
+
             LRScheduler::CosineWithWarmup { warmup_epochs } => {
                 if self.current_epoch < *warmup_epochs {
                     // Linear warmup
@@ -355,12 +355,12 @@ impl TrainingPipeline {
                     self.config.learning_rate * cosine_decay
                 }
             }
-            
+
             LRScheduler::StepDecay { step_size, gamma } => {
                 let steps = self.current_epoch / step_size;
                 self.config.learning_rate * gamma.powi(steps as i32)
             }
-            
+
             LRScheduler::ReduceOnPlateau { .. } => {
                 // Would need loss history to implement properly
                 self.config.learning_rate
@@ -377,10 +377,10 @@ impl TrainingPipeline {
     pub fn export_metrics(&self, path: &Path) -> Result<()> {
         let json = serde_json::to_string_pretty(&self.metrics_history)
             .context("Failed to serialize metrics")?;
-        
+
         std::fs::write(path, json)
             .with_context(|| format!("Failed to write metrics to {}", path.display()))?;
-        
+
         info!("📊 Metrics exported to: {}", path.display());
         Ok(())
     }
@@ -416,10 +416,10 @@ mod tests {
     fn test_learning_rate_scheduler() {
         let config = TrainingConfig::default();
         let mut pipeline = TrainingPipeline::new(config);
-        
+
         // Test warmup phase
         assert!(pipeline.get_learning_rate() >= 0.0);
-        
+
         pipeline.current_epoch = 10;
         let lr = pipeline.get_learning_rate();
         assert!(lr > 0.0 && lr <= pipeline.config.learning_rate);
@@ -429,9 +429,9 @@ mod tests {
     fn test_train_epoch() {
         let config = TrainingConfig::default();
         let mut pipeline = TrainingPipeline::new(config);
-        
+
         let train_fn = |_batch_idx: usize| -> Result<f32> { Ok(0.5) };
-        
+
         let avg_loss = pipeline.train_epoch(train_fn);
         assert!(avg_loss.is_ok());
         assert!(avg_loss.unwrap() > 0.0);
@@ -440,16 +440,16 @@ mod tests {
     #[test]
     fn test_metrics_export() {
         use std::env;
-        
+
         let config = TrainingConfig::default();
         let pipeline = TrainingPipeline::new(config);
-        
+
         let temp_dir = env::temp_dir();
         let metrics_path = temp_dir.join("test_metrics.json");
-        
+
         let result = pipeline.export_metrics(&metrics_path);
         assert!(result.is_ok());
-        
+
         // Cleanup
         let _ = std::fs::remove_file(metrics_path);
     }

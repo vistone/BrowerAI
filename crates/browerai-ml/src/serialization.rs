@@ -43,13 +43,12 @@ impl ModelSerializer {
 
         // Ensure parent directory exists
         if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent)
-                .context("Failed to create model directory")?;
+            fs::create_dir_all(parent).context("Failed to create model directory")?;
         }
 
         // Serialize model metadata and weights
-        let json_data = serde_json::to_string_pretty(model_data)
-            .context("Failed to serialize model data")?;
+        let json_data =
+            serde_json::to_string_pretty(model_data).context("Failed to serialize model data")?;
 
         // Write to file
         fs::write(path, json_data)
@@ -85,8 +84,8 @@ impl ModelSerializer {
         let json_data = fs::read_to_string(path)
             .with_context(|| format!("Failed to read model from {}", path.display()))?;
 
-        let model_data = serde_json::from_str(&json_data)
-            .context("Failed to deserialize model data")?;
+        let model_data =
+            serde_json::from_str(&json_data).context("Failed to deserialize model data")?;
 
         info!("✅ Model loaded successfully");
         Ok(model_data)
@@ -134,14 +133,11 @@ impl ModelSerializer {
     /// # Note
     /// This is a placeholder for future ONNX export functionality.
     /// Requires Neuroxide to support ONNX conversion (not yet available in Alpha).
-    pub fn export_to_onnx<T: serde::Serialize>(
-        _model_data: &T,
-        output_path: &Path,
-    ) -> Result<()> {
+    pub fn export_to_onnx<T: serde::Serialize>(_model_data: &T, output_path: &Path) -> Result<()> {
         info!("🔄 ONNX export requested: {}", output_path.display());
         info!("⚠️  ONNX export not yet implemented in Neuroxide Alpha");
         info!("📝 This feature will be available when Neuroxide stabilizes");
-        
+
         anyhow::bail!(
             "ONNX export is not yet supported. \
              This is a planned feature for when Neuroxide reaches stable release."
@@ -199,12 +195,11 @@ mod tests {
         };
 
         // Save model
-        ModelSerializer::save(&original_model, &model_path)
-            .expect("Failed to save model");
+        ModelSerializer::save(&original_model, &model_path).expect("Failed to save model");
 
         // Load model
-        let loaded_model: TestModel = ModelSerializer::load(&model_path)
-            .expect("Failed to load model");
+        let loaded_model: TestModel =
+            ModelSerializer::load(&model_path).expect("Failed to load model");
 
         assert_eq!(original_model, loaded_model);
 

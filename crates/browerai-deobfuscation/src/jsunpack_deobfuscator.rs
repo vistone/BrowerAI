@@ -5,44 +5,44 @@
 //! and automatic decoder identification.
 
 use anyhow::Result;
+use base64::{engine::general_purpose, Engine as _};
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use base64::{Engine as _, engine::general_purpose};
 
 lazy_static! {
     // Packer detection patterns
-    static ref DEAN_EDWARDS_PACKER: Regex = 
+    static ref DEAN_EDWARDS_PACKER: Regex =
         Regex::new(r"eval\s*\(\s*function\s*\(\s*p\s*,\s*a\s*,\s*c\s*,\s*k\s*,\s*e\s*,\s*[rd]\s*\)").unwrap();
-    
-    static ref EVAL_PATTERN: Regex = 
+
+    static ref EVAL_PATTERN: Regex =
         Regex::new(r"eval\s*\(").unwrap();
-    
-    static ref UNESCAPE_PATTERN: Regex = 
+
+    static ref UNESCAPE_PATTERN: Regex =
         Regex::new(r"unescape\s*\(").unwrap();
-    
-    static ref FROM_CHAR_CODE: Regex = 
+
+    static ref FROM_CHAR_CODE: Regex =
         Regex::new(r"String\.fromCharCode\s*\(").unwrap();
-    
-    static ref BASE64_PATTERN: Regex = 
+
+    static ref BASE64_PATTERN: Regex =
         Regex::new(r"atob\s*\(|btoa\s*\(").unwrap();
-    
-    static ref DOCUMENT_WRITE: Regex = 
+
+    static ref DOCUMENT_WRITE: Regex =
         Regex::new(r"document\.write\s*\(").unwrap();
-    
+
     // Shellcode patterns (common exploit indicators)
-    static ref SHELLCODE_PATTERN: Regex = 
+    static ref SHELLCODE_PATTERN: Regex =
         Regex::new(r"%u[0-9a-fA-F]{4}").unwrap();
-    
-    static ref HEAP_SPRAY: Regex = 
+
+    static ref HEAP_SPRAY: Regex =
         Regex::new(r"(nop|[\x90]+)\s*\.repeat\s*\(").unwrap();
-    
+
     // URL extraction
-    static ref URL_PATTERN: Regex = 
+    static ref URL_PATTERN: Regex =
         Regex::new(r#"https?://[^\s"'<>)]+|ftp://[^\s"'<>)]+"#).unwrap();
-    
+
     // Obfuscation markers
-    static ref JSO_PATTERN: Regex = 
+    static ref JSO_PATTERN: Regex =
         Regex::new(r"^\s*var\s+_\d+\s*=").unwrap();
 }
 
@@ -63,12 +63,12 @@ pub struct UnpackResult {
 /// Known packer types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum PackerType {
-    DeanEdwards,      // Dean Edwards Packer
-    JSObfuscate,      // JSObfuscate
-    JSPacker,         // Generic JS Packer
-    YUICompressor,    // YUI Compressor
-    ClosureCompiler,  // Google Closure
-    UglifyJS,         // UglifyJS
+    DeanEdwards,     // Dean Edwards Packer
+    JSObfuscate,     // JSObfuscate
+    JSPacker,        // Generic JS Packer
+    YUICompressor,   // YUI Compressor
+    ClosureCompiler, // Google Closure
+    UglifyJS,        // UglifyJS
     Unknown,
 }
 
@@ -109,7 +109,7 @@ pub enum Severity {
 pub struct JSUnpackDeobfuscator {
     max_depth: usize,
     #[allow(dead_code)]
-    max_iterations: usize,  // Reserved for future use
+    max_iterations: usize, // Reserved for future use
     enable_vm_execution: bool,
     strict_mode: bool,
     extracted_urls: Vec<String>,
@@ -258,16 +258,22 @@ impl JSUnpackDeobfuscator {
 
         // Extract the packed data
         // Pattern: eval(function(p,a,c,k,e,d){...}('packed_payload',radix,count,'key'.split('|'),0,{}))
-        
+
         // More lenient regex to capture the parameters
         let re = Regex::new(
-            r"eval\s*\(\s*function\s*\([^)]+\)\s*\{[\s\S]+?\}\s*\(\s*'([^']+)'\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*'([^']+)'\.split\s*\('\|'\)"
+            r"eval\s*\(\s*function\s*\([^)]+\)\s*\{[\s\S]+?\}\s*\(\s*'([^']+)'\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*'([^']+)'\.split\s*\('\|'\)",
         )?;
 
         if let Some(caps) = re.captures(code) {
             let payload = caps.get(1).map(|m| m.as_str()).unwrap_or("");
-            let radix: u32 = caps.get(2).and_then(|m| m.as_str().parse().ok()).unwrap_or(36);
-            let count: usize = caps.get(3).and_then(|m| m.as_str().parse().ok()).unwrap_or(0);
+            let radix: u32 = caps
+                .get(2)
+                .and_then(|m| m.as_str().parse().ok())
+                .unwrap_or(36);
+            let count: usize = caps
+                .get(3)
+                .and_then(|m| m.as_str().parse().ok())
+                .unwrap_or(0);
             let keys = caps.get(4).map(|m| m.as_str()).unwrap_or("");
 
             let unpacked = self.unpack_p_a_c_k(payload, radix, count, keys)?;
@@ -278,7 +284,13 @@ impl JSUnpackDeobfuscator {
     }
 
     /// Unpack p.a.c.k format
-    fn unpack_p_a_c_k(&self, payload: &str, radix: u32, _count: usize, keys: &str) -> Result<String> {
+    fn unpack_p_a_c_k(
+        &self,
+        payload: &str,
+        radix: u32,
+        _count: usize,
+        keys: &str,
+    ) -> Result<String> {
         let key_array: Vec<&str> = keys.split('|').collect();
         let mut result = payload.to_string();
 
@@ -287,16 +299,18 @@ impl JSUnpackDeobfuscator {
 
         // Replace word patterns \b\d+\b with corresponding key
         let word_pattern = Regex::new(r"\\b(\d+)\\b")?;
-        
-        result = word_pattern.replace_all(&result, |caps: &regex::Captures| {
-            let index: usize = caps[1].parse().unwrap_or(0);
-            if index < key_array.len() && !key_array[index].is_empty() {
-                key_array[index].to_string()
-            } else {
-                // Convert index to base-radix representation
-                Self::to_base(index, radix)
-            }
-        }).to_string();
+
+        result = word_pattern
+            .replace_all(&result, |caps: &regex::Captures| {
+                let index: usize = caps[1].parse().unwrap_or(0);
+                if index < key_array.len() && !key_array[index].is_empty() {
+                    key_array[index].to_string()
+                } else {
+                    // Convert index to base-radix representation
+                    Self::to_base(index, radix)
+                }
+            })
+            .to_string();
 
         // Restore escaped backslashes
         result = result.replace('\x00', "\\");
@@ -330,7 +344,7 @@ impl JSUnpackDeobfuscator {
 
         // Extract atob() calls
         let re = Regex::new(r#"atob\s*\(\s*["']([A-Za-z0-9+/=]+)["']\s*\)"#)?;
-        
+
         let mut result = code.to_string();
         let mut replaced = false;
 
@@ -360,7 +374,7 @@ impl JSUnpackDeobfuscator {
 
         // Extract unescape() calls
         let re = Regex::new(r#"unescape\s*\(\s*["']([^"']+)["']\s*\)"#)?;
-        
+
         let mut result = code.to_string();
         let mut replaced = false;
 
@@ -409,7 +423,7 @@ impl JSUnpackDeobfuscator {
 
         // Extract String.fromCharCode(num1, num2, ...)
         let re = Regex::new(r"String\.fromCharCode\s*\(\s*([\d\s,]+)\s*\)")?;
-        
+
         let mut result = code.to_string();
         let mut replaced = false;
 
@@ -445,7 +459,7 @@ impl JSUnpackDeobfuscator {
 
         // Extract document.write() content
         let re = Regex::new(r#"document\.write\s*\(\s*["']([^"']+)["']\s*\)"#)?;
-        
+
         if let Some(caps) = re.captures(code) {
             if let Some(content) = caps.get(1) {
                 return Ok(Some(content.as_str().to_string()));
@@ -563,7 +577,7 @@ impl JSUnpackDeobfuscator {
 
         let safety_score = unpack_result.safety_score;
         let recommendations = self.generate_recommendations(&unpack_result);
-        
+
         Ok(AnalysisReport {
             packer_type: unpack_result.packer_detected,
             obfuscation_layers: unpack_result.layers_unpacked,
@@ -593,7 +607,8 @@ impl JSUnpackDeobfuscator {
         let mut recommendations = Vec::new();
 
         if result.shellcode_detected {
-            recommendations.push("CRITICAL: Shellcode detected - do not execute this code".to_string());
+            recommendations
+                .push("CRITICAL: Shellcode detected - do not execute this code".to_string());
         }
 
         if !result.extracted_urls.is_empty() {
@@ -650,9 +665,9 @@ mod tests {
     #[test]
     fn test_detect_dean_edwards() {
         let mut deobf = JSUnpackDeobfuscator::new();
-        
+
         let packed = r#"eval(function(p,a,c,k,e,d){e=function(c){return c};if(!''.replace(/^/,String)){while(c--){d[c]=k[c]||c}k=[function(e){return d[e]}];e=function(){return'\\w+'};c=1};while(c--){if(k[c]){p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c])}}return p}('0 1=2',3,3,'var|x|42'.split('|'),0,{}))"#;
-        
+
         let result = deobf.unpack(packed).unwrap();
         assert_eq!(result.packer_detected, Some(PackerType::DeanEdwards));
         assert!(result.layers_unpacked > 0);
@@ -661,10 +676,10 @@ mod tests {
     #[test]
     fn test_decode_base64() {
         let deobf = JSUnpackDeobfuscator::new();
-        
+
         let code = r#"var secret = atob("SGVsbG8gV29ybGQ=");"#;
         let result = deobf.decode_base64(code).unwrap();
-        
+
         assert!(result.is_some());
         assert!(result.unwrap().contains("Hello World"));
     }
@@ -672,26 +687,26 @@ mod tests {
     #[test]
     fn test_from_char_code() {
         let deobf = JSUnpackDeobfuscator::new();
-        
+
         let decoded = deobf.from_char_codes("72, 101, 108, 108, 111");
-        
+
         assert_eq!(decoded, "Hello");
     }
 
     #[test]
     fn test_unescape() {
         let deobf = JSUnpackDeobfuscator::new();
-        
+
         let escaped = "%48%65%6C%6C%6F";
         let decoded = deobf.unescape_string(escaped);
-        
+
         assert_eq!(decoded, "Hello");
     }
 
     #[test]
     fn test_shellcode_detection() {
         let mut deobf = JSUnpackDeobfuscator::new();
-        
+
         let shellcode = "%u9090%u9090%u9090%u9090%u9090%u9090%u9090%u9090%u9090%u9090%u9090";
         assert!(deobf.detect_shellcode(shellcode));
     }
@@ -699,10 +714,10 @@ mod tests {
     #[test]
     fn test_url_extraction() {
         let mut deobf = JSUnpackDeobfuscator::new();
-        
+
         let code = r#"window.location = "http://evil.com/malware.exe";"#;
         deobf.extract_urls(code);
-        
+
         assert_eq!(deobf.extracted_urls.len(), 1);
         assert!(deobf.extracted_urls[0].contains("evil.com"));
     }
@@ -710,12 +725,12 @@ mod tests {
     #[test]
     fn test_safety_score() {
         let mut deobf = JSUnpackDeobfuscator::new();
-        
+
         // Safe code
         let safe_code = "console.log('Hello');";
         let safe_result = deobf.unpack(safe_code).unwrap();
         assert!(safe_result.safety_score > 0.9);
-        
+
         // Suspicious code with multiple red flags
         let mut deobf2 = JSUnpackDeobfuscator::new();
         let suspicious = r#"
@@ -733,8 +748,10 @@ mod tests {
         "#;
         let sus_result = deobf2.unpack(suspicious).unwrap();
         // With 6+ evals, 2 document.writes, 3 URLs, should be < 0.7
-        assert!(sus_result.safety_score < 0.7, 
-            "Expected safety_score < 0.7, got {}", sus_result.safety_score);
+        assert!(
+            sus_result.safety_score < 0.7,
+            "Expected safety_score < 0.7, got {}",
+            sus_result.safety_score
+        );
     }
 }
-
