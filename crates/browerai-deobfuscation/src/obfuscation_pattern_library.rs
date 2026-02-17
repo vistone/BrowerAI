@@ -225,10 +225,7 @@ impl ObfuscationPatternLibrary {
 
     /// 添加模式
     fn add_pattern(&mut self, pattern_type: ObfuscationPatternType, pattern: ObfuscationPattern) {
-        self.patterns
-            .entry(pattern_type)
-            .or_default()
-            .push(pattern);
+        self.patterns.entry(pattern_type).or_default().push(pattern);
     }
 
     /// 添加自定义模式

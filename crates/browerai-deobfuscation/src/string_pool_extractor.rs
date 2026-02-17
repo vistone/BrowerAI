@@ -167,9 +167,7 @@ impl StringPoolExtractor {
                 if let Ok(num_vec) = numbers {
                     if num_vec.len() > 2 {
                         // 至少 3 个字符
-                        if let Ok(decoded) =
-                            String::from_utf8(num_vec.to_vec())
-                        {
+                        if let Ok(decoded) = String::from_utf8(num_vec.to_vec()) {
                             self.add_entry(StringPoolEntry {
                                 original: format!("[{}]", numbers_str),
                                 decoded,

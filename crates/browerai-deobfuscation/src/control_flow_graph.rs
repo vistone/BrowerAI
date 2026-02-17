@@ -343,12 +343,9 @@ impl ControlFlowAnalyzer {
         let mut idom = HashMap::new();
 
         for (node, doms) in dominators {
-            if let Some(imdom) = doms
-                .iter()
-                .find(|d| {
-                    *d != node && !doms.iter().any(|other| other != *d && doms.contains(other))
-                })
-            {
+            if let Some(imdom) = doms.iter().find(|d| {
+                *d != node && !doms.iter().any(|other| other != *d && doms.contains(other))
+            }) {
                 idom.insert(*node, *imdom);
             }
         }
