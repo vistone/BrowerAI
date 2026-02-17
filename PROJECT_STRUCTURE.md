@@ -417,7 +417,7 @@ Docker镜像:
 |------|------|
 | `src/lib.rs` | Rust库入口 |
 | `crates/browerai-api-server/src/main.rs` | API服务器入口 |
-| `crates/browerai-webclient/src/App.tsx` | React主组件 |
+| `frontend/src/App.tsx` | React主组件 |
 | `src/main.rs` | 主应用 (如果需要CLI) |
 
 ---

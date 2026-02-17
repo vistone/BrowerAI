@@ -15,7 +15,7 @@ members = [
     "crates/browerai-renderer",
     "crates/browerai-deobfuscation",
     "crates/browerai-intelligent-rendering",
-    # "crates/browerai-integrated-pipeline",  # TODO: Needs API updates for newer browerai-js-analyzer
+    "crates/browerai-integrated-pipeline",
     "crates/browerai-learning",
     "crates/browerai-network",
     "crates/browerai-devtools",
@@ -105,10 +105,8 @@ ndarray = "0.17"
 tempfile = "3.8"
 
 # Internal workspace crates
-browerai-config = { version = "0.2.0", path = "crates/browerai-config" }
 browerai-core = { version = "0.2.0", path = "crates/browerai-core" }
 browerai-deobfuscation = { version = "0.2.0", path = "crates/browerai-deobfuscation" }
-browerai-feedback = { version = "0.2.0", path = "crates/browerai-feedback" }
 browerai-dom = { version = "0.2.0", path = "crates/browerai-dom" }
 browerai-html-parser = { version = "0.2.0", path = "crates/browerai-html-parser" }
 browerai-css-parser = { version = "0.2.0", path = "crates/browerai-css-parser" }
@@ -129,7 +127,6 @@ browerai-devtools = { version = "0.2.0", path = "crates/browerai-devtools" }
 browerai-testing = { version = "0.2.0", path = "crates/browerai-testing" }
 browerai-plugins = { version = "0.2.0", path = "crates/browerai-plugins" }
 browerai-metrics = { version = "0.2.0", path = "crates/browerai-metrics" }
-website-classifier = { version = "0.2.0", path = "crates/website_classifier" }
 
 [profile.release]
 opt-level = 3

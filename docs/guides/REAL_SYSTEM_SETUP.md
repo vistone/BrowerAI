@@ -27,7 +27,7 @@ cargo run --release -p browerai-api-server
 #### 终端2 - 启动前端应用
 
 ```bash
-cd /home/stone/BrowerAI/crates/browerai-webclient
+cd /home/stone/BrowerAI/frontend
 
 # 首次运行需要安装依赖（2分钟）
 npm install
@@ -237,7 +237,7 @@ print(response.json())
 
 ```typescript
 // 已经在前端代码中实现！
-// 参考: crates/browerai-webclient/src/api/client.ts
+// 参考: frontend/src/api/client.ts
 
 import { apiClient } from './api/client';
 
@@ -374,17 +374,17 @@ du -sh real_data/
 cat crates/browerai-api-server/src/handlers.rs
 
 # 查看前端API客户端
-cat crates/browerai-webclient/src/api/client.ts
+cat frontend/src/api/client.ts
 
 # 查看React主应用
-cat crates/browerai-webclient/src/App.tsx
+cat frontend/src/App.tsx
 ```
 
 ### 2. 修改和扩展
 
 ```bash
 # 编辑前端
-vim crates/browerai-webclient/src/App.tsx
+vim frontend/src/App.tsx
 
 # 编辑后端
 vim crates/browerai-api-server/src/handlers.rs
@@ -396,7 +396,7 @@ vim crates/browerai-api-server/src/handlers.rs
 
 ```bash
 # 构建前端生产版本
-cd crates/browerai-webclient
+cd frontend
 npm run build
 
 # 构建后端发布版本
@@ -415,7 +415,7 @@ docker-compose -f docker-compose.complete.yml up -d
 - [完整执行指南](REAL_SYSTEM_EXECUTION_GUIDE.md)
 - [最终交付报告](REAL_SYSTEM_FINAL_REPORT.md)
 - [API服务器文档](crates/browerai-api-server/README.md)
-- [Web客户端文档](crates/browerai-webclient/README.md)
+- [Web客户端文档](frontend/README.md)
 
 ---
 
@@ -455,7 +455,7 @@ docker-compose -f docker-compose.complete.yml up -d
 cd /home/stone/BrowerAI && cargo run --release -p browerai-api-server
 
 # 2. 在新终端启动前端（在项目目录中）
-cd crates/browerai-webclient && npm install && npm run dev
+cd frontend && npm install && npm run dev
 
 # 3. 打开浏览器
 # http://localhost:5173

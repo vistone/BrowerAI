@@ -41,7 +41,7 @@ curl http://localhost:3000/api/health
 #### 前端 (React)
 ```bash
 # 安装依赖
-cd crates/browerai-webclient
+cd frontend
 npm install
 
 # 开发模式 (http://localhost:5173)

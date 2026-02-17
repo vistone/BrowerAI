@@ -36,7 +36,7 @@ cargo run --release -p browerai-api-server
 在新的终端中：
 
 ```bash
-cd /home/stone/BrowerAI/crates/browerai-webclient
+cd /home/stone/BrowerAI/frontend
 npm install
 npm run dev
 ```
@@ -306,7 +306,7 @@ cargo clippy
 ### 前端开发
 
 ```bash
-cd /home/stone/BrowerAI/crates/browerai-webclient
+cd /home/stone/BrowerAI/frontend
 
 # 安装依赖（首次）
 npm install
@@ -388,7 +388,7 @@ npm install
 ## 📚 相关文档
 
 - [API服务器文档](crates/browerai-api-server/README.md)
-- [Web客户端文档](crates/browerai-webclient/README.md)
+- [Web客户端文档](frontend/README.md)
 - [真实数据学习指南](REAL_DATA_LEARNING_GUIDE.md)
 
 ---

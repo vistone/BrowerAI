@@ -64,7 +64,7 @@
 ### 步骤1: 前端项目初始化
 ```bash
 # 我们将在这里创建真实的React应用
-crates/browerai-webclient/
+frontend/
 ├── src/
 │   ├── components/
 │   │   ├── CodeEditor.tsx
