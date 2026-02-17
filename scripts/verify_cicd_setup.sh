@@ -81,7 +81,7 @@ echo ""
 # 4. 检查 Docker Compose
 echo "🐋 4. 检查 Docker Compose"
 echo "----------------------------------------"
-check_file "config/docker-compose.yml" "主Docker Compose"
+check_file "docker-compose.yml" "开发Docker Compose"
 check_file "config/docker-compose.api.yml" "API Docker Compose"
 check_file "config/docker-compose.monitoring.yml" "监控Docker Compose"
 echo ""
