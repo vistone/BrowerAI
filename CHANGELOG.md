@@ -7,6 +7,14 @@
 
 ## [1.0.0] - 2026-02-17
 
+### 🔧 项目整合优化 (2026-02-17)
+- 重组workspace：启用`browerai-integrated-pipeline`，移除重复的persistent-layer-rocksdb
+- 前端独立：`browerai-webclient` 从 crates/ 移至 /frontend (React/TypeScript项目)
+- Crate整合：删除3个不完整的crates（config、feedback、website_classifier），清理到29个有效crates
+- 特性管理：persistent-layer支持sled（默认）和rocksdb（可选）双后端
+- 文档同步：更新14处docs引用和3处根指南（QUICK_START、DEVELOPMENT_GUIDE等）
+- 结构优化：根目录16个清晰目录层次，Workspace members 31个活跃项目
+
 ### 🎉 生产发布
 
 **里程碑**: 从研发阶段到生产就绪，完整的企业级AI浏览器引擎正式发布
