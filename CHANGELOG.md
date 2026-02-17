@@ -7,6 +7,19 @@
 
 ## [1.0.0] - 2026-02-17
 
+### 🧹 项目清理与整理 (2026-02-17)
+- 整个项目全面清理：删除30个过时脚本和临时文件，保留5个CI/CD脚本
+- 文档完整对齐：删除11个不对齐的指南文档，保留8个经代码验证的指南
+- 数据整理：组织week6训练数据到archived_phase/，保持data/根目录清晰
+- .gitignore完善：添加.venv/, venv_test/, .ruff_cache/, logs/ 目录
+- 项目结构标准化：
+  - Root: 19个文件（markdown + configs）
+  - scripts/: 5个有效脚本（全部CI/CD相关）
+  - docs/: 8个指南 + 架构 + 学习资源（完全代码对齐）
+  - crates/: 29个生产级模块
+  - data/: 实时代码 + 阶段存档，结构清晰
+- 规范实施：保证文档=代码+真实数据，无虚假测试数据
+
 ### 🔧 项目整合优化 (2026-02-17)
 - 重组workspace：启用`browerai-integrated-pipeline`，移除重复的persistent-layer-rocksdb
 - 前端独立：`browerai-webclient` 从 crates/ 移至 /frontend (React/TypeScript项目)
