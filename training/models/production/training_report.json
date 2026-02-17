@@ -1,8 +1,0 @@
-{
-  "status": "NEEDS_IMPROVEMENT",
-  "accuracy": 50.0,
-  "num_frameworks": 6,
-  "num_samples": 69,
-  "model_path": "models/production/best_model.pt",
-  "device": "cuda"
-}

@@ -56,3 +56,15 @@ models/local/**/checkpoints/
 models/local/**/generated_websites*/
 models/local/**/training_*
 
+# Training data and learning datasets (not versioned)
+data/**/*.jsonl
+data/**/*.json
+data/archived_phase/
+training/**/*.jsonl
+training/**/*.json
+training/week6_env/
+training/data/
+training/checkpoints/
+training/outputs/
+training/logs/
+
