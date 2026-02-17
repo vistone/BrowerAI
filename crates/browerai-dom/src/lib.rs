@@ -8,6 +8,7 @@ pub mod modern_apis;
 pub mod monitoring_apis;
 pub mod sandbox;
 pub mod script_detector;
+pub mod web_apis;
 
 use markup5ever_rcdom::{Handle, NodeData, RcDom};
 use std::collections::HashMap;
@@ -27,6 +28,10 @@ pub use monitoring_apis::{
     ResourceTiming, ScriptEntry, ServerTiming,
 };
 pub use sandbox::{ExecutionContext, JsSandbox, ResourceLimits, SandboxError, SandboxValue};
+pub use web_apis::{
+    AbortController, AbortSignal, ClipboardAPI, ConsoleAPI, ConsoleEntry, LogLevel, TimerAPI,
+    TimerType, URL, URLSearchParams,
+};
 
 /// Represents a DOM element with attributes and children
 #[derive(Debug, Clone)]
