@@ -41,7 +41,16 @@ cargo test --workspace
 - Code quality improvements applied
 - All clippy warnings addressed
 
+**Week 6 Learning**: ✅ Complete
+- ✨ 100% Real Data Learning System
+- 🎯 5,491 real code files collected
+- 🔀 12 obfuscation techniques applied
+- 🚀 GPU acceleration with CUDA
+- 📊 50 epochs training completed
+
 See [docs/phases/PHASE3_WEEK3_COMPLETION_REPORT.md](docs/phases/PHASE3_WEEK3_COMPLETION_REPORT.md)
+
+See [WEEK6_COMPLETION_SUMMARY.md](WEEK6_COMPLETION_SUMMARY.md)
 
 ## 🏗️ Project Structure
 
@@ -90,6 +99,43 @@ cargo test --workspace --tests
 # Build documentation
 cargo doc --workspace --open
 ```
+
+## 🎓 Week 6 - Real Data Learning System
+
+**Run the complete real data learning pipeline:**
+
+```bash
+# Quick start - 完整流程
+just learn-real
+
+# Custom parameters - 自定义参数
+just learn-real-techniques 6       # 6种混淆技术
+just learn-real-epochs 100         # 100个epochs
+just learn-real-batch 64           # 批大小64
+
+# Full customization - 全参数自定义
+just learn-real-custom crates 6 100 64
+
+# View results - 查看结果
+just learn-results
+
+# Help
+just learn-help
+```
+
+**What happens:**
+1. 📂 Collects 5,000+ real code files from project
+2. 🔀 Applies 12 obfuscation techniques
+3. 🧠 Extracts 48-dimensional features
+4. 🚀 GPU-accelerated training (50 epochs)
+5. 📊 Outputs training history & results
+
+**Output location:** `data/real_codes/`
+- `raw_codes.jsonl` - Original code samples
+- `obfuscated_samples.jsonl` - Obfuscated samples
+- `training_history.json` - Training metrics
+
+See [WEEK6_COMPLETION_SUMMARY.md](WEEK6_COMPLETION_SUMMARY.md) for details
 
 ## ✨ Features
 

@@ -1,0 +1,151 @@
+name: Test - Post-Deployment Verification
+
+on:
+  workflow_run:
+    workflows: ["Deploy - Kubernetes Deployment"]
+    types: [completed]
+  workflow_dispatch:
+
+env:
+  NAMESPACE: browerai
+  SERVICE_NAME: browerai-api-service
+
+jobs:
+  test:
+    name: Post-Deployment Tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+      
+      - name: Configure kubectl
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+          kubectl config use-context ${{ secrets.KUBE_CONTEXT }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install test dependencies
+        run: |
+          pip install requests pytest pytest-benchmark pytest-asyncio
+      
+      - name: Verify deployment readiness
+        run: |
+          echo "Checking deployment status..."
+          kubectl get deployment browerai-api-deployment -n ${{ env.NAMESPACE }}
+          
+          # Wait for pods to be ready
+          kubectl wait --for=condition=ready pod \
+            -l app=browerai-api \
+            -n ${{ env.NAMESPACE }} \
+            --timeout=300s
+      
+      - name: Port forward setup
+        run: |
+          # Start port forward in background
+          kubectl port-forward -n ${{ env.NAMESPACE }} \
+            svc/${{ env.SERVICE_NAME }} 5000:5000 > /dev/null 2>&1 &
+          
+          # Wait for port forward to be ready
+          sleep 3
+          
+          # Verify connection
+          for i in {1..30}; do
+            if curl -s http://localhost:5000/health > /dev/null; then
+              echo "✅ Service is accessible"
+              exit 0
+            fi
+            echo "Waiting for service... ($i/30)"
+            sleep 1
+          done
+          exit 1
+      
+      - name: Smoke tests
+        run: |
+          echo "Running smoke tests..."
+          
+          # Test 1: Health check
+          echo "Test 1: Health check"
+          curl -f http://localhost:5000/health || exit 1
+          echo "✅ Health check passed"
+          
+          # Test 2: Feature encoding
+          echo ""
+          echo "Test 2: Feature encoding"
+          curl -X POST http://localhost:5000/encode \
+            -H "Content-Type: application/json" \
+            -d '{"url":"https://example.com","html":"<html><body>Test</body></html>"}' || exit 1
+          echo "✅ Feature encoding passed"
+          
+          # Test 3: Code generation
+          echo ""
+          echo "Test 3: Code generation"
+          curl -X POST http://localhost:5000/generate \
+            -H "Content-Type: application/json" \
+            -d '{"features":[],"website_intent":"search"}' || exit 1
+          echo "✅ Code generation passed"
+          
+          # Test 4: Feedback
+          echo ""
+          echo "Test 4: Feedback submission"
+          curl -X POST http://localhost:5000/feedback \
+            -H "Content-Type: application/json" \
+            -d '{"url":"https://example.com","quality_score":0.85}' || exit 1
+          echo "✅ Feedback submission passed"
+      
+      - name: Performance benchmark
+        continue-on-error: true
+        run: |
+          echo "Running performance benchmark..."
+          
+          # Simple performance test
+          for i in {1..10}; do
+            START=$(date +%s%N)
+            curl -s http://localhost:5000/health > /dev/null
+            END=$(date +%s%N)
+            ELAPSED=$((($END - $START) / 1000000))
+            echo "Request $i: ${ELAPSED}ms"
+          done
+          
+          echo "✅ Performance benchmark completed"
+      
+      - name: Collect metrics
+        continue-on-error: true
+        run: |
+          echo "Collecting deployment metrics..."
+          
+          # Get pod metrics
+          kubectl top pods -n ${{ env.NAMESPACE }} -l app=browerai-api || true
+          
+          # Get pod resource requests/limits
+          kubectl describe pods -n ${{ env.NAMESPACE }} -l app=browerai-api | grep -A 5 "Requests\|Limits" || true
+      
+      - name: Check logs
+        if: always()
+        run: |
+          echo "Recent deployment logs:"
+          kubectl logs -n ${{ env.NAMESPACE }} -l app=browerai-api --tail=100 --timestamps=true || true
+      
+      - name: Test Summary
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ Post-Deployment Tests Completed"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Tests Run:"
+          echo "  ✅ Health check"
+          echo "  ✅ Feature encoding"
+          echo "  ✅ Code generation"
+          echo "  ✅ Feedback submission"
+          echo "  ✅ Performance benchmark"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

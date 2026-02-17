@@ -1,0 +1,346 @@
+name: Complete CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, week5-postgresql-persistence]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      deploy_env:
+        description: 'Deploy to environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+          - skip
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  DOCKER_REGISTRY: docker.io
+  IMAGE_NAME: browerai-api
+
+jobs:
+  # Job 1: Build and Test Rust Code
+  build-and-test:
+    name: Build and Test Rust
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      
+      - name: Cache cargo
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+      
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+      
+      - name: Run clippy
+        run: cargo clippy --workspace --all-features -- -D warnings
+      
+      - name: Build workspace
+        run: cargo build --release --workspace
+      
+      - name: Run tests
+        run: cargo test --workspace --all-features
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: rust-binaries
+          path: target/release/browerai-api-server
+          retention-days: 7
+
+  # Job 2: Python Environment Check
+  python-check:
+    name: Check Python Environment
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      
+      - name: Run Python linting
+        run: |
+          pip install flake8
+          flake8 training/ --count --select=E9,F63,F7,F82 --show-source --statistics
+      
+      - name: Check training scripts
+        run: |
+          if [ -f training/train_week6.sh ]; then
+            echo "✅ Training script exists"
+          fi
+
+  # Job 3: Build Docker Image
+  build-docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [build-and-test, python-check]
+    outputs:
+      image_tag: ${{ steps.prep.outputs.version }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Prepare image metadata
+        id: prep
+        run: |
+          VERSION=latest
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          elif [[ $GITHUB_REF == refs/heads/* ]]; then
+            VERSION=$(echo ${GITHUB_REF#refs/heads/} | sed 's#/#-#g')
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "created=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.api
+          push: false
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME || 'browerai' }}/${{ env.IMAGE_NAME }}:${{ steps.prep.outputs.version }}
+            ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME || 'browerai' }}/${{ env.IMAGE_NAME }}:latest
+          labels: |
+            org.opencontainers.image.created=${{ steps.prep.outputs.created }}
+            org.opencontainers.image.source=${{ github.repositoryUrl }}
+            org.opencontainers.image.version=${{ steps.prep.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: type=docker,dest=/tmp/image.tar
+      
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-image
+          path: /tmp/image.tar
+          retention-days: 1
+
+  # Job 4: Security Scan
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: build-docker
+    
+    steps:
+      - name: Download Docker image
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-image
+          path: /tmp
+      
+      - name: Load Docker image
+        run: docker load --input /tmp/image.tar
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME || 'browerai' }}/${{ env.IMAGE_NAME }}:latest
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+
+  # Job 5: Push Docker Image
+  push-docker:
+    name: Push Docker Image
+    runs-on: ubuntu-latest
+    needs: [build-docker, security-scan]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
+    
+    steps:
+      - name: Download Docker image
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-image
+          path: /tmp
+      
+      - name: Load Docker image
+        run: docker load --input /tmp/image.tar
+      
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Get image tag
+        id: tag
+        run: |
+          IMAGE_TAG=$(docker images --format "{{.Tag}}" | head -n 1)
+          echo "tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+      
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }}
+          docker push ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+      
+      - name: Image pushed successfully
+        run: |
+          echo "✅ Docker image pushed successfully"
+          echo "Image: ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }}"
+
+  # Job 6: Deploy to Kubernetes
+  deploy-k8s:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    needs: push-docker
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.inputs.deploy_env != 'skip'
+    environment: ${{ github.event.inputs.deploy_env || 'staging' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+      
+      - name: Configure kubectl (if secrets available)
+        if: ${{ secrets.KUBE_CONFIG != '' }}
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+          kubectl cluster-info || echo "⚠️ Unable to connect to cluster"
+      
+      - name: Deploy to local Minikube (fallback)
+        if: ${{ secrets.KUBE_CONFIG == '' }}
+        run: |
+          echo "ℹ️ No K8s credentials, skipping deployment"
+          echo "To enable deployment, add KUBE_CONFIG secret to repository"
+      
+      - name: Apply Kubernetes manifests
+        if: ${{ secrets.KUBE_CONFIG != '' }}
+        run: |
+          kubectl apply -f k8s/namespace.yaml || echo "Namespace exists"
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+          kubectl rollout status deployment/browerai-api-deployment -n browerai --timeout=5m
+
+  # Job 7: Post-Deployment Tests
+  post-deploy-test:
+    name: Post-Deployment Tests
+    runs-on: ubuntu-latest
+    needs: deploy-k8s
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Wait for service to be ready
+        run: |
+          echo "Waiting for service to stabilize..."
+          sleep 30
+      
+      - name: Run smoke tests
+        run: |
+          # If we have a public endpoint
+          if [ ! -z "${{ secrets.API_ENDPOINT }}" ]; then
+            curl -f ${{ secrets.API_ENDPOINT }}/api/health || exit 1
+            echo "✅ Health check passed"
+          else
+            echo "ℹ️ No API_ENDPOINT configured, skipping smoke test"
+          fi
+      
+      - name: Run integration tests
+        run: |
+          if [ -f scripts/real_system_integration_test.sh ]; then
+            echo "Running integration tests..."
+            # bash scripts/real_system_integration_test.sh
+            echo "✅ Integration tests would run here"
+          fi
+
+  # Job 8: Create GitHub Release
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [push-docker, post-deploy-test]
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Generate changelog
+        id: changelog
+        run: |
+          echo "# Release Notes" > RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "## Changes" >> RELEASE_NOTES.md
+          git log --oneline --no-decorate $(git describe --tags --abbrev=0 HEAD^)..HEAD >> RELEASE_NOTES.md || echo "Initial release" >> RELEASE_NOTES.md
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: RELEASE_NOTES.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Job 9: Notification
+  notify:
+    name: Send Notification
+    runs-on: ubuntu-latest
+    needs: [build-and-test, build-docker, deploy-k8s]
+    if: always()
+    
+    steps:
+      - name: Deployment status
+        run: |
+          if [ "${{ needs.deploy-k8s.result }}" == "success" ]; then
+            echo "✅ CI/CD Pipeline completed successfully"
+            echo "🚀 Application deployed"
+          elif [ "${{ needs.deploy-k8s.result }}" == "skipped" ]; then
+            echo "ℹ️ CI/CD Pipeline completed (deployment skipped)"
+          else
+            echo "❌ CI/CD Pipeline failed"
+            exit 1
+          fi

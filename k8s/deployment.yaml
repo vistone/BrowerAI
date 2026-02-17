@@ -1,0 +1,353 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: browerai
+  labels:
+    name: browerai
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: browerai-api-config
+  namespace: browerai
+data:
+  FLASK_ENV: "production"
+  FLASK_DEBUG: "false"
+  API_HOST: "0.0.0.0"
+  API_PORT: "5000"
+  LATENT_DIM: "256"
+  FEATURE_DIM: "48"
+  LEARNING_RATE: "0.001"
+  BATCH_SIZE: "32"
+  MAX_QUEUE_SIZE: "1000"
+  LOG_LEVEL: "INFO"
+  PYTHONUNBUFFERED: "1"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: browerai-api-secrets
+  namespace: browerai
+type: Opaque
+stringData:
+  DATABASE_URL: "postgresql://user:password@postgres:5432/browerai"
+  REDIS_URL: "redis://redis:6379/0"
+  SECRET_KEY: "your-secret-key-change-in-production"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: browerai-api-deployment
+  namespace: browerai
+  labels:
+    app: browerai-api
+    version: v1
+spec:
+  replicas: 3  # 初始 3 个副本
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # 最多增加 1 个 Pod
+      maxUnavailable: 0  # 保证可用性
+  selector:
+    matchLabels:
+      app: browerai-api
+  template:
+    metadata:
+      labels:
+        app: browerai-api
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
+        prometheus.io/path: "/metrics"
+    spec:
+      # Pod 反亲和性 - 尽量分散到不同节点
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - browerai-api
+                topologyKey: kubernetes.io/hostname
+
+      # 初始化容器 - 等待数据库就绪
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.35
+          command: ['sh', '-c', 'until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done']
+
+      # 主容器
+      containers:
+        - name: browerai-api
+          image: browerai-api:latest
+          imagePullPolicy: IfNotPresent
+          
+          ports:
+            - name: http
+              containerPort: 5000
+              protocol: TCP
+          
+          # 环境变量
+          envFrom:
+            - configMapRef:
+                name: browerai-api-config
+            - secretRef:
+                name: browerai-api-secrets
+          
+          # 健康检查
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 2
+          
+          # 启动探针 - 给应用充足的时间启动
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            failureThreshold: 30  # 最多等待 5 分钟
+          
+          # 资源限制
+          resources:
+            requests:
+              cpu: "500m"        # 最小 0.5 核
+              memory: "256Mi"    # 最小 256MB
+            limits:
+              cpu: "2000m"       # 最多 2 核
+              memory: "1Gi"      # 最多 1GB
+          
+          # 生命周期钩子 - 优雅关闭
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 15"]  # 等待连接关闭
+          
+          # 安全上下文
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+          
+          # 卷挂载
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: logs
+              mountPath: /app/logs
+      
+      # 卷定义
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: logs
+          emptyDir: {}
+      
+      # Pod 安全政策
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      
+      # 服务账户
+      serviceAccountName: browerai-api
+      
+      # 优雅关闭时间
+      terminationGracePeriodSeconds: 30
+      
+      # DNS 政策
+      dnsPolicy: ClusterFirst
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: browerai-api-service
+  namespace: browerai
+  labels:
+    app: browerai-api
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5000
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: browerai-api
+  sessionAffinity: None
+  
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: browerai-api-hpa
+  namespace: browerai
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: browerai-api-deployment
+  
+  minReplicas: 2
+  maxReplicas: 10
+  
+  metrics:
+    # CPU 指标
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70  # CPU 超过 70% 时扩展
+    
+    # 内存指标
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80  # 内存超过 80% 时扩展
+  
+  # 扩展行为
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 15
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 2
+          periodSeconds: 15
+      selectPolicy: Max
+
+---
+apiVersion: v1
+kind: PodDisruptionBudget
+metadata:
+  name: browerai-api-pdb
+  namespace: browerai
+spec:
+  minAvailable: 2  # 至少保持 2 个 Pod 运行
+  selector:
+    matchLabels:
+      app: browerai-api
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: browerai-api
+  namespace: browerai
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: browerai-api-role
+  namespace: browerai
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: browerai-api-rolebinding
+  namespace: browerai
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: browerai-api-role
+subjects:
+  - kind: ServiceAccount
+    name: browerai-api
+    namespace: browerai
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: browerai-api-network-policy
+  namespace: browerai
+spec:
+  podSelector:
+    matchLabels:
+      app: browerai-api
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # 允许来自 Ingress controller 的入站
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 5000
+    # 允许来自同 namespace 的入站
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 5000
+  egress:
+    # 允许 DNS
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+    # 允许出站到数据库
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    # 允许出站到外部 HTTP/HTTPS
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443

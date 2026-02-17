@@ -3,6 +3,7 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
 };
+use browerai_html_parser::HtmlParser;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{error, info};
@@ -71,6 +72,8 @@ pub struct ParseHtmlRequest {
 #[derive(Debug, Serialize)]
 pub struct ParseHtmlResponse {
     pub success: bool,
+    pub node_count: usize,
+    pub depth: usize,
     pub message: String,
 }
 
@@ -251,9 +254,26 @@ pub async fn parse_html_handler(
             .into_response();
     }
 
-    // Basic HTML parsing (placeholder)
+    let parser = HtmlParser::new();
+
+    if let Err(e) = parser.parse(&req.html) {
+        error!("Failed to parse HTML: {}", e);
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorResponse {
+                error: "Failed to parse HTML".to_string(),
+                details: Some(e.to_string()),
+            }),
+        )
+            .into_response();
+    }
+
+    let stats = parser.get_stats(&req.html);
+
     let response = ParseHtmlResponse {
         success: true,
+        node_count: stats.tag_count,
+        depth: stats.max_depth,
         message: format!("Parsed HTML ({} bytes)", req.html.len()),
     };
 
