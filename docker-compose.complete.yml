@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库
+  db:
+    image: postgres:15-alpine
+    container_name: browerai-db
+    environment:
+      POSTGRES_USER: browerai
+      POSTGRES_PASSWORD: browerai_secure_password
+      POSTGRES_DB: browerai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U browerai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Rust 后端API服务器
+  api:
+    build:
+      context: ../..
+      dockerfile: Dockerfile.api
+    container_name: browerai-api
+    environment:
+      RUST_LOG: info
+      DATABASE_URL: postgres://browerai:browerai_secure_password@db:5432/browerai
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # React 前端应用
+  web:
+    build:
+      context: crates/browerai-webclient
+      dockerfile: Dockerfile
+    container_name: browerai-web
+    ports:
+      - "80:3000"
+    depends_on:
+      - api
+    environment:
+      REACT_APP_API_URL: http://api:3000/api
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    name: browerai-network

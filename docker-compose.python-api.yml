@@ -1,0 +1,153 @@
+version: "3.8"
+
+services:
+  # =====================================================================
+  # BrowerAI Python API Server
+  # =====================================================================
+  api-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.python-api
+      cache_from:
+        - browerai-api:latest
+    container_name: browerai-api-server
+    image: browerai-api:latest
+    ports:
+      - "5000:5000"
+    environment:
+      # Flask configuration
+      FLASK_ENV: production
+      FLASK_DEBUG: "false"
+      API_HOST: 0.0.0.0
+      API_PORT: 5000
+      
+      # Model configuration
+      LATENT_DIM: "256"
+      FEATURE_DIM: 48
+      
+      # Learning configuration
+      LEARNING_RATE: "0.001"
+      BATCH_SIZE: "32"
+      MAX_QUEUE_SIZE: "1000"
+      
+      # Logging
+      LOG_LEVEL: INFO
+      PYTHONUNBUFFERED: "1"
+    
+    volumes:
+      - ./training/logs:/app/logs
+      - ./data:/app/data
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+        reservations:
+          cpus: "1.0"
+          memory: 512M
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    networks:
+      - browerai-network
+
+  # =====================================================================
+  # Optional: Nginx Reverse Proxy (for production)
+  # =====================================================================
+  nginx:
+    image: nginx:alpine
+    container_name: browerai-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx-monitoring.conf:/etc/nginx/conf.d/monitoring.conf:ro
+    depends_on:
+      - api-server
+    networks:
+      - browerai-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =====================================================================
+  # Optional: Prometheus Monitoring
+  # =====================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: browerai-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+      - "--storage.tsdb.retention.time=30d"
+    networks:
+      - browerai-network
+    restart: unless-stopped
+    depends_on:
+      - api-server
+
+  # =====================================================================
+  # Optional: Grafana Dashboards
+  # =====================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: browerai-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - browerai-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+# =========================================================================
+# Networks
+# =========================================================================
+networks:
+  browerai-network:
+    driver: bridge
+
+# =========================================================================
+# Volumes
+# =========================================================================
+volumes:
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local

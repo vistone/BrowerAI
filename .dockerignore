@@ -1,0 +1,95 @@
+# .dockerignore - Exclude files from Docker build context
+# Reduces build size and improves build performance
+
+# Version control
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+CHANGELOG.md
+README.md
+CONTRIBUTING.md
+
+# Build artifacts
+target/
+dist/
+build/
+*.egg-info/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Test files
+tests/
+.pytest_cache/
+.coverage
+coverage.xml
+*.tox.ini
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+*~
+.vim/
+
+# Environment files
+.env
+.env.local
+*.env.sample
+
+# Cache
+node_modules/
+.cache/
+.eslintcache
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+
+# Docker
+docker-compose.*.yml
+Dockerfile*
+.dockerignore
+
+# Data files (but keep models)
+/data/**
+!/models/
+*.csv
+*.json (except config files)
+
+# Virtual environments
+venv/
+env/
+.venv
+
+# Package manager
+Pipfile.lock
+package-lock.json
+yarn.lock
+
+# Week reports and summaries (keep only essential docs)
+WEEK*.md
+WEEK*.json

@@ -1,0 +1,48 @@
+{
+  "start_time": "2026-01-31T23:20:18.123309",
+  "stages": {
+    "data_collection": {
+      "status": "completed",
+      "samples_collected": 0,
+      "output": "None",
+      "timestamp": "2026-01-31T23:20:20.522523"
+    },
+    "data_augmentation": {
+      "status": "completed",
+      "original_samples": 0,
+      "augmented_samples": 0,
+      "augmentation_factor": 3,
+      "timestamp": "2026-01-31T23:20:20.522779"
+    },
+    "obfuscation_generation": {
+      "status": "completed",
+      "num_samples": 500,
+      "techniques": [
+        "array_obfuscation",
+        "combined",
+        "comment_obfuscation",
+        "control_flow",
+        "dead_code",
+        "eval_obfuscation",
+        "function_wrapping",
+        "property_encryption",
+        "regex_obfuscation",
+        "semantic_obfuscation",
+        "string_encoding",
+        "variable_rename",
+        "whitespace_obfuscation"
+      ],
+      "timestamp": "2026-01-31T23:20:20.591320"
+    },
+    "obfuscation_evaluation": {
+      "status": "completed",
+      "techniques_evaluated": 13,
+      "timestamp": "2026-01-31T23:20:20.656699"
+    },
+    "gpu_training": {
+      "status": "failed",
+      "error": "[Errno 32] Broken pipe"
+    }
+  },
+  "end_time": "2026-01-31T23:20:21.961657"
+}

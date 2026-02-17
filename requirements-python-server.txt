@@ -1,0 +1,35 @@
+# Python Backend Server Dependencies for BrowserAI Week 6
+# Install with: pip install -r requirements-python-server.txt
+
+# Web Framework
+Flask==2.3.3
+flask-cors==4.0.0
+Werkzeug==2.3.7
+
+# Data Models and Validation
+pydantic==2.4.2
+pydantic-core==2.10.1
+
+# Numerical Computing
+numpy==1.24.3
+scipy==1.11.3
+
+# Machine Learning
+scikit-learn==1.3.2
+
+# Async/Concurrency
+asyncio-contextmanager==1.0.0
+
+# Logging and Monitoring
+python-logging-loki==0.3.2
+
+# Development Tools
+pytest==7.4.2
+pytest-asyncio==0.21.1
+black==23.11.0
+flake8==6.1.0
+mypy==1.6.1
+
+# Utilities
+python-dotenv==1.0.0
+requests==2.31.0

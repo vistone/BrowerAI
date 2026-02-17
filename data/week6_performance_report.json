@@ -1,0 +1,71 @@
+{
+  "timestamp": "2026-02-01T17:08:34.424447",
+  "endpoints": {
+    "health": {
+      "endpoint": "/api/v1/health",
+      "method": "GET",
+      "total_requests": 50,
+      "successful": 50,
+      "failed": 0,
+      "success_rate": "100.0%",
+      "latency_ms": {
+        "mean": "1.56",
+        "median": "1.51",
+        "min": "1.20",
+        "max": "2.97",
+        "stdev": "0.31",
+        "p95": "1.97",
+        "p99": "2.97"
+      },
+      "throughput_rps": "640.2"
+    },
+    "generate": {
+      "endpoint": "/api/v1/generate",
+      "method": "POST",
+      "total_requests": 20,
+      "successful": 20,
+      "failed": 0,
+      "success_rate": "100.0%",
+      "latency_ms": {
+        "mean": "1.85",
+        "median": "1.79",
+        "min": "1.69",
+        "max": "2.24",
+        "stdev": "0.15",
+        "p95": "2.24",
+        "p99": "2.24"
+      },
+      "throughput_rps": "541.5"
+    },
+    "feedback": {
+      "endpoint": "/api/v1/feedback",
+      "method": "POST",
+      "total_requests": 30,
+      "successful": 30,
+      "failed": 0,
+      "success_rate": "100.0%",
+      "latency_ms": {
+        "mean": "1.48",
+        "median": "1.45",
+        "min": "1.35",
+        "max": "1.82",
+        "stdev": "0.13",
+        "p95": "1.80",
+        "p99": "1.82"
+      },
+      "throughput_rps": "674.0"
+    }
+  },
+  "overall": {
+    "avg_latency_ms": "1.63",
+    "max_latency_ms": "1.85"
+  },
+  "resources": {
+    "cpu_percent": "9.7%",
+    "memory_percent": "49.4%",
+    "memory_used_mb": "7579.6",
+    "memory_available_mb": "7765.5",
+    "api_server_memory_mb": "56.0"
+  },
+  "test_summary": {}
+}
