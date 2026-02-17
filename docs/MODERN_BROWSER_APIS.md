@@ -324,3 +324,289 @@ These APIs follow 2026 browser standards and are compatible with:
 
 **Last Updated**: February 17, 2026
 **Status**: Phase 1 Complete ✅
+
+### Phase 2: Modern CSS Features ✅ COMPLETE
+
+#### 1. Container Queries
+
+CSS Container Queries allow styles to adapt based on a component's parent size, not just viewport.
+
+**Features:**
+- Named and unnamed containers
+- Width and height queries
+- Min/max condition evaluation
+
+**Example:**
+```rust
+use browerai_css_parser::{ContainerQuery, CssRule, CssProperty};
+
+// Parse container query
+let query = ContainerQuery::parse("@container (min-width: 400px)").unwrap();
+assert_eq!(query.condition, "min-width: 400px");
+
+// Named container
+let named = ContainerQuery::parse("@container sidebar (min-width: 300px)").unwrap();
+assert_eq!(named.container_name, Some("sidebar".to_string()));
+
+// Evaluate condition
+let mut query = ContainerQuery::new("min-width: 400px".to_string());
+assert!(query.evaluate(500.0, 300.0));  // Width >= 400
+assert!(!query.evaluate(300.0, 300.0)); // Width < 400
+```
+
+**CSS Usage:**
+```css
+@container (min-width: 400px) {
+  .card {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+@container sidebar (max-width: 300px) {
+  .widget {
+    flex-direction: column;
+  }
+}
+```
+
+#### 2. :has() Pseudo-Class Selector
+
+Powerful parent-based styling selector that enables "parent selector" functionality.
+
+**Features:**
+- Parent selector with child condition
+- Complex selector support
+- Direct child (>) and descendant selectors
+
+**Example:**
+```rust
+use browerai_css_parser::HasSelector;
+
+// Parse :has() selector
+let selector = HasSelector::parse("section:has(.active)").unwrap();
+assert_eq!(selector.parent_selector, "section");
+assert_eq!(selector.child_selector, ".active");
+
+// Convert to CSS string
+assert_eq!(selector.to_css(), "section:has(.active)");
+
+// Complex example
+let complex = HasSelector::parse("div.container:has(> .important)").unwrap();
+assert_eq!(complex.child_selector, "> .important");
+```
+
+**CSS Usage:**
+```css
+/* Style article only if it contains a video */
+article:has(video) {
+  background: #f0f0f0;
+}
+
+/* Style form only if it has errors */
+form:has(.error) {
+  border: 2px solid red;
+}
+
+/* Direct child selector */
+nav:has(> .active) {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+```
+
+#### 3. CSS Nesting
+
+Author cleaner, hierarchical stylesheets similar to Sass/Less preprocessors.
+
+**Features:**
+- Nested rule structures
+- Ampersand (&) parent reference
+- Automatic flattening to regular CSS
+
+**Example:**
+```rust
+use browerai_css_parser::{NestedCssRule, CssProperty};
+
+// Create nested structure
+let mut root = NestedCssRule::new(".card".to_string());
+root.add_property(CssProperty::new("padding".to_string(), "1rem".to_string()));
+
+let mut title = NestedCssRule::new(".title".to_string());
+title.add_property(CssProperty::new("font-size".to_string(), "1.5rem".to_string()));
+root.add_nested_rule(title);
+
+// Flatten to regular CSS
+let flattened = root.flatten("");
+// Result: [".card", ".card .title"]
+
+// Using ampersand for pseudo-classes
+let mut button = NestedCssRule::new(".button".to_string());
+let mut hover = NestedCssRule::new("&:hover".to_string());
+button.add_nested_rule(hover);
+
+let flat = button.flatten("");
+// Result: ".button:hover"
+```
+
+**CSS Usage:**
+```css
+.card {
+  padding: 1rem;
+  
+  .title {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .body {
+    margin-top: 0.5rem;
+  }
+}
+
+.button {
+  background: blue;
+  
+  &:hover {
+    background: darkblue;
+  }
+  
+  &.active {
+    background: green;
+  }
+}
+```
+
+#### 4. CSS Custom Properties (CSS Variables)
+
+Full support for CSS variables with inheritance and var() resolution.
+
+**Features:**
+- Custom property storage with -- prefix
+- Scope inheritance (parent-child)
+- var() reference resolution
+- Fallback value support
+
+**Example:**
+```rust
+use browerai_css_parser::CssCustomProperties;
+
+// Create property scope
+let mut props = CssCustomProperties::new();
+props.set_property("--primary-color".to_string(), "blue".to_string());
+props.set_property("--spacing".to_string(), "1rem".to_string());
+
+// Get property
+assert_eq!(props.get_property("--primary-color"), Some("blue".to_string()));
+
+// Resolve var() references
+assert_eq!(
+    props.resolve_var("background: var(--primary-color);"),
+    "background: blue;"
+);
+
+// Fallback for undefined variables
+let resolved = props.resolve_var("color: var(--undefined, red);");
+assert_eq!(resolved, "color: red;");
+
+// Inheritance
+let mut parent = CssCustomProperties::new();
+parent.set_property("--base-size".to_string(), "16px".to_string());
+
+let mut child = CssCustomProperties::with_parent(parent);
+child.set_property("--local-size".to_string(), "14px".to_string());
+
+// Child can access parent properties
+assert_eq!(child.get_property("--base-size"), Some("16px".to_string()));
+```
+
+**CSS Usage:**
+```css
+:root {
+  --primary-color: #3498db;
+  --secondary-color: #2ecc71;
+  --spacing: 1rem;
+}
+
+.button {
+  background: var(--primary-color);
+  padding: var(--spacing);
+  
+  /* With fallback */
+  color: var(--text-color, white);
+}
+
+.card {
+  --local-spacing: 0.5rem;
+  margin: var(--local-spacing);
+}
+```
+
+#### 5. CSS Subgrid
+
+Grid layouts can now have nested grids inherit row/column definitions from parent.
+
+**Features:**
+- Subgrid axis specification (rows, columns, both)
+- Track line inheritance from parent grid
+- CSS value generation
+
+**Example:**
+```rust
+use browerai_css_parser::{SubgridDefinition, SubgridAxis};
+
+// Parse subgrid value
+let both = SubgridDefinition::parse("subgrid").unwrap();
+assert_eq!(both.axis, SubgridAxis::Both);
+
+let rows = SubgridDefinition::parse("subgrid rows").unwrap();
+assert_eq!(rows.axis, SubgridAxis::Rows);
+
+// Create subgrid programmatically
+let cols = SubgridDefinition::new(SubgridAxis::Columns);
+assert_eq!(cols.to_css(), "subgrid [columns]");
+
+// Check if it's a subgrid
+assert!(both.is_subgrid());
+```
+
+**CSS Usage:**
+```css
+.grid-parent {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-rows: auto 1fr auto;
+}
+
+.grid-child {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-template-rows: subgrid;
+  
+  /* Child inherits parent's grid lines */
+  grid-column: 1 / 4;
+  grid-row: 1 / 3;
+}
+
+/* Subgrid for columns only */
+.partial-subgrid {
+  grid-template-columns: subgrid;
+  grid-template-rows: auto auto;
+}
+```
+
+## Testing
+
+Phase 2 includes 14 comprehensive tests:
+
+```bash
+# Run all modern CSS features tests
+cargo test -p browerai-css-parser modern_features
+
+# Run specific tests
+cargo test -p browerai-css-parser test_container_query
+cargo test -p browerai-css-parser test_has_selector
+cargo test -p browerai-css-parser test_nested_css
+cargo test -p browerai-css-parser test_css_custom_properties
+cargo test -p browerai-css-parser test_subgrid
+```
+
