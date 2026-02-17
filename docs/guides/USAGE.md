@@ -2,7 +2,10 @@
 
 ## 📖 这是什么？
 
-一个真实的、基于 LSTM 模型的 JavaScript 框架检测系统，使用 17,542 个真实代码样本训练。
+基于真实框架检测器API的使用指南，支持React、Vue等主流JavaScript框架的识别。
+
+**真实数据**: 17,710个真实经过混淆的代码样本
+**API调用**: 完全同步，基于browerai-ai-integration模块
 
 ## ✅ 已验证的功能
 
@@ -232,8 +235,8 @@ cargo test --lib framework_detector 2>&1 | grep "test result"
 
 ### 验证 4: 训练数据存在
 ```bash
-wc -l real_data/obfuscated_code/training_pairs.jsonl
-# 17542 lines
+wc -l real_data/obfuscated_code/augmented_training_pairs.jsonl
+# 17710 lines (真实增强的训练对)
 ```
 
 ## ✅ 生产就绪检查清单
@@ -247,9 +250,9 @@ wc -l real_data/obfuscated_code/training_pairs.jsonl
 
 ## 📞 获取帮助
 
-1. **查看测试代码**: `framework_detector.rs` 中的 tests 模块
-2. **查看训练代码**: `training/large_scale_trainer.py`
-3. **查看示例**: `examples/framework_detection.rs`
+1. **查看实现代码**: `crates/browerai-ai-integration/src/framework_detector.rs`
+2. **查看集成点**: `crates/browerai-api-server/src/handlers.rs` 中的框架检测端点
+3. **查看模型位置**: `models/local/*.onnx`
 
 ---
 
