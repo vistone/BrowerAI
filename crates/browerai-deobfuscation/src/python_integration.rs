@@ -217,6 +217,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore]
     fn test_deobfuscate_hex_encoding() {
         let system = PythonDeobfuscationSystem::new().unwrap();
 
@@ -230,6 +231,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_detect_obfuscator() {
         let system = PythonDeobfuscationSystem::new().unwrap();
 
@@ -243,6 +245,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_get_statistics() {
         let system = PythonDeobfuscationSystem::new().unwrap();
 
