@@ -42,7 +42,7 @@ prometheus = "0.13"
 lazy_static = "1.4"
 
 # Security and HTTPS
-tokio-rustls = "0.24"
+tokio-rustls = "0.26"
 rustls-pemfile = "2.0"
 tokio-util = { version = "0.7", features = ["codec"] }
 
