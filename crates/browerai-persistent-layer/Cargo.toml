@@ -6,7 +6,7 @@ description = "RocksDB-based persistent cache layer for BrowerAI"
 
 [dependencies]
 sled = "0.34"
-rocksdb = { version = "0.21", optional = true }
+rocksdb = { version = "0.24", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 anyhow = "1.0"
