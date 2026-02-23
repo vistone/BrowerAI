@@ -15,7 +15,7 @@ browerai-renderer-core = { workspace = true }
 browerai-ai-core = { workspace = true, optional = true }
 
 # Web framework
-axum = { version = "0.7", features = ["macros"] }
+axum = { version = "0.8", features = ["macros"] }
 tokio = { workspace = true, features = ["full"] }
 tower = { version = "0.4", features = ["util"] }
 tower-http = { version = "0.5", features = ["fs", "trace", "cors"] }
