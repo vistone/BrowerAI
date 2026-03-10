@@ -68,3 +68,7 @@ training/checkpoints/
 training/outputs/
 training/logs/
 
+# Local training artifacts and generated outputs
+models/trained_*/
+output/
+
