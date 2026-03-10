@@ -1,6 +1,11 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/auto-observer",
+    "crates/visual-learner",
+    "crates/interaction-patterns",
+    "crates/code-generator",
+    "crates/behavior-tester",
     "crates/browerai-core",
     "crates/browerai-dom",
     "crates/browerai-html-parser",
@@ -15,6 +20,7 @@ members = [
     "crates/browerai-renderer",
     "crates/browerai-deobfuscation",
     "crates/browerai-intelligent-rendering",
+    "crates/browerai-dual-sandbox",
     # "crates/browerai-integrated-pipeline",  # Temporarily disabled due to compilation errors
     "crates/browerai-learning",
     "crates/browerai-network",
@@ -119,6 +125,7 @@ browerai-renderer-core = { version = "0.2.0", path = "crates/browerai-renderer-c
 browerai-renderer-predictive = { version = "0.2.0", path = "crates/browerai-renderer-predictive" }
 browerai-renderer = { version = "0.2.0", path = "crates/browerai-renderer" }
 browerai-intelligent-rendering = { version = "0.2.0", path = "crates/browerai-intelligent-rendering" }
+browerai-dual-sandbox = { version = "0.2.0", path = "crates/browerai-dual-sandbox" }
 browerai-integrated-pipeline = { version = "0.2.0", path = "crates/browerai-integrated-pipeline" }
 browerai-learning = { version = "0.2.0", path = "crates/browerai-learning" }
 browerai-ml = { version = "0.2.0", path = "crates/browerai-ml" }
@@ -127,6 +134,12 @@ browerai-devtools = { version = "0.2.0", path = "crates/browerai-devtools" }
 browerai-testing = { version = "0.2.0", path = "crates/browerai-testing" }
 browerai-plugins = { version = "0.2.0", path = "crates/browerai-plugins" }
 browerai-metrics = { version = "0.2.0", path = "crates/browerai-metrics" }
+browerai-cache = { version = "0.2.0", path = "crates/browerai-cache" }
+browerai-multilayer-cache = { version = "0.2.0", path = "crates/browerai-multilayer-cache" }
+browerai-persistent-layer = { version = "0.2.0", path = "crates/browerai-persistent-layer" }
+browerai-db = { version = "0.2.0", path = "crates/browerai-db" }
+browerai-redis-integration = { version = "0.2.0", path = "crates/browerai-redis-integration" }
+browerai-api-server = { version = "0.2.0", path = "crates/browerai-api-server" }
 
 [profile.release]
 opt-level = 3
@@ -136,3 +149,4 @@ codegen-units = 1
 [profile.dev]
 opt-level = 0
 debug = true
+

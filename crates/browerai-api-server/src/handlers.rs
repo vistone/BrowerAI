@@ -4,6 +4,7 @@ use axum::{
     response::IntoResponse,
 };
 use browerai_html_parser::HtmlParser;
+use browerai_core::traits::Parser;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{error, info};
@@ -107,9 +108,10 @@ pub async fn render_handler(
     // Parse CSS if provided
     let rules_count = if let Some(css) = &req.css {
         match state.css_parser().parse(css) {
-            Ok(rules) => {
-                info!("Parsed {} CSS rules", rules.len());
-                rules.len()
+            Ok(stylesheet) => {
+                let count = stylesheet.rules.len();
+                info!("Parsed {} CSS rules", count);
+                count
             }
             Err(e) => {
                 error!("Failed to parse CSS: {}", e);
@@ -159,11 +161,12 @@ pub async fn parse_css_handler(
 
     // Parse CSS
     match state.css_parser().parse(&req.css) {
-        Ok(rules) => {
-            info!("Parsed {} CSS rules", rules.len());
+        Ok(stylesheet) => {
+            let rules_len = stylesheet.rules.len();
+            info!("Parsed {} CSS rules", rules_len);
 
             // Record CSS parsing metrics
-            metrics::record_css_rules_parsed(rules.len(), false);
+            metrics::record_css_rules_parsed(rules_len, false);
 
             // Try AI enhancement if requested
             #[cfg(feature = "onnx")]
@@ -213,7 +216,7 @@ pub async fn parse_css_handler(
 
             let response = ParseCssResponse {
                 success: true,
-                rules_count: rules.len(),
+                rules_count: rules_len,
                 ai_enhanced,
                 predicted_properties,
             };
@@ -256,24 +259,25 @@ pub async fn parse_html_handler(
 
     let parser = HtmlParser::new();
 
-    if let Err(e) = parser.parse(&req.html) {
-        error!("Failed to parse HTML: {}", e);
-        return (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ErrorResponse {
-                error: "Failed to parse HTML".to_string(),
-                details: Some(e.to_string()),
-            }),
-        )
-            .into_response();
-    }
-
-    let stats = parser.get_stats(&req.html);
+    let doc = match parser.parse(&req.html) {
+        Ok(d) => d,
+        Err(e) => {
+            error!("Failed to parse HTML: {}", e);
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorResponse {
+                    error: "Failed to parse HTML".to_string(),
+                    details: Some(format!("{}", e)),
+                }),
+            )
+                .into_response();
+        }
+    };
 
     let response = ParseHtmlResponse {
         success: true,
-        node_count: stats.tag_count,
-        depth: stats.max_depth,
+        node_count: doc.text_node_count(),
+        depth: 1, // Simplified
         message: format!("Parsed HTML ({} bytes)", req.html.len()),
     };
 

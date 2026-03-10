@@ -142,7 +142,8 @@ impl BenchmarkRunner {
         html: &str,
         iterations: usize,
     ) -> Result<BenchmarkResult> {
-        use browerai_html_parser::HtmlParser;
+use browerai_html_parser::HtmlParser;
+        use browerai_core::traits::Parser;
 
         let mut timings = Vec::with_capacity(iterations);
 

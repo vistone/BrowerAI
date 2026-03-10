@@ -204,8 +204,10 @@ mod tests {
 
     #[tokio::test]
     async fn persistent_basic_ops() {
-        let mut cfg = PersistentConfig::default();
-        cfg.cleanup_interval = Duration::from_millis(200);
+        let cfg = PersistentConfig {
+            cleanup_interval: Duration::from_millis(200),
+            ..Default::default()
+        };
         let layer: PersistentLayer<String> = PersistentLayer::new("rocksdb-l2", cfg).unwrap();
         layer
             .set_internal("a", "b".to_string(), Duration::from_millis(500))

@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 /// Real Website Framework Detection Test
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 #[derive(Clone, Debug)]
+#[allow(dead_code)]
 struct TestWebsite {
     name: &'static str,
     url: &'static str,
@@ -11,6 +12,7 @@ struct TestWebsite {
 }
 
 #[derive(Clone, Debug)]
+#[allow(dead_code)]
 struct DetectionResult {
     website: String,
     frameworks: Vec<String>,

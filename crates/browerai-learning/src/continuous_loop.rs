@@ -88,15 +88,14 @@ pub struct ContinuousLearningLoop {
 impl ContinuousLearningLoop {
     /// Create a new continuous learning loop
     pub fn new(config: ContinuousLearningConfig) -> Self {
-        let learning_config = LearningConfig {
-            learning_rate: config.learning_rate,
-            batch_size: config.batch_size,
-            max_samples: 10000,
-            min_samples_for_update: config.batch_size,
-            auto_update: true,
-            l2_regularization: 0.0001,
-            momentum: 0.9,
-        };
+        let mut learning_config = LearningConfig::with_env();
+        learning_config.learning_rate = config.learning_rate;
+        learning_config.batch_size = config.batch_size;
+        learning_config.max_samples = 10000;
+        learning_config.min_samples_for_update = config.batch_size;
+        learning_config.auto_update = true;
+        learning_config.l2_regularization = 0.0001;
+        learning_config.momentum = 0.9;
 
         Self {
             config,
@@ -401,9 +400,11 @@ mod tests {
 
     #[test]
     fn test_multiple_iterations() {
-        let mut config = ContinuousLearningConfig::default();
-        config.max_iterations = Some(3);
-        config.update_interval_secs = 0; // No delay for testing
+        let config = ContinuousLearningConfig {
+            max_iterations: Some(3),
+            update_interval_secs: 0,
+            ..Default::default()
+        };
 
         let mut loop_instance = ContinuousLearningLoop::new(config);
 
@@ -439,8 +440,10 @@ mod tests {
     #[test]
     fn test_config_update() {
         let mut loop_instance = ContinuousLearningLoop::with_defaults();
-        let mut new_config = ContinuousLearningConfig::default();
-        new_config.learning_rate = 0.01;
+        let new_config = ContinuousLearningConfig {
+            learning_rate: 0.01,
+            ..Default::default()
+        };
 
         loop_instance.update_config(new_config);
         assert_eq!(loop_instance.learner.get_learning_rate(), 0.01);

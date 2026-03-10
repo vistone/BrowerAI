@@ -4,6 +4,7 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
+use std::env;
 
 /// Model weights container for gradient descent
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -117,6 +118,12 @@ pub struct LearningConfig {
     pub l2_regularization: f32,
     /// Momentum factor for gradient updates (0.0 = no momentum, 0.9 = high momentum)
     pub momentum: f32,
+    /// Enable learning mode (required for GPU learning)
+    pub learning_mode: bool,
+    /// Enable GPU learning (best-effort)
+    pub use_gpu: bool,
+    /// GPU device ID
+    pub gpu_device_id: i32,
 }
 
 impl Default for LearningConfig {
@@ -129,7 +136,35 @@ impl Default for LearningConfig {
             auto_update: false,
             l2_regularization: 0.0001,
             momentum: 0.9,
+            learning_mode: false,
+            use_gpu: false,
+            gpu_device_id: 0,
         }
+    }
+}
+
+impl LearningConfig {
+    /// Build config with learning/GPU flags from environment
+    pub fn with_env() -> Self {
+        let mut config = Self::default();
+
+        let learning_mode = env::var("BROWERAI_LEARNING_MODE")
+            .unwrap_or_else(|_| "0".to_string())
+            .to_lowercase();
+        let use_gpu = env::var("BROWERAI_USE_GPU")
+            .unwrap_or_else(|_| "0".to_string())
+            .to_lowercase();
+
+        config.learning_mode = matches!(learning_mode.as_str(), "1" | "true" | "yes" | "on");
+        config.use_gpu = matches!(use_gpu.as_str(), "1" | "true" | "yes" | "on");
+
+        if let Ok(device_id) = env::var("BROWERAI_GPU_DEVICE") {
+            if let Ok(id) = device_id.parse::<i32>() {
+                config.gpu_device_id = id;
+            }
+        }
+
+        config
     }
 }
 
@@ -215,6 +250,12 @@ pub struct OnlineLearner {
 impl OnlineLearner {
     /// Create a new online learner
     pub fn new(config: LearningConfig) -> Self {
+        if config.learning_mode && config.use_gpu {
+            log::warn!(
+                "GPU learning requested (device_id={}) but Rust online learning is CPU-only; using CPU.",
+                config.gpu_device_id
+            );
+        }
         Self {
             config,
             sample_buffer: VecDeque::new(),
@@ -227,7 +268,7 @@ impl OnlineLearner {
 
     /// Create with default configuration
     pub fn with_defaults() -> Self {
-        Self::new(LearningConfig::default())
+        Self::new(LearningConfig::with_env())
     }
 
     /// Initialize model weights with given dimension
@@ -527,8 +568,10 @@ mod tests {
     #[case(10, 20)]
     #[case(100, 100)]
     fn test_online_learner_buffer_limit(#[case] max_samples: usize, #[case] num_samples: usize) {
-        let mut config = LearningConfig::default();
-        config.max_samples = max_samples;
+        let config = LearningConfig {
+            max_samples,
+            ..Default::default()
+        };
         let mut learner = OnlineLearner::new(config);
 
         for i in 0..num_samples {
@@ -542,8 +585,10 @@ mod tests {
 
     #[test]
     fn test_online_learner_should_update() {
-        let mut config = LearningConfig::default();
-        config.min_samples_for_update = 5;
+        let config = LearningConfig {
+            min_samples_for_update: 5,
+            ..Default::default()
+        };
         let mut learner = OnlineLearner::new(config);
 
         assert!(!learner.should_update());
@@ -558,8 +603,10 @@ mod tests {
 
     #[test]
     fn test_online_learner_trigger_update() {
-        let mut config = LearningConfig::default();
-        config.min_samples_for_update = 2;
+        let config = LearningConfig {
+            min_samples_for_update: 2,
+            ..Default::default()
+        };
         let mut learner = OnlineLearner::new(config);
 
         let _ = learner.add_sample(TrainingSample::new(vec![1.0], vec![2.0]));

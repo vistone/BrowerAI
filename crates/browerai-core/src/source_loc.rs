@@ -1,190 +1,218 @@
-/// Unified source location information for the entire BrowerAI project
-///
-/// This module provides centralized types for representing source code locations,
-/// unifying previously duplicated definitions across different modules.
+//! 源代码位置信息
+//!
+//! 提供代码位置、范围等信息的类型
+
 use serde::{Deserialize, Serialize};
 
-/// Represents a location in source code
-///
-/// This struct unifies location definitions that were previously duplicated in:
-/// - `browerai-js-analyzer/src/types.rs` (LocationInfo)
-/// - `browerai-learning/src/behavior_record.rs` (CodeLocation)
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Default)]
+/// 源代码位置
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 pub struct SourceLocation {
-    /// File path or identifier
-    #[serde(default)]
-    pub file: String,
-    /// Line number (1-based)
-    #[serde(default)]
+    /// 行号（1-based）
     pub line: usize,
-    /// Column number (0-based)
-    #[serde(default)]
+    /// 列号（1-based）
     pub column: usize,
-    /// Character offset from start of file
-    #[serde(default)]
-    pub start: usize,
-    /// Character offset to end of range
-    #[serde(default)]
-    pub end: usize,
 }
 
 impl SourceLocation {
-    /// Create a new source location
-    pub fn new(
-        file: impl Into<String>,
-        line: usize,
-        column: usize,
-        start: usize,
-        end: usize,
-    ) -> Self {
-        Self {
-            file: file.into(),
-            line,
-            column,
-            start,
-            end,
-        }
+    /// 创建新的位置
+    pub fn new(line: usize, column: usize) -> Self {
+        Self { line, column }
     }
 
-    /// Create a location from line and column only
-    pub fn from_line_column(file: impl Into<String>, line: usize, column: usize) -> Self {
-        Self {
-            file: file.into(),
-            line,
-            column,
-            start: 0,
-            end: 0,
-        }
+    /// 位置是否在另一个位置之前
+    pub fn is_before(&self, other: &Self) -> bool {
+        self.line < other.line || (self.line == other.line && self.column < other.column)
     }
 
-    /// Get the byte range as a Rust range
-    pub fn byte_range(&self) -> std::ops::Range<usize> {
-        self.start..self.end
-    }
-
-    /// Get the line range (inclusive start, exclusive end)
-    pub fn line_range(&self) -> std::ops::Range<usize> {
-        self.line..self.line + 1
-    }
-
-    /// Check if this location is valid (has non-zero positions)
-    pub fn is_valid(&self) -> bool {
-        self.line > 0 || self.column > 0 || self.start > 0 || self.end > 0
-    }
-
-    /// Calculate the length in characters
-    pub fn length(&self) -> usize {
-        self.end.saturating_sub(self.start)
-    }
-
-    /// Format as a display string (e.g., "file.rs:10:5")
-    pub fn to_display(&self) -> String {
-        format!("{}:{}:{}", self.file, self.line, self.column)
+    /// 位置是否在另一个位置之后
+    pub fn is_after(&self, other: &Self) -> bool {
+        self.line > other.line || (self.line == other.line && self.column > other.column)
     }
 }
 
 impl std::fmt::Display for SourceLocation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.to_display())
+        write!(f, "{}:{}", self.line, self.column)
     }
 }
 
-/// Represents a span of source code (start and end locations)
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+/// 源代码范围
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 pub struct SourceSpan {
-    /// Starting location
-    #[serde(default)]
+    /// 起始位置
     pub start: SourceLocation,
-    /// Ending location
-    #[serde(default)]
+    /// 结束位置
     pub end: SourceLocation,
 }
 
 impl SourceSpan {
-    /// Create a new span from start and end locations
+    /// 创建新的范围
     pub fn new(start: SourceLocation, end: SourceLocation) -> Self {
         Self { start, end }
     }
 
-    /// Create a span covering a single location
-    pub fn at(location: SourceLocation) -> Self {
+    /// 从行列创建
+    pub fn from_lines(
+        start_line: usize,
+        start_col: usize,
+        end_line: usize,
+        end_col: usize,
+    ) -> Self {
         Self {
-            start: location.clone(),
-            end: location,
+            start: SourceLocation::new(start_line, start_col),
+            end: SourceLocation::new(end_line, end_col),
         }
     }
 
-    /// Get the total length of the span
-    pub fn length(&self) -> usize {
-        self.end.length().max(self.start.length())
+    /// 检查位置是否在范围内
+    pub fn contains(&self, loc: &SourceLocation) -> bool {
+        !loc.is_before(&self.start) && !loc.is_after(&self.end)
     }
 
-    /// Check if the span is valid
-    pub fn is_valid(&self) -> bool {
-        self.start.is_valid() || self.end.is_valid()
+    /// 检查两个范围是否重叠
+    pub fn overlaps(&self, other: &Self) -> bool {
+        !(self.end.is_before(&other.start) || self.start.is_after(&other.end))
     }
 
-    /// Check if this span contains another location
-    pub fn contains(&self, location: &SourceLocation) -> bool {
-        self.start.start <= location.start && location.end <= self.end.end
+    /// 合并两个范围
+    pub fn merge(&self, other: &Self) -> Self {
+        Self {
+            start: if self.start.is_before(&other.start) {
+                self.start
+            } else {
+                other.start
+            },
+            end: if self.end.is_after(&other.end) {
+                self.end
+            } else {
+                other.end
+            },
+        }
     }
 }
 
-/// Kind of source (file, generated, memory, etc.)
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
-pub enum SourceKind {
-    /// Physical file on disk
-    File,
-    /// Generated code
-    Generated,
-    /// In-memory code (eval, dynamic)
-    Memory,
-    /// Standard input
-    Stdin,
-    /// Unknown origin
-    #[default]
-    Unknown,
+impl std::fmt::Display for SourceSpan {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} - {}", self.start, self.end)
+    }
 }
 
-/// Container for source code with its location information
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// 源代码信息
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct SourceInfo {
-    /// Location of the source
-    #[serde(default)]
-    pub location: SourceLocation,
-    /// Kind of source
-    #[serde(default)]
-    pub kind: SourceKind,
-    /// The source code content
-    #[serde(default)]
-    pub content: String,
-    /// Hash of the content for change detection
-    #[serde(default)]
-    pub content_hash: String,
+    /// 文件名
+    pub filename: Option<String>,
+    /// 源代码内容
+    pub source: Option<String>,
+    /// 位置
+    pub span: SourceSpan,
 }
 
 impl SourceInfo {
-    /// Create source info from content with default location
-    pub fn from_content(content: impl Into<String>) -> Self {
-        let content = content.into();
-        let content_hash = format!("{:x}", md5::compute(&content));
+    /// 创建新的源信息
+    pub fn new(span: SourceSpan) -> Self {
         Self {
-            location: SourceLocation::default(),
-            kind: SourceKind::Unknown,
-            content,
-            content_hash,
+            filename: None,
+            source: None,
+            span,
         }
     }
 
-    /// Create source info with full location
-    pub fn new(location: SourceLocation, kind: SourceKind, content: impl Into<String>) -> Self {
-        let content = content.into();
-        let content_hash = format!("{:x}", md5::compute(&content));
-        Self {
-            location,
-            kind,
-            content,
-            content_hash,
+    /// 设置文件名
+    pub fn with_filename(mut self, filename: impl Into<String>) -> Self {
+        self.filename = Some(filename.into());
+        self
+    }
+
+    /// 设置源代码
+    pub fn with_source(mut self, source: impl Into<String>) -> Self {
+        self.source = Some(source.into());
+        self
+    }
+
+    /// 获取指定范围的源代码片段
+    pub fn snippet(&self) -> Option<String> {
+        let source = self.source.as_ref()?;
+        let lines: Vec<&str> = source.lines().collect();
+        
+        if self.span.start.line == 0 || self.span.start.line > lines.len() {
+            return None;
+        }
+
+        let start_line = self.span.start.line - 1;
+        let end_line = self.span.end.line.min(lines.len()) - 1;
+
+        if start_line == end_line {
+            // 单行
+            let line = lines[start_line];
+            let start_col = self.span.start.column.saturating_sub(1);
+            let end_col = self.span.end.column.min(line.len());
+            if start_col < end_col {
+                Some(line[start_col..end_col].to_string())
+            } else {
+                Some(line.to_string())
+            }
+        } else {
+            // 多行
+            let mut result = String::new();
+            for i in start_line..=end_line {
+                result.push_str(lines[i]);
+                result.push('\n');
+            }
+            Some(result)
+        }
+    }
+
+    /// 格式化错误消息
+    pub fn format_error(&self, message: &str) -> String {
+        let mut result = String::new();
+        
+        if let Some(ref filename) = self.filename {
+            result.push_str(&format!("{}:{}:{}\n", 
+                filename, 
+                self.span.start.line, 
+                self.span.start.column
+            ));
+        }
+        
+        if let Some(snippet) = self.snippet() {
+            result.push_str(&format!("  | {}\n", snippet.trim()));
+            result.push_str(&format!("  | {}^ {}\n", 
+                " ".repeat(self.span.start.column.saturating_sub(1)),
+                message
+            ));
+        } else {
+            result.push_str(message);
+        }
+        
+        result
+    }
+}
+
+/// 源代码种类
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum SourceKind {
+    /// HTML
+    Html,
+    /// CSS
+    Css,
+    /// JavaScript
+    JavaScript,
+    /// TypeScript
+    TypeScript,
+    /// 其他
+    Other,
+}
+
+impl SourceKind {
+    /// 获取文件扩展名
+    pub fn extension(&self) -> &'static str {
+        match self {
+            SourceKind::Html => "html",
+            SourceKind::Css => "css",
+            SourceKind::JavaScript => "js",
+            SourceKind::TypeScript => "ts",
+            SourceKind::Other => "txt",
         }
     }
 }
@@ -194,39 +222,47 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_source_location_new() {
-        let loc = SourceLocation::new("test.rs", 10, 5, 100, 150);
-        assert_eq!(loc.file, "test.rs");
-        assert_eq!(loc.line, 10);
-        assert_eq!(loc.column, 5);
-        assert_eq!(loc.start, 100);
-        assert_eq!(loc.end, 150);
-    }
+    fn test_source_location() {
+        let loc1 = SourceLocation::new(10, 5);
+        let loc2 = SourceLocation::new(10, 10);
+        let loc3 = SourceLocation::new(11, 1);
 
-    #[test]
-    fn test_source_location_is_valid() {
-        assert!(!SourceLocation::default().is_valid());
-        assert!(SourceLocation::new("test.rs", 1, 0, 0, 0).is_valid());
-    }
-
-    #[test]
-    fn test_source_location_length() {
-        let loc = SourceLocation::new("test.rs", 1, 0, 100, 150);
-        assert_eq!(loc.length(), 50);
+        assert!(loc1.is_before(&loc2));
+        assert!(loc2.is_before(&loc3));
+        assert!(!loc2.is_before(&loc1));
     }
 
     #[test]
     fn test_source_span() {
-        let start = SourceLocation::new("test.rs", 10, 5, 100, 150);
-        let end = SourceLocation::new("test.rs", 15, 10, 200, 250);
-        let span = SourceSpan::new(start, end);
-        assert_eq!(span.length(), 50);
+        let span1 = SourceSpan::from_lines(1, 1, 3, 10);
+        let span2 = SourceSpan::from_lines(2, 5, 4, 8);
+
+        assert!(span1.overlaps(&span2));
+
+        let merged = span1.merge(&span2);
+        assert_eq!(merged.start.line, 1);
+        assert_eq!(merged.end.line, 4);
     }
 
     #[test]
-    fn test_source_info_content_hash() {
-        let info = SourceInfo::from_content("test content");
-        assert_eq!(info.content, "test content");
-        assert!(!info.content_hash.is_empty());
+    fn test_source_info_snippet() {
+        let source = "line 1\nline 2\nline 3".to_string();
+        let info = SourceInfo::new(SourceSpan::from_lines(2, 1, 2, 6))
+            .with_source(source);
+
+        assert_eq!(info.snippet(), Some("line 2".to_string()));
+    }
+
+    #[test]
+    fn test_format_error() {
+        let source = "function test() {".to_string();
+        let info = SourceInfo::new(SourceSpan::from_lines(1, 1, 1, 17))
+            .with_filename("test.js")
+            .with_source(source);
+
+        let formatted = info.format_error("missing closing brace");
+        assert!(formatted.contains("test.js"));
+        assert!(formatted.contains("function test()"));
+        assert!(formatted.contains("missing closing brace"));
     }
 }

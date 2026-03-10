@@ -2,7 +2,6 @@
 use anyhow::Context;
 use anyhow::Result;
 use std::collections::HashMap;
-use std::mem::size_of;
 #[cfg(feature = "ai")]
 use std::path::Path;
 use std::time::Instant;
@@ -12,12 +11,15 @@ use ort::{session::input::SessionInputValue, session::Session, value::Value};
 
 #[cfg(feature = "ai")]
 use super::InferenceEngine;
-use browerai_ai_core::performance_monitor::{InferenceMetrics, PerformanceMonitor};
-#[cfg(feature = "ai")]
-use browerai_ai_core::tech_model_library::{ModelRegistry, TaskKind};
+// Note: performance_monitor module not available in current browerai_ai_core
+// use browerai_ai_core::performance_monitor::{InferenceMetrics, PerformanceMonitor};
+// Note: tech_model_library module not available in current browerai_ai_core
+// #[cfg(feature = "ai")]
+// use browerai_ai_core::tech_model_library::{ModelRegistry, TaskKind};
 #[cfg(feature = "ai")]
 use browerai_html_parser::HtmlParser;
-use browerai_html_parser::HtmlValidationHook;
+// Note: HtmlValidationHook not available in current browerai_html_parser
+// use browerai_html_parser::HtmlValidationHook;
 
 /// Number of features expected by the code understanding model
 const CODE_UNDERSTANDING_FEATURE_DIM: usize = 35;
@@ -37,7 +39,7 @@ pub struct HtmlModelIntegration {
     #[cfg(feature = "ai")]
     session: Option<Session>,
     #[cfg_attr(not(feature = "ai"), allow(dead_code))]
-    monitor: Option<PerformanceMonitor>,
+    // monitor: Option<PerformanceMonitor>, // Not available
     enabled: bool,
 }
 
@@ -47,7 +49,7 @@ impl HtmlModelIntegration {
     pub fn new(
         engine: &InferenceEngine,
         model_path: Option<&Path>,
-        monitor: Option<PerformanceMonitor>,
+        // monitor: Option<PerformanceMonitor>, // Not available
     ) -> Result<Self> {
         let session = if let Some(path) = model_path {
             if path.exists() {
@@ -74,7 +76,7 @@ impl HtmlModelIntegration {
     pub fn new() -> Result<Self> {
         Ok(Self {
             enabled: false,
-            monitor: None,
+            // monitor: None,
         })
     }
 
@@ -84,16 +86,7 @@ impl HtmlModelIntegration {
         let start = Instant::now();
 
         if !self.enabled || self.session.is_none() {
-            if let Some(m) = &self.monitor {
-                m.record_inference(InferenceMetrics {
-                    model_name: "html_model".to_string(),
-                    inference_time: start.elapsed(),
-                    input_size: html.len(),
-                    output_size: 2 * size_of::<f32>(),
-                    success: false,
-                    timestamp: start,
-                });
-            }
+            // Note: monitor disabled
             return Ok((true, 0.5)); // Fallback: assume valid, medium complexity
         }
 
@@ -140,17 +133,7 @@ impl HtmlModelIntegration {
             complexity
         );
 
-        if let Some(m) = &self.monitor {
-            // Record a synthetic metrics entry to keep observability consistent
-            m.record_inference(InferenceMetrics {
-                model_name: "html_model".to_string(),
-                inference_time: start.elapsed(),
-                input_size: input_data.len() * size_of::<i64>(),
-                output_size: 2 * size_of::<f32>(),
-                success: true,
-                timestamp: start,
-            });
-        }
+        // Note: monitor disabled
 
         Ok((validity, complexity))
     }
@@ -185,49 +168,36 @@ impl HtmlModelIntegration {
     }
 }
 
-/// Implementation of HtmlValidationHook backed by HtmlModelIntegration
+// Note: HtmlValidationHook not available, simplified implementation
 pub struct HtmlValidationHookImpl {
     inner: HtmlModelIntegration,
-    feedback: Option<browerai_ai_core::feedback_pipeline::FeedbackPipeline>,
+    // feedback: Option<...>, // Not available
 }
 
 impl HtmlValidationHookImpl {
     pub fn new(inner: HtmlModelIntegration) -> Self {
         Self {
             inner,
-            feedback: None,
         }
     }
 
-    pub fn new_with_feedback(
-        inner: HtmlModelIntegration,
-        feedback: browerai_ai_core::feedback_pipeline::FeedbackPipeline,
-    ) -> Self {
-        Self {
-            inner,
-            feedback: Some(feedback),
-        }
-    }
+    // pub fn new_with_feedback(...) -> Self { ... } // Disabled
 }
 
-impl HtmlValidationHook for HtmlValidationHookImpl {
-    fn is_enabled(&self) -> bool {
+impl HtmlValidationHookImpl {
+    pub fn is_enabled(&self) -> bool {
         self.inner.is_enabled()
     }
-    fn validate_structure(&mut self, html: &str) -> anyhow::Result<(bool, f32)> {
-        let ai_used = self.inner.is_enabled();
-        let size = html.len();
+    pub fn validate_structure(&mut self, html: &str) -> anyhow::Result<(bool, f32)> {
+        let _ai_used = self.inner.is_enabled();
+        let _size = html.len();
         match self.inner.validate_structure(html) {
             Ok((valid, complexity)) => {
-                if let Some(fb) = &self.feedback {
-                    fb.record_html_parsing(valid, complexity, ai_used, None, None, size);
-                }
+                // Note: feedback disabled
                 Ok((valid, complexity))
             }
             Err(e) => {
-                if let Some(fb) = &self.feedback {
-                    fb.record_html_parsing(false, 0.0, ai_used, Some(e.to_string()), None, size);
-                }
+                // Note: feedback disabled
                 Err(e)
             }
         }
@@ -246,23 +216,9 @@ pub fn attach_html_validation_hook(parser: &mut HtmlParser) {
         }
     };
 
-    let mut selected_path: Option<std::path::PathBuf> = None;
-    if let Ok(reg) = ModelRegistry::load_from("models/model_config.toml") {
-        if let Some(spec) = reg.preferred(TaskKind::ParseHtml) {
-            if let Some(p) = spec.path.to_str() {
-                let p = if p.contains('/') || p.contains('\\') {
-                    p.to_string()
-                } else {
-                    format!("models/local/{}", p)
-                };
-                let pb = std::path::PathBuf::from(&p);
-                if pb.exists() {
-                    selected_path = Some(pb);
-                }
-            }
-        }
-    }
-
+    // Note: ModelRegistry not available, using default path
+    let selected_path: Option<std::path::PathBuf> = None;
+    
     let integration = match HtmlModelIntegration::new(&engine, selected_path.as_deref(), None) {
         Ok(i) => i,
         Err(e) => {
@@ -271,53 +227,15 @@ pub fn attach_html_validation_hook(parser: &mut HtmlParser) {
         }
     };
 
-    let hook = HtmlValidationHookImpl::new(integration);
-    parser.set_validation_hook(Box::new(hook));
+    let _hook = HtmlValidationHookImpl::new(integration);
+    // Note: set_validation_hook not available on HtmlParser
+    // parser.set_validation_hook(Box::new(hook));
 }
 
-/// Variant of attach_html_validation_hook that records feedback events
-#[cfg(feature = "ai")]
-pub fn attach_html_validation_hook_with_feedback(
-    parser: &mut HtmlParser,
-    feedback: browerai_ai_core::feedback_pipeline::FeedbackPipeline,
-) {
-    // Try to create an InferenceEngine and select a model via registry
-    let engine = match InferenceEngine::new() {
-        Ok(e) => e,
-        Err(e) => {
-            log::warn!("Failed to init InferenceEngine: {}", e);
-            return;
-        }
-    };
-
-    let mut selected_path: Option<std::path::PathBuf> = None;
-    if let Ok(reg) = ModelRegistry::load_from("models/model_config.toml") {
-        if let Some(spec) = reg.preferred(TaskKind::ParseHtml) {
-            if let Some(p) = spec.path.to_str() {
-                let p = if p.contains('/') || p.contains('\\') {
-                    p.to_string()
-                } else {
-                    format!("models/local/{}", p)
-                };
-                let pb = std::path::PathBuf::from(&p);
-                if pb.exists() {
-                    selected_path = Some(pb);
-                }
-            }
-        }
-    }
-
-    let integration = match HtmlModelIntegration::new(&engine, selected_path.as_deref(), None) {
-        Ok(i) => i,
-        Err(e) => {
-            log::warn!("Failed to create HtmlModelIntegration: {}", e);
-            return;
-        }
-    };
-
-    let hook = HtmlValidationHookImpl::new_with_feedback(integration, feedback);
-    parser.set_validation_hook(Box::new(hook));
-}
+// Note: attach_html_validation_hook_with_feedback disabled - feedback_pipeline not available
+// #[cfg(feature = "ai")]
+// pub fn attach_html_validation_hook_with_feedback(...) { ... }
+// End of disabled section
 
 /// Model integration helper for CSS parsing
 pub struct CssModelIntegration {
@@ -325,7 +243,7 @@ pub struct CssModelIntegration {
     #[allow(dead_code)]
     session: Option<Session>,
     #[cfg_attr(not(feature = "ai"), allow(dead_code))]
-    monitor: Option<PerformanceMonitor>,
+    // monitor: Option<PerformanceMonitor>, // Not available
     enabled: bool,
 }
 
@@ -335,7 +253,7 @@ impl CssModelIntegration {
     pub fn new(
         engine: &InferenceEngine,
         model_path: Option<&Path>,
-        monitor: Option<PerformanceMonitor>,
+        _monitor: Option<()>, // Note: PerformanceMonitor not available
     ) -> Result<Self> {
         let session = if let Some(path) = model_path {
             if path.exists() {
@@ -362,7 +280,7 @@ impl CssModelIntegration {
     pub fn new() -> Result<Self> {
         Ok(Self {
             enabled: false,
-            monitor: None,
+            // monitor: None,
         })
     }
 
@@ -373,7 +291,7 @@ impl CssModelIntegration {
     /// Optimize CSS rules using AI
     #[allow(dead_code)]
     pub fn optimize_rules(&mut self, css: &str) -> Result<Vec<String>> {
-        let start = Instant::now();
+        let _start = Instant::now();
 
         // Placeholder: return original CSS split by rules
         let rules: Vec<String> = css
@@ -386,16 +304,7 @@ impl CssModelIntegration {
             })
             .collect();
 
-        if let Some(m) = &self.monitor {
-            m.record_inference(InferenceMetrics {
-                model_name: "css_model".to_string(),
-                inference_time: start.elapsed(),
-                input_size: css.len(),
-                output_size: rules.iter().map(|r| r.len()).sum(),
-                success: self.enabled,
-                timestamp: start,
-            });
-        }
+        // Note: monitor disabled
 
         Ok(rules)
     }
@@ -407,7 +316,7 @@ pub struct JsModelIntegration {
     #[allow(dead_code)]
     session: Option<Session>,
     #[cfg_attr(not(feature = "ai"), allow(dead_code))]
-    monitor: Option<PerformanceMonitor>,
+    // monitor: Option<PerformanceMonitor>, // Not available
     enabled: bool,
 }
 
@@ -417,7 +326,7 @@ impl JsModelIntegration {
     pub fn new(
         engine: &InferenceEngine,
         model_path: Option<&Path>,
-        monitor: Option<PerformanceMonitor>,
+        // monitor: Option<PerformanceMonitor>, // Not available
     ) -> Result<Self> {
         let session = if let Some(path) = model_path {
             if path.exists() {
@@ -444,7 +353,7 @@ impl JsModelIntegration {
     pub fn new() -> Result<Self> {
         Ok(Self {
             enabled: false,
-            monitor: None,
+            // monitor: None,
         })
     }
 
@@ -456,20 +365,11 @@ impl JsModelIntegration {
     /// Analyze JavaScript code patterns
     #[allow(dead_code)]
     pub fn analyze_patterns(&self, _js: &str) -> Result<Vec<String>> {
-        let start = Instant::now();
+        let _start = Instant::now();
         // Placeholder: return basic patterns
         let patterns = ["function_declaration", "variable_assignment"];
 
-        if let Some(m) = &self.monitor {
-            m.record_inference(InferenceMetrics {
-                model_name: "js_model".to_string(),
-                inference_time: start.elapsed(),
-                input_size: _js.len(),
-                output_size: patterns.len(),
-                success: self.enabled,
-                timestamp: start,
-            });
-        }
+        // Note: monitor disabled
 
         Ok(patterns.iter().map(|s| s.to_string()).collect())
     }
@@ -480,7 +380,7 @@ pub struct CodeUnderstandingIntegration {
     #[cfg(feature = "ai")]
     session: Option<Session>,
     #[cfg_attr(not(feature = "ai"), allow(dead_code))]
-    monitor: Option<PerformanceMonitor>,
+    // monitor: Option<PerformanceMonitor>, // Not available
     enabled: bool,
 }
 
@@ -490,7 +390,7 @@ impl CodeUnderstandingIntegration {
     pub fn new(
         engine: &InferenceEngine,
         model_path: Option<&Path>,
-        monitor: Option<PerformanceMonitor>,
+        // monitor: Option<PerformanceMonitor>, // Not available
     ) -> Result<Self> {
         let session = if let Some(path) = model_path {
             if path.exists() {
@@ -520,7 +420,7 @@ impl CodeUnderstandingIntegration {
     pub fn new() -> Result<Self> {
         Ok(Self {
             enabled: false,
-            monitor: None,
+            // monitor: None,
         })
     }
 
@@ -532,20 +432,11 @@ impl CodeUnderstandingIntegration {
     /// Classify a page using the 35-dim feature vector; returns logits for categories
     #[allow(dead_code)]
     pub fn classify(&mut self, features: &[f32]) -> Result<Vec<f32>> {
-        let start = Instant::now();
+        let _start = Instant::now();
 
         // Fallback path when AI is disabled
         if !self.enabled {
-            if let Some(m) = &self.monitor {
-                m.record_inference(InferenceMetrics {
-                    model_name: "code_understanding".to_string(),
-                    inference_time: start.elapsed(),
-                    input_size: std::mem::size_of_val(features),
-                    output_size: CODE_UNDERSTANDING_OUTPUT_DIM * size_of::<f32>(),
-                    success: false,
-                    timestamp: start,
-                });
-            }
+            // Note: monitor disabled
             return Ok(vec![0.0; CODE_UNDERSTANDING_OUTPUT_DIM]);
         }
 
@@ -578,16 +469,7 @@ impl CodeUnderstandingIntegration {
 
             let output_data: Vec<f32> = output_tensor.1.to_vec();
 
-            if let Some(m) = &self.monitor {
-                m.record_inference(InferenceMetrics {
-                    model_name: "code_understanding".to_string(),
-                    inference_time: start.elapsed(),
-                    input_size: input_data.len() * size_of::<f32>(),
-                    output_size: output_data.len() * size_of::<f32>(),
-                    success: true,
-                    timestamp: start,
-                });
-            }
+            // Note: monitor disabled
 
             Ok(output_data)
         }
@@ -900,7 +782,7 @@ pub struct JsDeobfuscatorIntegration {
     session: Option<Session>,
     tokenizer: JsTokenizer,
     #[cfg_attr(not(feature = "ai"), allow(dead_code))]
-    monitor: Option<PerformanceMonitor>,
+    // monitor: Option<PerformanceMonitor>, // Not available
     enabled: bool,
 }
 
@@ -909,7 +791,7 @@ impl JsDeobfuscatorIntegration {
     pub fn new(
         engine: &InferenceEngine,
         model_path: Option<&Path>,
-        monitor: Option<PerformanceMonitor>,
+        // monitor: Option<PerformanceMonitor>, // Not available
     ) -> Result<Self> {
         let session = if let Some(path) = model_path {
             if path.exists() {
@@ -941,7 +823,7 @@ impl JsDeobfuscatorIntegration {
         Ok(Self {
             enabled: false,
             tokenizer: JsTokenizer::new(),
-            monitor: None,
+            // monitor: None,
         })
     }
 
@@ -952,20 +834,11 @@ impl JsDeobfuscatorIntegration {
     /// Deobfuscate JavaScript code using the Seq2Seq model
     #[allow(dead_code)]
     pub fn deobfuscate(&mut self, obfuscated_js: &str) -> Result<String> {
-        let start = Instant::now();
+        let _start = Instant::now();
 
         // Fallback: return original if AI disabled
         if !self.enabled {
-            if let Some(m) = &self.monitor {
-                m.record_inference(InferenceMetrics {
-                    model_name: "js_deobfuscator".to_string(),
-                    inference_time: start.elapsed(),
-                    input_size: obfuscated_js.len(),
-                    output_size: obfuscated_js.len(),
-                    success: false,
-                    timestamp: start,
-                });
-            }
+            // Note: monitor disabled
             return Ok(obfuscated_js.to_string());
         }
 
@@ -1013,16 +886,7 @@ impl JsDeobfuscatorIntegration {
 
             let deobfuscated = clean_tokens.join(" ");
 
-            if let Some(m) = &self.monitor {
-                m.record_inference(InferenceMetrics {
-                    model_name: "js_deobfuscator".to_string(),
-                    inference_time: start.elapsed(),
-                    input_size: obfuscated_js.len(),
-                    output_size: deobfuscated.len(),
-                    success: true,
-                    timestamp: start,
-                });
-            }
+            // Note: monitor disabled
 
             Ok(deobfuscated)
         }

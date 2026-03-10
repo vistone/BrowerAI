@@ -318,7 +318,7 @@ impl URL {
     }
 
     fn parse_path_components(path: &str) -> (String, String, String) {
-        let pathname: String;
+        let mut pathname: String;
         let mut search = String::new();
         let mut hash = String::new();
 
@@ -345,10 +345,11 @@ impl URL {
 
         (pathname, search, hash)
     }
+}
 
-    /// Convert to string
-    pub fn to_string(&self) -> String {
-        self.href.clone()
+impl std::fmt::Display for URL {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.href)
     }
 }
 
@@ -418,10 +419,11 @@ impl URLSearchParams {
         self.delete(&key);
         self.append(key, value);
     }
+}
 
-    /// Convert to query string
-    pub fn to_string(&self) -> String {
-        self.params
+impl std::fmt::Display for URLSearchParams {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let query_string = self.params
             .iter()
             .map(|(k, v)| {
                 if v.is_empty() {
@@ -431,9 +433,12 @@ impl URLSearchParams {
                 }
             })
             .collect::<Vec<_>>()
-            .join("&")
+            .join("&");
+        write!(f, "{}", query_string)
     }
+}
 
+impl URLSearchParams {
     /// Get all entries
     pub fn entries(&self) -> &[(String, String)] {
         &self.params

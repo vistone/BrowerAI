@@ -901,7 +901,7 @@ mod tests {
     #[test]
     fn test_browser_config_default() {
         let config = BrowserConfig::default();
-        assert_eq!(config.headless, true);
+        assert!(config.headless);
         assert_eq!(config.timeout_ms, 30000);
         assert_eq!(config.viewport_width, 1920);
     }
@@ -956,7 +956,7 @@ mod tests {
 
     #[test]
     fn test_console_message_structure() {
-        let messages = vec![
+        let messages = [
             ConsoleMessage {
                 level: "log".to_string(),
                 text: "Hello World".to_string(),

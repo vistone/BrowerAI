@@ -184,8 +184,8 @@ impl ESModuleParser {
 
         // Side effect import: import 'module'
         if line.contains("import '") || line.contains("import \"") {
-            let start = line.find(|c| c == '\'' || c == '"')?;
-            let end = line[start + 1..].find(|c| c == '\'' || c == '"')? + start + 1;
+            let start = line.find(['\'', '"'])?;
+            let end = line[start + 1..].find(['\'', '"'])? + start + 1;
             let source = line[start + 1..end].to_string();
 
             return Some(ImportDeclaration {

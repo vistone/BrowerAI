@@ -27,7 +27,7 @@ fn main() {
         }
     "#;
 
-    let results = kb.analyze_code(react_code).unwrap();
+    let results = kb.analyze_code(react_code);
     println!("   Detected {} frameworks:", results.len());
     for result in &results {
         println!(
@@ -59,7 +59,7 @@ fn main() {
         }
     "#;
 
-    let results = kb.analyze_code(vue_code).unwrap();
+    let results = kb.analyze_code(vue_code);
     println!("   Detected {} frameworks:", results.len());
     for result in &results {
         println!(
@@ -96,7 +96,7 @@ fn main() {
         ]);
     "#;
 
-    let results = kb.analyze_code(webpack_code).unwrap();
+    let results = kb.analyze_code(webpack_code);
     println!("   Detected {} frameworks:", results.len());
     for result in &results {
         println!(
@@ -135,7 +135,7 @@ fn main() {
         }
     "#;
 
-    let results = kb.analyze_code(taro_code).unwrap();
+    let results = kb.analyze_code(taro_code);
     println!("   Taro detection:");
     for result in &results {
         if result.framework_id == "taro" || result.framework_id == "react" {
@@ -174,7 +174,7 @@ fn main() {
         </script>
     "#;
 
-    let results = kb.analyze_code(uniapp_code).unwrap();
+    let results = kb.analyze_code(uniapp_code);
     println!("   Uni-app detection:");
     for result in &results {
         if result.framework_id == "uni-app" {
@@ -209,7 +209,7 @@ fn main() {
         }
     "#;
 
-    let results = kb.analyze_code(obfuscated_code).unwrap();
+    let results = kb.analyze_code(obfuscated_code);
     println!("   Detected {} obfuscation patterns:", results.len());
     for result in &results {
         println!(

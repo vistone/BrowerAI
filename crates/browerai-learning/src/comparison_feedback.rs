@@ -239,7 +239,6 @@ mod tests {
 
     #[test]
     fn test_code_verification_feedback_generation() {
-        use crate::code_verifier::VerificationError;
         use crate::code_verifier::{CssVerification, HtmlVerification, JsVerification};
 
         let verification = CodeVerificationResult {

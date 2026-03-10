@@ -1,465 +1,430 @@
-/// Unified metrics and performance tracking for BrowerAI
-///
-/// This module provides centralized types for metrics and performance tracking,
-/// unifying previously duplicated definitions across different modules.
+//! 指标收集系统
+//!
+//! 提供 BrowerAI 的性能指标收集和导出
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 
-/// Type of metric being tracked
-///
-/// This enum unifies metric type definitions that were previously duplicated in:
-/// - `browerai-learning/src/metrics.rs` (MetricType)
-/// - `browerai-ai-core/src/advanced_metrics.rs` (inferred types)
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// 指标类型
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum MetricType {
-    /// Parsing accuracy percentage (0.0 - 1.0)
-    ParsingAccuracy,
-    /// Rendering performance in milliseconds
-    RenderingTime,
-    /// Cache hit rate percentage (0.0 - 1.0)
-    CacheHitRate,
-    /// Model inference time in milliseconds
-    InferenceTime,
-    /// Memory usage in megabytes
-    MemoryUsage,
-    /// Throughput in requests per second
-    Throughput,
-    /// Error rate percentage (0.0 - 1.0)
-    ErrorRate,
-    /// Model load time in milliseconds
-    ModelLoadTime,
-    /// AI operation success rate (0.0 - 1.0)
-    AiSuccessRate,
-    /// Code generation confidence (0.0 - 1.0)
-    GenerationConfidence,
-    /// Custom metric with a name
-    Custom(String),
+    /// 计数器（单调递增）
+    Counter,
+    /// 仪表盘（可上下变化）
+    Gauge,
+    /// 直方图（分布统计）
+    Histogram,
+    /// 摘要（分位数统计）
+    Summary,
 }
 
-impl Default for MetricType {
-    fn default() -> Self {
-        MetricType::Custom("unknown".to_string())
-    }
-}
-
-impl fmt::Display for MetricType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            MetricType::ParsingAccuracy => write!(f, "parsing_accuracy"),
-            MetricType::RenderingTime => write!(f, "rendering_time_ms"),
-            MetricType::CacheHitRate => write!(f, "cache_hit_rate"),
-            MetricType::InferenceTime => write!(f, "inference_time_ms"),
-            MetricType::MemoryUsage => write!(f, "memory_mb"),
-            MetricType::Throughput => write!(f, "throughput_per_sec"),
-            MetricType::ErrorRate => write!(f, "error_rate"),
-            MetricType::ModelLoadTime => write!(f, "model_load_time_ms"),
-            MetricType::AiSuccessRate => write!(f, "ai_success_rate"),
-            MetricType::GenerationConfidence => write!(f, "generation_confidence"),
-            MetricType::Custom(name) => write!(f, "{}", name),
-        }
-    }
-}
-
-/// Individual metric value with timestamp
-///
-/// This struct unifies metric definitions that were previously duplicated in:
-/// - `browerai-learning/src/metrics.rs` (Metric)
+/// 指标
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Metric {
-    /// Type of metric
+    /// 指标名称
+    pub name: String,
+    /// 指标类型
     pub metric_type: MetricType,
-    /// Metric value
+    /// 指标值
     pub value: f64,
-    /// Timestamp when metric was recorded
-    pub timestamp: u64,
-    /// Optional labels for grouping and filtering
-    #[serde(default)]
+    /// 标签
     pub labels: HashMap<String, String>,
-    /// Optional unit description
-    #[serde(default)]
-    pub unit: String,
+    /// 时间戳
+    pub timestamp: chrono::DateTime<chrono::Utc>,
+    /// 描述
+    pub description: Option<String>,
 }
 
 impl Metric {
-    /// Create a new metric with the current timestamp
-    pub fn new(metric_type: MetricType, value: f64) -> Self {
-        let timestamp = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_else(|_| std::time::Duration::from_secs(0))
-            .as_secs();
-
+    /// 创建新的指标
+    pub fn new(name: impl Into<String>, metric_type: MetricType, value: f64) -> Self {
         Self {
+            name: name.into(),
             metric_type,
             value,
-            timestamp,
             labels: HashMap::new(),
-            unit: String::new(),
+            timestamp: chrono::Utc::now(),
+            description: None,
         }
     }
 
-    /// Add a label to the metric
+    /// 添加标签
     pub fn with_label(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.labels.insert(key.into(), value.into());
         self
     }
 
-    /// Add multiple labels to the metric
-    pub fn with_labels(mut self, labels: impl Into<HashMap<String, String>>) -> Self {
-        self.labels.extend(labels.into());
+    /// 添加描述
+    pub fn with_description(mut self, desc: impl Into<String>) -> Self {
+        self.description = Some(desc.into());
         self
     }
 
-    /// Set the unit for this metric
-    pub fn with_unit(mut self, unit: impl Into<String>) -> Self {
-        self.unit = unit.into();
-        self
+    /// 创建计数器指标
+    pub fn counter(name: impl Into<String>, value: f64) -> Self {
+        Self::new(name, MetricType::Counter, value)
     }
 
-    /// Create a timing metric (value in milliseconds)
-    pub fn timing(value: f64) -> Self {
-        Self::new(MetricType::InferenceTime, value).with_unit("ms")
+    /// 创建仪表盘指标
+    pub fn gauge(name: impl Into<String>, value: f64) -> Self {
+        Self::new(name, MetricType::Gauge, value)
     }
 
-    /// Create a rate metric (0.0 - 1.0)
-    pub fn rate(value: f64) -> Self {
-        Self::new(
-            MetricType::Custom("rate".to_string()),
-            value.clamp(0.0, 1.0),
-        )
+    /// 创建直方图指标
+    pub fn histogram(name: impl Into<String>, value: f64) -> Self {
+        Self::new(name, MetricType::Histogram, value)
     }
 }
 
-/// Statistics for a metric over time
-///
-/// This struct unifies statistics definitions that were previously duplicated in:
-/// - `browerai-learning/src/metrics.rs` (MetricStats)
-/// - `browerai-ai-core/src/advanced_metrics.rs` (HistogramBucket, MetricStats)
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// 指标统计
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct MetricStats {
-    /// Number of samples
-    pub count: usize,
-    /// Minimum value
-    pub min: f64,
-    /// Maximum value
-    pub max: f64,
-    /// Arithmetic mean
-    pub mean: f64,
-    /// Median value
-    pub median: f64,
-    /// Standard deviation
-    pub std_dev: f64,
-    /// Sum of all values
+    /// 样本数
+    pub count: u64,
+    /// 总和
     pub sum: f64,
-    /// 95th percentile
-    pub p95: f64,
-    /// 99th percentile
-    pub p99: f64,
+    /// 最小值
+    pub min: f64,
+    /// 最大值
+    pub max: f64,
+    /// 平均值
+    pub avg: f64,
+    /// 分位数（P50, P90, P95, P99）
+    pub percentiles: HashMap<String, f64>,
 }
 
 impl MetricStats {
-    /// Calculate statistics from a list of values
-    pub fn from_values(values: &[f64]) -> Self {
-        if values.is_empty() {
-            return Self {
-                count: 0,
-                min: 0.0,
-                max: 0.0,
-                mean: 0.0,
-                median: 0.0,
-                std_dev: 0.0,
-                sum: 0.0,
-                p95: 0.0,
-                p99: 0.0,
-            };
+    /// 从样本计算统计
+    pub fn from_samples(samples: &[f64]) -> Self {
+        if samples.is_empty() {
+            return Self::default();
         }
 
-        let count = values.len();
-        let min = values.iter().copied().fold(f64::INFINITY, f64::min);
-        let max = values.iter().copied().fold(f64::NEG_INFINITY, f64::max);
-        let sum = values.iter().sum::<f64>();
-        let mean = sum / count as f64;
+        let count = samples.len() as u64;
+        let sum: f64 = samples.iter().sum();
+        let min = samples.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+        let max = samples.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+        let avg = sum / count as f64;
 
-        // Calculate median
-        let mut sorted = values.to_vec();
-        sorted.sort_by(|a, b| a.total_cmp(b));
-        let median = if count.is_multiple_of(2) {
-            (sorted[count / 2 - 1] + sorted[count / 2]) / 2.0
-        } else {
-            sorted[count / 2]
-        };
+        let mut sorted = samples.to_vec();
+        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-        // Calculate standard deviation
-        let variance = values.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / count as f64;
-        let std_dev = variance.sqrt();
-
-        // Calculate percentiles
-        let p95 = percentile(&sorted, 0.95);
-        let p99 = percentile(&sorted, 0.99);
+        let mut percentiles = HashMap::new();
+        percentiles.insert("p50".to_string(), Self::percentile(&sorted, 0.5));
+        percentiles.insert("p90".to_string(), Self::percentile(&sorted, 0.9));
+        percentiles.insert("p95".to_string(), Self::percentile(&sorted, 0.95));
+        percentiles.insert("p99".to_string(), Self::percentile(&sorted, 0.99));
 
         Self {
             count,
+            sum,
             min,
             max,
-            mean,
-            median,
-            std_dev,
-            sum,
-            p95,
-            p99,
+            avg,
+            percentiles,
         }
     }
 
-    /// Create empty statistics
-    pub fn empty() -> Self {
-        Self::default()
-    }
-
-    /// Check if this is empty (no data)
-    pub fn is_empty(&self) -> bool {
-        self.count == 0
-    }
-
-    /// Get the range (max - min)
-    pub fn range(&self) -> f64 {
-        self.max - self.min
-    }
-}
-
-/// Calculate the p-th percentile of a sorted slice
-fn percentile(sorted: &[f64], p: f64) -> f64 {
-    if sorted.is_empty() {
-        return 0.0;
-    }
-    let idx = (p * (sorted.len() - 1) as f64).round() as usize;
-    sorted[idx.min(sorted.len() - 1)]
-}
-
-/// Histogram bucket for distributing values
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct HistogramBucket {
-    /// Lower bound (inclusive)
-    pub lower_bound: f64,
-    /// Upper bound (exclusive)
-    pub upper_bound: f64,
-    /// Count of values in this bucket
-    pub count: u64,
-    /// Cumulative count from start
-    pub cumulative_count: u64,
-}
-
-impl HistogramBucket {
-    /// Create a new bucket
-    pub fn new(lower_bound: f64, upper_bound: f64) -> Self {
-        Self {
-            lower_bound,
-            upper_bound,
-            count: 0,
-            cumulative_count: 0,
+    /// 计算分位数
+    fn percentile(sorted: &[f64], p: f64) -> f64 {
+        if sorted.is_empty() {
+            return 0.0;
         }
-    }
-
-    /// Check if a value falls in this bucket
-    pub fn contains(&self, value: f64) -> bool {
-        value >= self.lower_bound && value < self.upper_bound
+        let index = (p * (sorted.len() - 1) as f64) as usize;
+        sorted[index.min(sorted.len() - 1)]
     }
 }
 
-/// Histogram for distributing metric values
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// 直方图
+#[derive(Debug, Clone)]
 pub struct Histogram {
-    /// Buckets defining the ranges
-    pub buckets: Vec<HistogramBucket>,
-    /// Total count of values
+    /// 桶边界
+    pub buckets: Vec<f64>,
+    /// 桶计数
+    pub counts: Vec<u64>,
+    /// 总和
+    pub sum: f64,
+    /// 总数
     pub total_count: u64,
-    /// Sum of all values
-    pub total_sum: f64,
-    /// Minimum value observed
-    pub min: f64,
-    /// Maximum value observed
-    pub max: f64,
 }
 
 impl Histogram {
-    /// Create a histogram with custom bucket boundaries
-    pub fn new(boundaries: &[f64]) -> Self {
-        let mut buckets = Vec::with_capacity(boundaries.len() + 1);
-        for i in 0..boundaries.len().saturating_sub(1) {
-            buckets.push(HistogramBucket::new(boundaries[i], boundaries[i + 1]));
-        }
-        // Add overflow bucket
-        if let Some(&last) = boundaries.last() {
-            buckets.push(HistogramBucket::new(last, f64::INFINITY));
-        }
+    /// 创建新的直方图
+    pub fn new(buckets: Vec<f64>) -> Self {
+        let len = buckets.len();
         Self {
             buckets,
+            counts: vec![0; len + 1], // +1 for +Inf bucket
+            sum: 0.0,
             total_count: 0,
-            total_sum: 0.0,
-            min: f64::INFINITY,
-            max: f64::NEG_INFINITY,
         }
     }
 
-    /// Create a histogram with default latency boundaries (in ms)
-    pub fn latency() -> Self {
-        Self::new(&[0.0, 1.0, 5.0, 10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0])
+    /// 创建默认的延迟直方图（毫秒）
+    pub fn default_latency() -> Self {
+        Self::new(vec![
+            1.0, 5.0, 10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0, 2500.0, 5000.0,
+        ])
     }
 
-    /// Record a value in the histogram
-    pub fn record(&mut self, value: f64) {
+    /// 观察值
+    pub fn observe(&mut self, value: f64) {
+        self.sum += value;
         self.total_count += 1;
-        self.total_sum += value;
-        self.min = self.min.min(value);
-        self.max = self.max.max(value);
 
-        for bucket in &mut self.buckets {
-            if bucket.contains(value) {
-                bucket.count += 1;
+        for (i, &bucket) in self.buckets.iter().enumerate() {
+            if value <= bucket {
+                self.counts[i] += 1;
+                return;
+            }
+        }
+        // +Inf bucket
+        self.counts[self.buckets.len()] += 1;
+    }
+
+    /// 获取分位数
+    pub fn percentile(&self, p: f64) -> f64 {
+        if self.total_count == 0 {
+            return 0.0;
+        }
+
+        let target = (p * self.total_count as f64) as u64;
+        let mut cumulative = 0u64;
+
+        for (i, &count) in self.counts.iter().enumerate() {
+            cumulative += count;
+            if cumulative >= target {
+                return if i < self.buckets.len() {
+                    self.buckets[i]
+                } else {
+                    f64::INFINITY
+                };
             }
         }
 
-        // Update cumulative counts
-        let mut cumulative = 0;
-        for bucket in &mut self.buckets {
-            cumulative += bucket.count;
-            bucket.cumulative_count = cumulative;
-        }
-    }
-
-    /// Get statistics from the histogram
-    pub fn stats(&self) -> MetricStats {
-        let values: Vec<f64> = self
-            .buckets
-            .iter()
-            .flat_map(|b| {
-                std::iter::repeat_n(
-                    b.lower_bound + (b.upper_bound - b.lower_bound) / 2.0,
-                    b.count as usize,
-                )
-            })
-            .collect();
-        MetricStats::from_values(&values)
+        f64::INFINITY
     }
 }
 
-/// Dashboard for monitoring and collecting metrics
-#[derive(Debug, Clone, Default)]
+/// 指标仪表板
+#[derive(Debug, Clone)]
 pub struct MetricsDashboard {
-    /// All recorded metrics
-    metrics: Vec<Metric>,
-    /// Maximum number of metrics to keep
-    max_metrics: usize,
+    /// 计数器
+    counters: HashMap<String, Arc<AtomicU64>>,
+    /// 仪表盘
+    gauges: HashMap<String, f64>,
+    /// 直方图
+    histograms: HashMap<String, Histogram>,
+    /// 启动时间
+    start_time: Instant,
+}
+
+impl Default for MetricsDashboard {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl MetricsDashboard {
-    /// Create a new metrics dashboard with default capacity
+    /// 创建新的仪表板
     pub fn new() -> Self {
         Self {
-            metrics: Vec::new(),
-            max_metrics: 100_000,
+            counters: HashMap::new(),
+            gauges: HashMap::new(),
+            histograms: HashMap::new(),
+            start_time: Instant::now(),
         }
     }
 
-    /// Create a dashboard with custom capacity
-    pub fn with_capacity(max_metrics: usize) -> Self {
-        Self {
-            metrics: Vec::with_capacity(max_metrics.min(10_000)),
-            max_metrics,
+    /// 增加计数器
+    pub fn increment_counter(&mut self, name: impl Into<String>) {
+        let name = name.into();
+        let counter = self
+            .counters
+            .entry(name)
+            .or_insert_with(|| Arc::new(AtomicU64::new(0)));
+        counter.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// 增加计数器（指定值）
+    pub fn add_counter(&mut self, name: impl Into<String>, value: u64) {
+        let name = name.into();
+        let counter = self
+            .counters
+            .entry(name)
+            .or_insert_with(|| Arc::new(AtomicU64::new(0)));
+        counter.fetch_add(value, Ordering::Relaxed);
+    }
+
+    /// 获取计数器值
+    pub fn get_counter(&self, name: &str) -> u64 {
+        self.counters
+            .get(name)
+            .map(|c| c.load(Ordering::Relaxed))
+            .unwrap_or(0)
+    }
+
+    /// 设置仪表盘
+    pub fn set_gauge(&mut self, name: impl Into<String>, value: f64) {
+        self.gauges.insert(name.into(), value);
+    }
+
+    /// 获取仪表盘
+    pub fn get_gauge(&self, name: &str) -> Option<f64> {
+        self.gauges.get(name).copied()
+    }
+
+    /// 观察直方图
+    pub fn observe_histogram(&mut self, name: impl Into<String>, value: f64) {
+        let name = name.into();
+        let histogram = self
+            .histograms
+            .entry(name)
+            .or_insert_with(Histogram::default_latency);
+        histogram.observe(value);
+    }
+
+    /// 获取直方图统计
+    pub fn get_histogram_stats(&self, name: &str) -> Option<MetricStats> {
+        self.histograms.get(name).map(|h| {
+            let mut samples = Vec::new();
+            for (i, &count) in h.counts.iter().enumerate() {
+                let value = if i < h.buckets.len() {
+                    h.buckets[i]
+                } else {
+                    h.buckets.last().copied().unwrap_or(0.0) * 2.0
+                };
+                for _ in 0..count {
+                    samples.push(value);
+                }
+            }
+            MetricStats::from_samples(&samples)
+        })
+    }
+
+    /// 获取运行时间
+    pub fn uptime(&self) -> Duration {
+        self.start_time.elapsed()
+    }
+
+    /// 导出所有指标为 Prometheus 格式
+    pub fn export_prometheus(&self) -> String {
+        let mut output = String::new();
+
+        // 计数器
+        for (name, counter) in &self.counters {
+            let value = counter.load(Ordering::Relaxed);
+            output.push_str(&format!("# TYPE {} counter\n", name));
+            output.push_str(&format!("{} {}\n\n", name, value));
         }
-    }
 
-    /// Record a new metric
-    pub fn record(&mut self, metric: Metric) {
-        self.metrics.push(metric);
-
-        // Remove oldest metrics if we exceed max_metrics
-        if self.metrics.len() > self.max_metrics {
-            self.metrics.drain(0..self.metrics.len() - self.max_metrics);
+        // 仪表盘
+        for (name, value) in &self.gauges {
+            output.push_str(&format!("# TYPE {} gauge\n", name));
+            output.push_str(&format!("{} {}\n\n", name, value));
         }
-    }
 
-    /// Record a simple metric
-    pub fn record_value(&mut self, metric_type: MetricType, value: f64) {
-        self.record(Metric::new(metric_type, value));
-    }
-
-    /// Get all metrics
-    pub fn get_all(&self) -> &[Metric] {
-        &self.metrics
-    }
-
-    /// Get metrics of a specific type
-    pub fn get_by_type(&self, metric_type: &MetricType) -> Vec<&Metric> {
-        self.metrics
-            .iter()
-            .filter(|m| &m.metric_type == metric_type)
-            .collect()
-    }
-
-    /// Get metrics matching labels
-    pub fn get_by_labels(&self, labels: &HashMap<String, String>) -> Vec<&Metric> {
-        self.metrics
-            .iter()
-            .filter(|m| labels.iter().all(|(k, v)| m.labels.get(k) == Some(v)))
-            .collect()
-    }
-
-    /// Get statistics for a specific metric type
-    pub fn get_stats(&self, metric_type: &MetricType) -> MetricStats {
-        let values: Vec<f64> = self
-            .metrics
-            .iter()
-            .filter(|m| &m.metric_type == metric_type)
-            .map(|m| m.value)
-            .collect();
-        MetricStats::from_values(&values)
-    }
-
-    /// Get a histogram for a specific metric type
-    pub fn get_histogram(&self, metric_type: &MetricType) -> Histogram {
-        let mut histogram = Histogram::latency();
-        for metric in self
-            .metrics
-            .iter()
-            .filter(|m| &m.metric_type == metric_type)
-        {
-            histogram.record(metric.value);
+        // 直方图
+        for (name, histogram) in &self.histograms {
+            output.push_str(&format!("# TYPE {} histogram\n", name));
+            
+            let mut cumulative = 0u64;
+            for (i, &bucket) in histogram.buckets.iter().enumerate() {
+                cumulative += histogram.counts[i];
+                output.push_str(&format!(
+                    "{}_bucket{{le=\"{}\"}} {}\n",
+                    name, bucket, cumulative
+                ));
+            }
+            // +Inf bucket
+            cumulative += histogram.counts[histogram.buckets.len()];
+            output.push_str(&format!("{}_bucket{{le=\"+Inf\"}} {}\n", name, cumulative));
+            
+            output.push_str(&format!("{}_sum {}\n", name, histogram.sum));
+            output.push_str(&format!("{}_count {}\n\n", name, histogram.total_count));
         }
-        histogram
+
+        output
     }
 
-    /// Clear all metrics
-    pub fn clear(&mut self) {
-        self.metrics.clear();
+    /// 导出为 JSON
+    pub fn export_json(&self) -> String {
+        let metrics: Vec<Metric> = self.to_metrics();
+        serde_json::to_string_pretty(&metrics).unwrap_or_default()
     }
 
-    /// Get the total number of metrics recorded
-    pub fn len(&self) -> usize {
-        self.metrics.len()
-    }
+    /// 转换为指标列表
+    pub fn to_metrics(&self) -> Vec<Metric> {
+        let mut metrics = Vec::new();
 
-    /// Check if the dashboard is empty
-    pub fn is_empty(&self) -> bool {
-        self.metrics.is_empty()
+        for (name, counter) in &self.counters {
+            let value = counter.load(Ordering::Relaxed) as f64;
+            metrics.push(Metric::counter(name.clone(), value));
+        }
+
+        for (name, value) in &self.gauges {
+            metrics.push(Metric::gauge(name.clone(), *value));
+        }
+
+        for (name, histogram) in &self.histograms {
+            metrics.push(
+                Metric::histogram(name.clone(), histogram.sum)
+                    .with_label("count", histogram.total_count.to_string())
+                    .with_label("p50", histogram.percentile(0.5).to_string())
+                    .with_label("p95", histogram.percentile(0.95).to_string()),
+            );
+        }
+
+        metrics
     }
 }
 
-use std::fmt;
+/// 计时器（自动记录持续时间）
+pub struct Timer {
+    start: Instant,
+    name: String,
+    dashboard: Option<Arc<std::sync::Mutex<MetricsDashboard>>>,
+}
 
-impl fmt::Display for Metric {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}={}{} @ {}",
-            self.metric_type,
-            self.value,
-            if self.unit.is_empty() {
-                String::new()
-            } else {
-                format!(" {}", self.unit)
-            },
-            self.timestamp
-        )
+impl Timer {
+    /// 创建新的计时器
+    pub fn new(name: impl Into<String>) -> Self {
+        Self {
+            start: Instant::now(),
+            name: name.into(),
+            dashboard: None,
+        }
+    }
+
+    /// 关联仪表板
+    pub fn with_dashboard(mut self, dashboard: Arc<std::sync::Mutex<MetricsDashboard>>) -> Self {
+        self.dashboard = Some(dashboard);
+        self
+    }
+
+    /// 获取已过去的时间
+    pub fn elapsed(&self) -> Duration {
+        self.start.elapsed()
+    }
+
+    /// 获取已过去的毫秒数
+    pub fn elapsed_ms(&self) -> u64 {
+        self.elapsed().as_millis() as u64
+    }
+}
+
+impl Drop for Timer {
+    fn drop(&mut self) {
+        let duration_ms = self.elapsed().as_millis() as f64;
+        
+        if let Some(ref dashboard) = self.dashboard {
+            if let Ok(mut d) = dashboard.lock() {
+                d.observe_histogram(format!("{}_duration_ms", self.name), duration_ms);
+            }
+        }
     }
 }
 
@@ -469,72 +434,50 @@ mod tests {
 
     #[test]
     fn test_metric_creation() {
-        let metric = Metric::new(MetricType::InferenceTime, 42.5);
-        assert_eq!(metric.metric_type, MetricType::InferenceTime);
-        assert_eq!(metric.value, 42.5);
-        assert!(metric.timestamp > 0);
-    }
-
-    #[test]
-    fn test_metric_with_labels() {
-        let metric = Metric::new(MetricType::Throughput, 100.0)
-            .with_label("model", "test")
-            .with_labels(std::collections::HashMap::from([(
-                "env".to_string(),
-                "test".to_string(),
-            )]));
-
-        assert_eq!(metric.labels.len(), 2);
-        assert_eq!(metric.labels.get("model"), Some(&"test".to_string()));
-    }
-
-    #[test]
-    fn test_metric_stats_from_values() {
-        let values = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let stats = MetricStats::from_values(&values);
-
-        assert_eq!(stats.count, 5);
-        assert_eq!(stats.min, 1.0);
-        assert_eq!(stats.max, 5.0);
-        assert!((stats.mean - 3.0).abs() < 0.001);
-        assert!((stats.median - 3.0).abs() < 0.001);
-        assert!((stats.sum - 15.0).abs() < 0.001);
-    }
-
-    #[test]
-    fn test_metric_stats_empty() {
-        let stats = MetricStats::from_values(&[]);
-        assert!(stats.is_empty());
-        assert_eq!(stats.count, 0);
+        let metric = Metric::counter("test_counter", 42.0)
+            .with_label("method", "GET")
+            .with_description("Test counter");
+        
+        assert_eq!(metric.name, "test_counter");
+        assert_eq!(metric.value, 42.0);
+        assert_eq!(metric.labels.get("method"), Some(&"GET".to_string()));
     }
 
     #[test]
     fn test_histogram() {
-        let mut histogram = Histogram::new(&[0.0, 10.0, 20.0, 50.0]);
-        histogram.record(5.0);
-        histogram.record(15.0);
-        histogram.record(25.0);
-        histogram.record(75.0);
-
-        assert_eq!(histogram.total_count, 4);
-        assert_eq!(histogram.buckets[0].count, 1); // 0-10
-        assert_eq!(histogram.buckets[1].count, 1); // 10-20
-        assert_eq!(histogram.buckets[2].count, 1); // 20-50
-        assert_eq!(histogram.buckets[3].count, 1); // 50+
+        let mut hist = Histogram::default_latency();
+        
+        hist.observe(10.0);
+        hist.observe(50.0);
+        hist.observe(100.0);
+        
+        assert_eq!(hist.total_count, 3);
+        assert_eq!(hist.sum, 160.0);
+        assert!(hist.percentile(0.5) >= 10.0);
     }
 
     #[test]
-    fn test_metrics_dashboard() {
+    fn test_metric_stats() {
+        let samples = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let stats = MetricStats::from_samples(&samples);
+        
+        assert_eq!(stats.count, 5);
+        assert_eq!(stats.sum, 15.0);
+        assert_eq!(stats.avg, 3.0);
+        assert_eq!(stats.min, 1.0);
+        assert_eq!(stats.max, 5.0);
+    }
+
+    #[test]
+    fn test_dashboard() {
         let mut dashboard = MetricsDashboard::new();
-        dashboard.record(Metric::new(MetricType::InferenceTime, 10.0));
-        dashboard.record(Metric::new(MetricType::InferenceTime, 20.0));
-        dashboard.record(Metric::new(MetricType::MemoryUsage, 100.0));
-
-        assert_eq!(dashboard.len(), 3);
-        assert_eq!(dashboard.get_by_type(&MetricType::InferenceTime).len(), 2);
-
-        let stats = dashboard.get_stats(&MetricType::InferenceTime);
-        assert_eq!(stats.count, 2);
-        assert!((stats.mean - 15.0).abs() < 0.001);
+        
+        dashboard.increment_counter("requests");
+        dashboard.increment_counter("requests");
+        dashboard.set_gauge("active_connections", 10.0);
+        dashboard.observe_histogram("response_time", 100.0);
+        
+        assert_eq!(dashboard.get_counter("requests"), 2);
+        assert_eq!(dashboard.get_gauge("active_connections"), Some(10.0));
     }
 }

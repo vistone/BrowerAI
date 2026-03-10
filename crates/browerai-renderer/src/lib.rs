@@ -131,7 +131,7 @@ mod tests {
         let result = RenderingPipeline::render(&dom, &styles);
         assert!(result.is_ok(), "Rendering pipeline should succeed");
 
-        let (layout, commands) = result.unwrap();
+        let (_layout, commands) = result.unwrap();
         assert!(!commands.is_empty(), "Should generate paint commands");
     }
 }

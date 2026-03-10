@@ -811,7 +811,7 @@ mod tests {
     #[test]
     fn test_websocket_analyzer_creation() {
         let analyzer = WebSocketAnalyzer::new(true, 2048);
-        assert_eq!(analyzer.capture_messages, true);
+        assert!(analyzer.capture_messages);
         assert_eq!(analyzer.max_message_size, 2048);
     }
 
@@ -965,7 +965,7 @@ mod tests {
         "#;
 
         let result = analyzer.extract_from_js(js_code).unwrap();
-        assert!(result.len() > 0);
+        assert!(!result.is_empty());
         if let Some(ws_info) = result.first() {
             if let Some(reconnect) = &ws_info.reconnection {
                 assert!(reconnect.enabled);

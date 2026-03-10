@@ -205,10 +205,92 @@ See [../training/](../training/) for model training pipeline.
 - **Performance**: All targets met
 - **Compatibility**: Rust 1.70+
 
-## Next Steps
+## Workspace Crate Reference
 
-See [phases/PHASE3_WEEK3_COMPLETION_REPORT.md](phases/PHASE3_WEEK3_COMPLETION_REPORT.md) for current progress.
+### Core Modules (Always Available)
+
+| Crate | Purpose | Integration Status |
+|-------|---------|-------------------|
+| `browerai-core` | Core types, errors, traits | ✅ Integrated |
+| `browerai-dom` | DOM implementation | ✅ Integrated |
+| `browerai-html-parser` | HTML5 parsing | ✅ Integrated |
+| `browerai-css-parser` | CSS3 parsing | ✅ Integrated |
+| `browerai-js-parser` | JavaScript parsing | ✅ Integrated |
+| `browerai-js-analyzer` | JS analysis (7-phase pipeline) | ✅ Integrated |
+| `browerai-renderer-core` | Rendering engine | ✅ Integrated |
+| `browerai-renderer` | Full rendering pipeline | ✅ Integrated |
+| `browerai-renderer-predictive` | Predictive rendering | ✅ Integrated |
+| `browerai-devtools` | Developer tools | ✅ Integrated |
+| `browerai-network` | HTTP client, crawler | ✅ Integrated |
+| `browerai-plugins` | Plugin system | ✅ Integrated |
+| `browerai-testing` | Test framework | ✅ Integrated |
+
+### AI Modules (Feature-gated)
+
+| Crate | Feature Flag | Purpose |
+|-------|-------------|---------|
+| `browerai-ai-core` | `ai` | ONNX model management |
+| `browerai-ai-integration` | - | AI integration layer |
+| `browerai-intelligent-rendering` | - | AI-powered rendering |
+| `browerai-learning` | - | Learning system |
+| `browerai-deobfuscation` | - | Code deobfuscation |
+| `browerai-ml` | `ml` | ML toolkit |
+
+### Storage & Cache Modules
+
+| Crate | Feature Flag | Purpose |
+|-------|-------------|---------|
+| `browerai-cache` | - | Basic caching |
+| `browerai-multilayer-cache` | - | L1/L2/L3 caching |
+| `browerai-persistent-layer` | - | Persistent storage |
+| `browerai-db` | `db` | Database support |
+| `browerai-redis-integration` | `redis` | Redis caching |
+
+### Optional Modules
+
+| Crate | Feature Flag | Purpose |
+|-------|-------------|---------|
+| `browerai-js-v8` | `v8` | V8 JavaScript engine |
+| `browerai-metrics` | `metrics` | Prometheus metrics |
+| `browerai-api-server` | `api-server` | HTTP API server |
+
+### Usage Example
+
+```rust
+use browerai::prelude::*;
+
+// Core parsers (always available)
+let html_parser = HtmlParser::new();
+let css_parser = CssParser::new();
+let js_parser = JsParser::new();
+
+// With AI feature enabled
+#[cfg(feature = "ai")]
+{
+    use browerai::ai::AiCore;
+    let ai = AiCore::new()?;
+}
+```
+
+### Feature Flags
+
+Enable optional functionality at compile time:
+
+```toml
+[dependencies]
+browerai = { version = "0.2.0", features = ["ai", "v8", "db"] }
+```
+
+Available features:
+- `ai` - ONNX-based AI inference
+- `ai-candle` - Candle-based LLM support
+- `v8` - V8 JavaScript engine
+- `ml` - PyTorch-based ML toolkit
+- `metrics` - Prometheus metrics
+- `db` - Database support
+- `redis` - Redis integration
+- `api-server` - HTTP API server
 
 ---
 
-**Last Updated**: January 6, 2026
+**Last Updated**: February 17, 2026

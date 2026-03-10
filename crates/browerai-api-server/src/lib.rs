@@ -111,8 +111,7 @@ mod tests {
     #[tokio::test]
     async fn test_app_creation() {
         let state = Arc::new(AppState::new());
-        let app = create_app(state);
-        // Should compile and create router
-        assert!(true);
+        let _app = create_app(state);
+        // App creation succeeds if we reach here
     }
 }

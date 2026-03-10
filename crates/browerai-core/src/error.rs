@@ -1,159 +1,199 @@
-use std::collections::HashMap;
+//! 错误处理系统
+//!
+//! 提供 BrowerAI 的统一错误类型，支持：
+//! - 详细的错误分类
+//! - 错误链追踪
+//! - 用户友好的错误消息
+
+use std::fmt;
 use std::path::PathBuf;
-use thiserror::Error;
 
-#[derive(Debug, Error)]
-#[error("Browser error: {kind}")]
-pub struct BrowserError {
-    pub kind: ErrorKind,
-    #[source]
-    pub source: Option<anyhow::Error>,
-    pub context: HashMap<String, String>,
-    pub timestamp: chrono::DateTime<chrono::Utc>,
-}
+/// BrowerAI 统一的 Result 类型
+pub type Result<T> = std::result::Result<T, BrowserError>;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// 错误分类
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ErrorKind {
+    /// 解析错误（HTML/CSS/JS）
     Parse,
+    /// 渲染错误
     Render,
-    Network,
+    /// AI/ML 错误
     Ai,
-    Validation,
+    /// 网络错误
+    Network,
+    /// IO 错误
     Io,
+    /// 配置错误
     Config,
-    Security,
-    Timeout,
-    ResourceLimit,
+    /// 反混淆错误
+    Deobfuscation,
+    /// 学习错误
+    Learning,
+    /// 验证错误
+    Validation,
+    /// 未知错误
     Unknown,
 }
 
-impl std::fmt::Display for ErrorKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for ErrorKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ErrorKind::Parse => write!(f, "Parse"),
             ErrorKind::Render => write!(f, "Render"),
-            ErrorKind::Network => write!(f, "Network"),
             ErrorKind::Ai => write!(f, "AI"),
-            ErrorKind::Validation => write!(f, "Validation"),
+            ErrorKind::Network => write!(f, "Network"),
             ErrorKind::Io => write!(f, "IO"),
             ErrorKind::Config => write!(f, "Config"),
-            ErrorKind::Security => write!(f, "Security"),
-            ErrorKind::Timeout => write!(f, "Timeout"),
-            ErrorKind::ResourceLimit => write!(f, "ResourceLimit"),
+            ErrorKind::Deobfuscation => write!(f, "Deobfuscation"),
+            ErrorKind::Learning => write!(f, "Learning"),
+            ErrorKind::Validation => write!(f, "Validation"),
             ErrorKind::Unknown => write!(f, "Unknown"),
         }
     }
 }
 
+/// BrowerAI 统一的错误类型
+#[derive(Debug, Clone)]
+pub struct BrowserError {
+    /// 错误分类
+    pub kind: ErrorKind,
+    /// 错误消息
+    pub message: String,
+    /// 错误来源（文件路径等）
+    pub source: Option<String>,
+    /// 行号（如果有）
+    pub line: Option<usize>,
+    /// 列号（如果有）
+    pub column: Option<usize>,
+}
+
 impl BrowserError {
-    pub fn new(kind: ErrorKind, _message: impl Into<String>) -> Self {
+    /// 创建新的错误
+    #[allow(dead_code)]
+    pub fn new(kind: ErrorKind, message: impl Into<String>) -> Self {
         Self {
             kind,
+            message: message.into(),
             source: None,
-            context: HashMap::new(),
-            timestamp: chrono::Utc::now(),
+            line: None,
+            column: None,
         }
     }
 
-    pub fn with_source(mut self, source: impl Into<anyhow::Error>) -> Self {
+    /// 添加来源信息
+    pub fn with_source(mut self, source: impl Into<String>) -> Self {
         self.source = Some(source.into());
         self
     }
 
-    pub fn with_context(mut self, key: impl Into<String>, value: impl ToString) -> Self {
-        self.context.insert(key.into(), value.to_string());
+    /// 添加位置信息
+    pub fn with_location(mut self, line: usize, column: usize) -> Self {
+        self.line = Some(line);
+        self.column = Some(column);
         self
     }
 
-    pub fn kind(&self) -> ErrorKind {
-        self.kind
+    /// 创建解析错误
+    #[allow(dead_code)]
+    pub fn parse(message: impl Into<String>) -> Self {
+        Self::new(ErrorKind::Parse, message)
     }
 
-    pub fn is_parse_error(&self) -> bool {
-        self.kind == ErrorKind::Parse
+    /// 创建渲染错误
+    #[allow(dead_code)]
+    pub fn render(message: impl Into<String>) -> Self {
+        Self::new(ErrorKind::Render, message)
     }
 
-    pub fn is_render_error(&self) -> bool {
-        self.kind == ErrorKind::Render
+    /// 创建 AI 错误
+    #[allow(dead_code)]
+    pub fn ai(message: impl Into<String>) -> Self {
+        Self::new(ErrorKind::Ai, message)
     }
 
-    pub fn is_network_error(&self) -> bool {
-        self.kind == ErrorKind::Network
+    /// 创建网络错误
+    #[allow(dead_code)]
+    pub fn network(message: impl Into<String>) -> Self {
+        Self::new(ErrorKind::Network, message)
     }
 
-    pub fn is_ai_error(&self) -> bool {
-        self.kind == ErrorKind::Ai
+    /// 创建 IO 错误
+    #[allow(dead_code)]
+    pub fn io(message: impl Into<String>) -> Self {
+        Self::new(ErrorKind::Io, message)
     }
 
-    pub fn context(&self) -> &HashMap<String, String> {
-        &self.context
+    /// 创建配置错误
+    #[allow(dead_code)]
+    pub fn config(message: impl Into<String>) -> Self {
+        Self::new(ErrorKind::Config, message)
     }
 
-    pub fn add_context(&mut self, key: impl Into<String>, value: impl ToString) {
-        self.context.insert(key.into(), value.to_string());
+    /// 创建反混淆错误
+    pub fn deobfuscation(message: impl Into<String>) -> Self {
+        Self::new(ErrorKind::Deobfuscation, message)
+    }
+
+    /// 创建学习错误
+    #[allow(dead_code)]
+    pub fn learning(message: impl Into<String>) -> Self {
+        Self::new(ErrorKind::Learning, message)
+    }
+
+    /// 创建验证错误
+    #[allow(dead_code)]
+    pub fn validation(message: impl Into<String>) -> Self {
+        Self::new(ErrorKind::Validation, message)
     }
 }
 
-pub type Result<T> = std::result::Result<T, anyhow::Error>;
-
-#[macro_export]
-macro_rules! context {
-    ($err:expr, $kind:expr) => {
-        $err.context(stringify!($kind))
-    };
+impl fmt::Display for BrowserError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[{}] {}", self.kind, self.message)?;
+        
+        if let Some(ref source) = self.source {
+            write!(f, " (source: {}", source)?;
+            if let (Some(line), Some(column)) = (self.line, self.column) {
+                write!(f, ":{}:{}", line, column)?;
+            }
+            write!(f, ")")?;
+        }
+        
+        Ok(())
+    }
 }
 
+impl std::error::Error for BrowserError {}
+
+// 从标准 IO 错误转换
+impl From<std::io::Error> for BrowserError {
+    fn from(err: std::io::Error) -> Self {
+        BrowserError::io(err.to_string())
+    }
+}
+
+// 从 serde_json 错误转换
+impl From<serde_json::Error> for BrowserError {
+    fn from(err: serde_json::Error) -> Self {
+        BrowserError::parse(format!("JSON error: {}", err))
+            .with_location(err.line(), err.column())
+    }
+}
+
+/// 解析错误子类型
 pub mod parse {
     use super::*;
 
-    #[derive(Debug, Error)]
-    #[error("HTML parse error at {line}:{col}: {message}")]
+    /// HTML 解析错误
+    #[derive(Debug, Clone)]
     pub struct HtmlParseError {
-        pub message: String,
-        pub line: usize,
-        pub col: usize,
-    }
-
-    impl HtmlParseError {
-        pub fn new(message: impl Into<String>, line: usize, col: usize) -> Self {
-            Self {
-                message: message.into(),
-                line,
-                col,
-            }
-        }
-    }
-
-    #[derive(Debug, Error)]
-    #[error("CSS parse error: {message}")]
-    pub struct CssParseError {
-        pub message: String,
-        pub line: Option<usize>,
-    }
-
-    impl CssParseError {
-        pub fn new(message: impl Into<String>) -> Self {
-            Self {
-                message: message.into(),
-                line: None,
-            }
-        }
-
-        pub fn at_line(mut self, line: usize) -> Self {
-            self.line = Some(line);
-            self
-        }
-    }
-
-    #[derive(Debug, Error)]
-    #[error("JavaScript parse error: {message}")]
-    pub struct JsParseError {
         pub message: String,
         pub line: Option<usize>,
         pub column: Option<usize>,
     }
 
-    impl JsParseError {
+    impl HtmlParseError {
         pub fn new(message: impl Into<String>) -> Self {
             Self {
                 message: message.into(),
@@ -162,206 +202,127 @@ pub mod parse {
             }
         }
 
-        pub fn at_location(mut self, line: usize, col: usize) -> Self {
+        pub fn with_location(mut self, line: usize, column: usize) -> Self {
             self.line = Some(line);
-            self.column = Some(col);
+            self.column = Some(column);
             self
         }
     }
-}
 
-pub mod render {
-    use super::*;
-
-    #[derive(Debug, Error)]
-    #[error("Layout error: {message}")]
-    pub struct LayoutError {
-        pub message: String,
-    }
-
-    impl LayoutError {
-        pub fn new(message: impl Into<String>) -> Self {
-            Self {
-                message: message.into(),
-            }
-        }
-    }
-
-    #[derive(Debug, Error)]
-    #[error("Paint error: {message}")]
-    pub struct PaintError {
-        pub message: String,
-    }
-
-    impl PaintError {
-        pub fn new(message: impl Into<String>) -> Self {
-            Self {
-                message: message.into(),
-            }
-        }
-    }
-}
-
-pub mod network {
-    use super::*;
-
-    #[derive(Debug, Error)]
-    pub struct NetworkError {
-        pub message: String,
-        pub status_code: Option<u16>,
-        pub url: Option<PathBuf>,
-        pub method: Option<String>,
-    }
-
-    impl std::fmt::Display for NetworkError {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            write!(f, "Network error: {}", self.message)?;
-            if let Some(code) = self.status_code {
-                write!(f, " (status: {})", code)?;
+    impl fmt::Display for HtmlParseError {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "HTML parse error: {}", self.message)?;
+            if let (Some(line), Some(column)) = (self.line, self.column) {
+                write!(f, " at {}:{}", line, column)?;
             }
             Ok(())
         }
     }
 
-    impl NetworkError {
+    impl std::error::Error for HtmlParseError {}
+
+    /// CSS 解析错误
+    #[derive(Debug, Clone)]
+    pub struct CssParseError {
+        pub message: String,
+        pub location: Option<String>,
+    }
+
+    impl CssParseError {
         pub fn new(message: impl Into<String>) -> Self {
             Self {
                 message: message.into(),
-                status_code: None,
-                url: None,
-                method: None,
+                location: None,
             }
-        }
-
-        pub fn with_status_code(mut self, code: u16) -> Self {
-            self.status_code = Some(code);
-            self
-        }
-
-        pub fn for_url(mut self, url: impl Into<PathBuf>) -> Self {
-            self.url = Some(url.into());
-            self
         }
     }
 
-    #[derive(Debug, Error)]
-    #[error("Timeout: {operation} exceeded {timeout_ms}ms")]
-    pub struct TimeoutError {
-        pub operation: String,
-        pub timeout_ms: u64,
-    }
-
-    impl TimeoutError {
-        pub fn new(operation: impl Into<String>, timeout_ms: u64) -> Self {
-            Self {
-                operation: operation.into(),
-                timeout_ms,
-            }
-        }
+    /// JS 解析错误
+    #[derive(Debug, Clone)]
+    pub struct JsParseError {
+        pub message: String,
+        pub line: Option<usize>,
+        pub column: Option<usize>,
     }
 }
 
+/// AI 错误子类型
 pub mod ai {
     use super::*;
 
-    #[derive(Debug, Error)]
-    pub struct AiError {
-        pub message: String,
-        pub model: Option<String>,
-        pub recoverable: bool,
-    }
-
-    impl std::fmt::Display for AiError {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            write!(f, "AI error: {}", self.message)?;
-            if let Some(ref model) = self.model {
-                write!(f, " [model: {}]", model)?;
-            }
-            Ok(())
-        }
-    }
-
-    impl AiError {
-        pub fn new(message: impl Into<String>) -> Self {
-            Self {
-                message: message.into(),
-                model: None,
-                recoverable: true,
-            }
-        }
-
-        pub fn for_model(mut self, model: impl Into<String>) -> Self {
-            self.model = Some(model.into());
-            self
-        }
-
-        pub fn unrecoverable(mut self) -> Self {
-            self.recoverable = false;
-            self
-        }
-    }
-
-    #[derive(Debug, Error)]
-    #[error("Model loading error: {message}")]
+    /// 模型加载错误
+    #[derive(Debug, Clone)]
     pub struct ModelLoadError {
-        pub message: String,
-        pub model_path: Option<PathBuf>,
+        pub model_path: PathBuf,
+        pub reason: String,
     }
 
     impl ModelLoadError {
+        pub fn new(path: impl Into<PathBuf>, reason: impl Into<String>) -> Self {
+            Self {
+                model_path: path.into(),
+                reason: reason.into(),
+            }
+        }
+    }
+
+    impl fmt::Display for ModelLoadError {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "Failed to load model from {:?}: {}", self.model_path, self.reason)
+        }
+    }
+
+    impl std::error::Error for ModelLoadError {}
+
+    /// 推理错误
+    #[derive(Debug, Clone)]
+    pub struct InferenceError {
+        pub message: String,
+        pub model_name: Option<String>,
+    }
+
+    impl InferenceError {
         pub fn new(message: impl Into<String>) -> Self {
             Self {
                 message: message.into(),
-                model_path: None,
+                model_name: None,
             }
         }
 
-        pub fn at_path(mut self, path: impl Into<PathBuf>) -> Self {
-            self.model_path = Some(path.into());
+        pub fn with_model(mut self, name: impl Into<String>) -> Self {
+            self.model_name = Some(name.into());
             self
         }
     }
 }
 
-pub mod config {
+/// 网络错误子类型
+pub mod network {
     use super::*;
 
-    #[derive(Debug, Error)]
-    #[error("Configuration error: {message}")]
-    pub struct ConfigError {
-        pub message: String,
-        pub config_key: Option<String>,
+    /// 超时错误
+    #[derive(Debug, Clone)]
+    pub struct TimeoutError {
+        pub url: String,
+        pub timeout_secs: u64,
     }
 
-    impl ConfigError {
-        pub fn new(message: impl Into<String>) -> Self {
+    impl TimeoutError {
+        pub fn new(url: impl Into<String>, secs: u64) -> Self {
             Self {
-                message: message.into(),
-                config_key: None,
-            }
-        }
-
-        pub fn for_key(mut self, key: impl Into<String>) -> Self {
-            self.config_key = Some(key.into());
-            self
-        }
-    }
-
-    #[derive(Debug, Error)]
-    #[error("Validation error: {field}: {message}")]
-    pub struct ValidationError {
-        pub field: String,
-        pub message: String,
-    }
-
-    impl ValidationError {
-        pub fn new(field: impl Into<String>, message: impl Into<String>) -> Self {
-            Self {
-                field: field.into(),
-                message: message.into(),
+                url: url.into(),
+                timeout_secs: secs,
             }
         }
     }
+
+    impl fmt::Display for TimeoutError {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "Request to {} timed out after {}s", self.url, self.timeout_secs)
+        }
+    }
+
+    impl std::error::Error for TimeoutError {}
 }
 
 #[cfg(test)]
@@ -370,53 +331,37 @@ mod tests {
 
     #[test]
     fn test_error_creation() {
-        let error = BrowserError::new(ErrorKind::Parse, "test message");
-        assert_eq!(error.kind(), ErrorKind::Parse);
+        let err = BrowserError::parse("Invalid HTML");
+        assert_eq!(err.kind, ErrorKind::Parse);
+        assert!(err.message.contains("Invalid HTML"));
     }
 
     #[test]
-    fn test_error_with_context() {
-        let error = BrowserError::new(ErrorKind::Network, "connection failed")
-            .with_context("url", "https://example.com");
-        assert_eq!(error.context().len(), 1);
+    fn test_error_with_location() {
+        let err = BrowserError::parse("Syntax error")
+            .with_location(10, 5);
+        
+        assert_eq!(err.line, Some(10));
+        assert_eq!(err.column, Some(5));
     }
 
     #[test]
-    fn test_error_kind_display() {
-        assert_eq!(ErrorKind::Parse.to_string(), "Parse");
-        assert_eq!(ErrorKind::Render.to_string(), "Render");
+    fn test_error_display() {
+        let err = BrowserError::parse("Test error")
+            .with_source("test.html")
+            .with_location(1, 10);
+        
+        let display = format!("{}", err);
+        assert!(display.contains("Parse"));
+        assert!(display.contains("Test error"));
+        assert!(display.contains("test.html"));
     }
 
     #[test]
-    fn test_html_parse_error() {
-        let error = parse::HtmlParseError::new("Unexpected token", 10, 5);
-        assert!(error.to_string().contains("10:5"));
-    }
-
-    #[test]
-    fn test_network_error() {
-        let error = network::NetworkError::new("Connection refused").with_status_code(500);
-        assert!(error.to_string().contains("500"));
-    }
-
-    #[test]
-    fn test_ai_error() {
-        let error = ai::AiError::new("Model inference failed")
-            .for_model("bert-base")
-            .unrecoverable();
-        assert!(!error.recoverable);
-        assert!(error.to_string().contains("bert-base"));
-    }
-
-    #[test]
-    fn test_validation_error() {
-        let error = config::ValidationError::new("email", "Invalid format");
-        assert_eq!(error.field, "email");
-    }
-
-    #[test]
-    fn test_timeout_error() {
-        let error = network::TimeoutError::new("API call", 5000);
-        assert!(error.to_string().contains("5000ms"));
+    fn test_io_error_conversion() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::NotFound, "file not found");
+        let browser_err: BrowserError = io_err.into();
+        
+        assert_eq!(browser_err.kind, ErrorKind::Io);
     }
 }

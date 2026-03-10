@@ -290,7 +290,7 @@ mod tests {
     #[test]
     fn test_cache_event_latency_measurement() {
         // 测试延迟测量
-        let latencies = vec![0, 1, 5, 10, 50, 100, 500, 1000];
+        let latencies = [0, 1, 5, 10, 50, 100, 500, 1000];
 
         for (idx, latency) in latencies.iter().enumerate() {
             let event = CacheEvent {
@@ -340,7 +340,7 @@ mod tests {
             .collect();
 
         // 序列化所有条目
-        let json_results: Vec<_> = entries.iter().map(|e| serde_json::to_string(e)).collect();
+        let json_results: Vec<_> = entries.iter().map(serde_json::to_string).collect();
 
         // 验证成功
         let successful = json_results.iter().filter(|r| r.is_ok()).count();

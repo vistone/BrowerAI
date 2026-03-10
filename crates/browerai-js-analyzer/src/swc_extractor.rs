@@ -395,8 +395,8 @@ mod tests {
     #[test]
     fn test_enhanced_ast_default() {
         let enhanced = EnhancedAst::default();
-        assert_eq!(enhanced.has_jsx, false);
-        assert_eq!(enhanced.has_typescript, false);
+        assert!(!enhanced.has_jsx);
+        assert!(!enhanced.has_typescript);
         assert_eq!(enhanced.jsx_elements.len(), 0);
     }
 
@@ -417,8 +417,8 @@ mod tests {
 
         assert!(result.is_ok());
         let enhanced = result.unwrap();
-        assert_eq!(enhanced.has_jsx, false);
-        assert_eq!(enhanced.has_typescript, false);
+        assert!(!enhanced.has_jsx);
+        assert!(!enhanced.has_typescript);
     }
 
     #[test]

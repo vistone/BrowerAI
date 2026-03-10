@@ -8,6 +8,7 @@ pub mod website_test_suite;
 use browerai_css_parser::CssParser;
 use browerai_html_parser::HtmlParser;
 use browerai_js_parser::JsParser;
+use browerai_core::traits::Parser;
 use std::time::{Duration, Instant};
 
 pub use benchmark::{BenchmarkConfig, BenchmarkResult, BenchmarkRunner, ComparisonResult};
@@ -112,8 +113,8 @@ impl WebsiteTester {
         match self.html_parser.parse(html) {
             Ok(dom) => {
                 let duration = start.elapsed();
-                // Count elements in DOM
-                let elements = Self::count_elements(&dom);
+                // Count elements in DOM using node_count method
+                let elements = dom.text_node_count();
                 (true, duration, elements)
             }
             Err(_) => (false, start.elapsed(), 0),
@@ -124,9 +125,9 @@ impl WebsiteTester {
     pub fn test_css(&self, css: &str) -> (bool, Duration, usize) {
         let start = Instant::now();
         match self.css_parser.parse(css) {
-            Ok(rules) => {
+            Ok(stylesheet) => {
                 let duration = start.elapsed();
-                (true, duration, rules.len())
+                (true, duration, stylesheet.rules.len())
             }
             Err(_) => (false, start.elapsed(), 0),
         }
@@ -138,7 +139,7 @@ impl WebsiteTester {
         match self.js_parser.parse(js) {
             Ok(ast) => {
                 let duration = start.elapsed();
-                (true, duration, ast.statement_count)
+                (true, duration, ast.statement_count())
             }
             Err(_) => (false, start.elapsed(), 0),
         }

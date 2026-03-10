@@ -389,6 +389,14 @@ mod tests {
 # 运行所有测试
 cargo test
 
+# 运行核心模块测试（推荐）
+cargo test -p browerai-core -p browerai-html-parser -p browerai-css-parser \
+           -p browerai-js-parser -p browerai-js-analyzer -p browerai-ai-core \
+           -p browerai-renderer-core -p browerai-devtools
+
+# 运行特定crate测试
+cargo test -p browerai-js-analyzer
+
 # 运行特定测试
 cargo test parser::html
 
@@ -398,12 +406,23 @@ cargo test -- --test-threads=1
 # 显示println!输出
 cargo test -- --nocapture
 
-# 运行失败的测试
-cargo test -- --failed-tests-only
-
 # 生成覆盖率 (需要tarpaulin)
 cargo tarpaulin --out Html
 ```
+
+### 测试状态
+
+| 模块 | 测试数 | 状态 |
+|------|--------|------|
+| browerai-core | 25 | ✅ 通过 |
+| browerai-html-parser | 24 | ✅ 通过 |
+| browerai-css-parser | 8 | ✅ 通过 |
+| browerai-js-parser | 9 | ✅ 通过 |
+| browerai-js-analyzer | 33 | ✅ 通过 |
+| browerai-ai-core | 27 | ✅ 通过 |
+| browerai-renderer-core | 22 | ✅ 通过 |
+| browerai-devtools | 10 | ✅ 通过 |
+| **总计** | **168** | **✅ 100%通过** |
 
 ### 测试最佳实践
 
@@ -419,6 +438,8 @@ cargo tarpaulin --out Html
 
 ### 本地构建
 
+#### 构建全部模块
+
 ```bash
 # Debug构建（快速，但无优化）
 cargo build
@@ -426,15 +447,38 @@ cargo build
 # Release构建（慢，但优化）
 cargo build --release
 
+# 仅构建核心模块（推荐用于快速验证）
+cargo build -p browerai-core -p browerai-html-parser -p browerai-css-parser \
+            -p browerai-js-parser -p browerai-js-analyzer -p browerai-ai-core \
+            -p browerai-renderer-core -p browerai-devtools
+```
+
+#### 构建特定模块
+
+```bash
+# 单个crate
+cargo build -p browerai-html-parser
+
+# 带特性标志
+cargo build -p browerai --features "ai,v8,db"
+
 # 检查代码（无生成二进制）
 cargo check
 
 # 格式化代码
 cargo fmt
 
-# 检查检测
+# 静态检查
 cargo clippy
 ```
+
+#### 构建状态
+
+| 模块组 | 命令 | 时间 |
+|--------|------|------|
+| 核心8模块 | `cargo build -p browerai-core ...` | ~35s |
+| 全部模块 | `cargo build --workspace` | ~2-3min |
+| Release | `cargo build --release` | ~5-10min |
 
 ### Docker构建
 

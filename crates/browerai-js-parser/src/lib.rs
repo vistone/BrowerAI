@@ -1,143 +1,302 @@
-use anyhow::{Context, Result};
-use boa_interner::Interner;
-use boa_parser::Source;
+//! BrowerAI JavaScript Parser
+//!
+//! 基于 Boa 的 JavaScript 解析器，提供：
+//! - ES2022 标准解析
+//! - AST 生成
+//!
+//! # 示例
+//! ```
+//! use browerai_js_parser::JsParser;
+//! use browerai_core::traits::Parser;
+//!
+//! let parser = JsParser::new();
+//! let js = "function hello() { return 'world'; }";
+//! let ast = parser.parse(js).unwrap();
+//! ```
 
-// ES Module support
-pub mod es_modules;
-pub use es_modules::{
-    DynamicImport, ESModuleParser, ExportBinding, ExportDeclaration, ExportType, ImportBinding,
-    ImportDeclaration, ImportType, ParsedModule,
-};
+#![warn(missing_docs)]
 
-/// JavaScript parser with AI enhancement capabilities
-/// Uses Boa Parser - a pure Rust ECMAScript parser (part of boa JavaScript engine)
+use browerai_core::{traits::Parser, BrowserError, CodeType, Result};
+use boa_parser::{Parser as BoaParser, Source};
+use boa_interner::ToInternedString;
+use boa_ast::scope::Scope;
+
+pub mod ast;
+
+pub use ast::{AstNode, FunctionDecl, JsAst, VariableDecl};
+
+/// JavaScript 解析器
 pub struct JsParser {
-    enforce_compatibility: bool,
+    /// 是否解析 TypeScript
+    parse_typescript: bool,
+    /// 是否解析 JSX
+    parse_jsx: bool,
+    /// 目标 ECMAScript 版本
+    target_version: EcmaVersion,
+    /// 内部 interner 用于字符串解析
+    interner: boa_interner::Interner,
 }
 
-/// Compatibility warning for JS features we do not fully support yet
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct CompatibilityWarning {
-    pub feature: String,
-    pub detail: String,
+/// ECMAScript 版本
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EcmaVersion {
+    /// ES5
+    ES5,
+    /// ES2015
+    ES2015,
+    /// ES2017
+    ES2017,
+    /// ES2019
+    ES2019,
+    /// ES2020
+    ES2020,
+    /// ES2021
+    ES2021,
+    /// ES2022
+    ES2022,
+    /// ESNext
+    ESNext,
+}
+
+impl Default for EcmaVersion {
+    fn default() -> Self {
+        EcmaVersion::ES2022
+    }
 }
 
 impl JsParser {
-    /// Create a new JavaScript parser with Boa (native Rust)
+    /// 创建新的 JS 解析器
     pub fn new() -> Self {
         Self {
-            enforce_compatibility: false,
+            parse_typescript: true,
+            parse_jsx: true,
+            target_version: EcmaVersion::ES2022,
+            interner: boa_interner::Interner::default(),
         }
     }
 
-    /// Enable or disable strict compatibility enforcement
-    pub fn set_enforce_compatibility(&mut self, enforce: bool) {
-        self.enforce_compatibility = enforce;
+    /// 设置是否解析 TypeScript
+    pub fn parse_typescript(mut self, enable: bool) -> Self {
+        self.parse_typescript = enable;
+        self
     }
 
-    /// Get compatibility enforcement status
-    pub fn is_enforcing_compatibility(&self) -> bool {
-        self.enforce_compatibility
+    /// 设置是否解析 JSX
+    pub fn parse_jsx(mut self, enable: bool) -> Self {
+        self.parse_jsx = enable;
+        self
     }
 
-    /// Parse JavaScript content using Boa native Rust parser
-    pub fn parse(&self, js: &str) -> Result<JsAst> {
-        let compatibility_warnings = Self::detect_compatibility_issues(js);
-        for warn in &compatibility_warnings {
-            log::warn!(
-                "JS compatibility warning: {} - {}",
-                warn.feature,
-                warn.detail
-            );
-        }
-
-        if self.enforce_compatibility && !compatibility_warnings.is_empty() {
-            let details: Vec<String> = compatibility_warnings
-                .iter()
-                .map(|w| format!("{}: {}", w.feature, w.detail))
-                .collect();
-            return Err(anyhow::anyhow!(
-                "JS compatibility enforcement failed: {}",
-                details.join(" | ")
-            ));
-        }
-
-        // Create interner for string interning
-        let mut interner = Interner::new();
-
-        // Parse the JavaScript source
-        let result = boa_parser::Parser::new(Source::from_bytes(js))
-            .parse_script(&boa_ast::scope::Scope::new_global(), &mut interner)
-            .map_err(|e| anyhow::anyhow!("Parse error: {}", e))
-            .context("Failed to parse JavaScript with Boa")?;
-
-        let statement_count = result.statements().len();
-
-        log::info!(
-            "Successfully parsed JavaScript with {} statements using Boa native Rust parser",
-            statement_count
-        );
-
-        // AI enhancement removed; returning baseline AST
-        Ok(JsAst {
-            statement_count,
-            is_valid: true,
-        })
+    /// 设置目标 ECMAScript 版本
+    pub fn target_version(mut self, version: EcmaVersion) -> Self {
+        self.target_version = version;
+        self
     }
 
-    /// Detect basic compatibility issues for known unsupported features
-    fn detect_compatibility_issues(js: &str) -> Vec<CompatibilityWarning> {
-        let mut warnings = Vec::new();
-
-        // Note: ES modules are now supported via ESModuleParser
-        // Check if using module syntax - provide informational warning
-        if js.contains("import ") || js.contains("export ") {
-            warnings.push(CompatibilityWarning {
-                feature: "ES modules".to_string(),
-                detail: "Module syntax detected. Use ESModuleParser for full module support or HybridJsOrchestrator for automatic handling.".to_string(),
-            });
-        }
-
-        // Dynamic import is now supported via ESModuleParser
-        if js.contains("import(") {
-            warnings.push(CompatibilityWarning {
-                feature: "dynamic import".to_string(),
-                detail: "Dynamic import() detected. Use ESModuleParser for parsing or execute with V8/Boa sandbox.".to_string(),
-            });
-        }
-
-        // Top-level await is supported in module mode
-        if js.contains("await ") && !js.contains("function") && !js.contains("async ") {
-            warnings.push(CompatibilityWarning {
-                feature: "top-level await".to_string(),
-                detail: "Top-level await detected. This requires module mode - use ESModuleParser.".to_string(),
-            });
-        }
-
-        warnings
+    /// 解析 JavaScript 字符串
+    pub fn parse_string(&mut self, js: impl AsRef<str>) -> Result<JsAst> {
+        let js = js.as_ref();
+        
+        // 使用 Boa 解析器
+        let mut parser = BoaParser::new(Source::from_bytes(js));
+        let scope = Scope::new_global();
+        
+        let script = parser.parse_script(&scope, &mut self.interner)
+            .map_err(|e| BrowserError::parse(format!("JS parse error: {:?}", e)))?;
+        
+        // 转换为内部 AST 表示
+        let ast = self.convert_ast(&script);
+        
+        Ok(ast)
     }
 
-    /// Tokenize JavaScript for compatibility with old API
-    #[allow(dead_code)]
-    fn tokenize(&self, js: &str) -> Result<Vec<String>> {
-        // Simple tokenization for backwards compatibility
-        let tokens: Vec<String> = js
-            .split(|c: char| c.is_whitespace() || "(){}[];,".contains(c))
-            .filter(|s| !s.is_empty())
-            .map(|s| s.to_string())
-            .collect();
-
-        Ok(tokens)
+    /// 将 Boa AST 转换为内部表示
+    fn convert_ast(&self, script: &boa_ast::Script) -> JsAst {
+        let mut ast = JsAst::new();
+        
+        // 遍历语句列表
+        for stmt in script.statements().as_ref() {
+            self.convert_statement_list_item(stmt, &mut ast);
+        }
+        
+        ast
     }
 
-    /// Validate JavaScript syntax using Boa parser
-    #[allow(dead_code)]
-    pub fn validate(&self, js: &str) -> Result<bool> {
-        // Use Boa to validate - if it parses successfully, it's valid
-        match self.parse(js) {
-            Ok(_) => Ok(true),
-            Err(_) => Ok(false),
+    /// 转换语句列表项
+    fn convert_statement_list_item(&self, stmt: &boa_ast::StatementListItem, ast: &mut JsAst) {
+        use boa_ast::StatementListItem;
+        
+        match stmt {
+            StatementListItem::Statement(s) => self.convert_statement(s, ast),
+            StatementListItem::Declaration(d) => self.convert_declaration(d, ast),
         }
+    }
+
+    /// 转换声明
+    fn convert_declaration(&self, decl: &boa_ast::Declaration, ast: &mut JsAst) {
+        use boa_ast::declaration::Declaration;
+        
+        match decl {
+            Declaration::FunctionDeclaration(func) => {
+                let name = Some(func.name().to_interned_string(&self.interner));
+                let params: Vec<String> = func.parameters().as_ref().iter()
+                    .map(|p: &boa_ast::function::FormalParameter| {
+                        p.to_interned_string(&self.interner)
+                    })
+                    .collect();
+                ast.function_decls.push(FunctionDecl {
+                    name,
+                    params,
+                    is_async: false,
+                    is_generator: false,
+                    body: None,
+                });
+            }
+            Declaration::GeneratorDeclaration(func) => {
+                let name = Some(func.name().to_interned_string(&self.interner));
+                let params: Vec<String> = func.parameters().as_ref().iter()
+                    .map(|p: &boa_ast::function::FormalParameter| {
+                        p.to_interned_string(&self.interner)
+                    })
+                    .collect();
+                ast.function_decls.push(FunctionDecl {
+                    name,
+                    params,
+                    is_async: false,
+                    is_generator: true,
+                    body: None,
+                });
+            }
+            Declaration::AsyncFunctionDeclaration(func) => {
+                let name = Some(func.name().to_interned_string(&self.interner));
+                let params: Vec<String> = func.parameters().as_ref().iter()
+                    .map(|p: &boa_ast::function::FormalParameter| {
+                        p.to_interned_string(&self.interner)
+                    })
+                    .collect();
+                ast.function_decls.push(FunctionDecl {
+                    name,
+                    params,
+                    is_async: true,
+                    is_generator: false,
+                    body: None,
+                });
+            }
+            Declaration::AsyncGeneratorDeclaration(func) => {
+                let name = Some(func.name().to_interned_string(&self.interner));
+                let params: Vec<String> = func.parameters().as_ref().iter()
+                    .map(|p: &boa_ast::function::FormalParameter| {
+                        p.to_interned_string(&self.interner)
+                    })
+                    .collect();
+                ast.function_decls.push(FunctionDecl {
+                    name,
+                    params,
+                    is_async: true,
+                    is_generator: true,
+                    body: None,
+                });
+            }
+            Declaration::Lexical(lex) => {
+                let kind = if lex.is_const() { "const" } else { "let" };
+                for var in lex.variable_list().as_ref() {
+                    if let boa_ast::declaration::Binding::Identifier(id) = var.binding() {
+                        ast.variable_decls.push(VariableDecl {
+                            name: id.to_interned_string(&self.interner),
+                            kind: kind.to_string(),
+                            init: var.init().map(|_| "expression".to_string()),
+                        });
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// 转换语句
+    fn convert_statement(&self, stmt: &boa_ast::Statement, ast: &mut JsAst) {
+        use boa_ast::Statement;
+        
+        match stmt {
+            Statement::Var(var_decl) => {
+                // 变量声明 - VarDeclaration 是一个 tuple struct
+                for var in var_decl.0.as_ref() {
+                    if let boa_ast::declaration::Binding::Identifier(id) = var.binding() {
+                        ast.variable_decls.push(VariableDecl {
+                            name: id.to_interned_string(&self.interner),
+                            kind: "var".to_string(),
+                            init: var.init().map(|_| "expression".to_string()),
+                        });
+                    }
+                }
+            }
+            Statement::Block(block) => {
+                // 块语句，递归处理
+                for stmt in block.statement_list().as_ref() {
+                    self.convert_statement_list_item(stmt, ast);
+                }
+            }
+            Statement::If(if_stmt) => {
+                // if 语句，递归处理
+                self.convert_statement(if_stmt.body(), ast);
+                if let Some(else_body) = if_stmt.else_node() {
+                    self.convert_statement(else_body, ast);
+                }
+            }
+            Statement::WhileLoop(while_stmt) => {
+                self.convert_statement(while_stmt.body(), ast);
+            }
+            Statement::ForLoop(for_stmt) => {
+                self.convert_statement(for_stmt.body(), ast);
+            }
+            // 其他语句类型...
+            _ => {}
+        }
+    }
+
+    /// 提取所有函数
+    pub fn extract_functions<'a>(&self, ast: &'a JsAst) -> Vec<&'a FunctionDecl> {
+        ast.function_decls.iter().collect()
+    }
+
+    /// 提取所有变量
+    pub fn extract_variables<'a>(&self, ast: &'a JsAst) -> Vec<&'a VariableDecl> {
+        ast.variable_decls.iter().collect()
+    }
+
+    /// 检测代码类型
+    pub fn detect_code_type(&self, code: &str) -> CodeType {
+        // TypeScript 特征检测
+        let ts_patterns = [
+            ": string", ": number", ": boolean", ": void", ": any",
+            "interface ", "type ", "enum ", "namespace ",
+            "as ", "readonly ", "abstract ", "implements ",
+        ];
+        
+        for pattern in &ts_patterns {
+            if code.contains(pattern) {
+                return CodeType::TypeScript;
+            }
+        }
+        
+        CodeType::JavaScript
+    }
+
+    /// 检查是否是模块
+    pub fn is_module(&self, code: &str) -> bool {
+        code.contains("import ") || code.contains("export ")
+    }
+
+    /// 提取导入
+    pub fn extract_imports(&self, _code: &str) -> Vec<String> {
+        // 简化实现
+        Vec::new()
+    }
+
+    /// 提取导出
+    pub fn extract_exports(&self, _code: &str) -> Vec<String> {
+        // 简化实现
+        Vec::new()
     }
 }
 
@@ -147,12 +306,43 @@ impl Default for JsParser {
     }
 }
 
-/// JavaScript AST representation using Boa
-/// This is a simplified representation - the full Boa AST is available internally
-#[derive(Debug, Clone)]
-pub struct JsAst {
+impl Parser for JsParser {
+    type Input = str;
+    type Output = JsAst;
+
+    fn parse(&self, input: &Self::Input) -> Result<Self::Output> {
+        // 创建一个新的解析器实例，因为parse_string需要&mut self
+        let mut parser = Self::new();
+        parser.parse_string(input)
+    }
+}
+
+/// JS 解析统计
+#[derive(Debug, Clone, Default)]
+pub struct JsParseStats {
+    /// 函数数量
+    pub function_count: usize,
+    /// 变量声明数量
+    pub variable_count: usize,
+    /// 语句数量
     pub statement_count: usize,
-    pub is_valid: bool,
+    /// 最大嵌套深度
+    pub max_nesting_depth: usize,
+    /// 代码行数
+    pub line_count: usize,
+}
+
+impl JsParseStats {
+    /// 从 AST 计算统计
+    pub fn from_ast(ast: &JsAst) -> Self {
+        Self {
+            function_count: ast.function_decls.len(),
+            variable_count: ast.variable_decls.len(),
+            statement_count: ast.statement_count(),
+            max_nesting_depth: ast.max_nesting_depth(),
+            line_count: 0,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -161,48 +351,46 @@ mod tests {
 
     #[test]
     fn test_parse_simple_js() {
-        let parser = JsParser::new();
+        let mut parser = JsParser::new();
         let js = "function hello() { return 'world'; }";
-        let result = parser.parse(js);
-        assert!(result.is_ok());
-        let ast = result.unwrap();
-        assert!(ast.is_valid);
-        assert!(ast.statement_count > 0);
+        let ast = parser.parse_string(js).unwrap();
+        
+        assert!(!ast.function_decls.is_empty());
     }
 
     #[test]
-    fn test_detects_module_syntax_warning() {
-        let warnings = JsParser::detect_compatibility_issues("import { a } from 'x';");
-        assert!(!warnings.is_empty());
-        assert!(warnings.iter().any(|w| w.feature == "ES modules"));
+    fn test_extract_functions() {
+        let mut parser = JsParser::new();
+        let js = r#"
+            function foo() {}
+            function bar() {}
+            const baz = () => {};
+        "#;
+        let ast = parser.parse_string(js).unwrap();
+        let functions = parser.extract_functions(&ast);
+        
+        assert!(!functions.is_empty());
     }
 
     #[test]
-    fn test_validate_valid_js() {
+    fn test_detect_code_type() {
         let parser = JsParser::new();
-        let js = "if (true) { console.log('test'); }";
-        let result = parser.validate(js);
-        assert!(result.is_ok());
-        assert!(result.unwrap());
+        
+        let js = "function test() {}";
+        assert_eq!(parser.detect_code_type(js), CodeType::JavaScript);
+        
+        let ts = "function test(): string {}";
+        assert_eq!(parser.detect_code_type(ts), CodeType::TypeScript);
     }
 
     #[test]
-    fn test_validate_invalid_js() {
+    fn test_is_module() {
         let parser = JsParser::new();
-        let js = "if (true) { console.log('test';"; // Missing closing brace
-        let result = parser.validate(js);
-        assert!(result.is_ok());
-        assert!(!result.unwrap());
-    }
-
-    #[test]
-    fn test_parse_modern_js() {
-        let parser = JsParser::new();
-        let js = "const x = 10; const y = () => x + 5;";
-        let result = parser.parse(js);
-        assert!(result.is_ok());
-        let ast = result.unwrap();
-        assert!(ast.is_valid);
-        assert_eq!(ast.statement_count, 2);
+        
+        let script = "function test() {}";
+        assert!(!parser.is_module(script));
+        
+        let module = "import { foo } from 'bar';";
+        assert!(parser.is_module(module));
     }
 }

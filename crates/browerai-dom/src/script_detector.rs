@@ -261,8 +261,8 @@ mod tests {
 
     #[test]
     fn test_collector_creation() {
-        let collector = DomScriptCollector::new().unwrap();
-        assert!(true); // Just verify creation succeeds
+        let _collector = DomScriptCollector::new().unwrap();
+        // Creation succeeds if we reach here
     }
 
     #[test]

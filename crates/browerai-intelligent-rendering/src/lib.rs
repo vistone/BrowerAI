@@ -10,16 +10,25 @@
 #![allow(clippy::all)]
 
 pub mod dual_sandbox_renderer;
+pub mod functional_transform;
 pub mod generation;
 pub mod js_handler;
 pub mod llm_integration;
+pub mod model_api_client;
 pub mod model_orchestrator;
 pub mod reasoning;
 pub mod renderer;
 pub mod site_understanding;
+pub mod style_analyzer;
 pub mod validation;
 pub mod website_analyzer;
 pub mod website_learning_engine;
+
+pub use functional_transform::{
+    FunctionalTransformPipeline, WebsiteStyle, TransformResult, GeneratedWebsite,
+    ReasoningEngine, StyleGenerator, FunctionalityVerifier,
+    CoreFunction, FunctionIntent, VariantProposal, FunctionBridge,
+};
 
 pub use llm_integration::{
     LayoutGenerationRequest, LayoutGenerationResponse, LlmLayoutGenerator, LlmProvider,

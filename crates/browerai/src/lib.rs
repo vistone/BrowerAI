@@ -46,6 +46,7 @@ pub use browerai_ai_integration as ai_integration;
 
 // Re-export renderers
 pub use browerai_intelligent_rendering as intelligent_rendering;
+pub use browerai_renderer as renderer_full;
 pub use browerai_renderer_core as renderer;
 pub use browerai_renderer_predictive as renderer_predictive;
 
@@ -53,10 +54,23 @@ pub use browerai_renderer_predictive as renderer_predictive;
 pub use browerai_learning as learning;
 
 // Re-export utilities
+pub use browerai_cache as cache;
 pub use browerai_devtools as devtools;
 pub use browerai_network as network;
 pub use browerai_plugins as plugins;
 pub use browerai_testing as testing;
+
+// Re-export storage/cache modules
+#[cfg(feature = "db")]
+pub use browerai_db as db;
+pub use browerai_multilayer_cache as multilayer_cache;
+pub use browerai_persistent_layer as persistent_layer;
+#[cfg(feature = "redis")]
+pub use browerai_redis_integration as redis;
+
+// Re-export API server (conditional)
+#[cfg(feature = "api-server")]
+pub use browerai_api_server as api_server;
 
 // Re-export metrics (conditional)
 #[cfg(feature = "metrics")]
@@ -70,6 +84,10 @@ pub use browerai_ml as ml;
 pub mod prelude {
     // Core
     pub use browerai_core::{BrowserError, Result};
+    
+    // Core traits (needed for parser methods)
+    pub use browerai_core::traits::Parser;
+    pub use browerai_core::traits::Analyzer;
 
     // DOM
     pub use browerai_dom::{Document, DomElement, DomNode, JsSandbox};
@@ -77,7 +95,7 @@ pub mod prelude {
     // Parsers
     pub use browerai_css_parser::CssParser;
     pub use browerai_html_parser::HtmlParser;
-    pub use browerai_js_analyzer::JsDeepAnalyzer;
+    pub use browerai_js_analyzer::JsAnalyzer;
     pub use browerai_js_parser::JsParser;
 
     // V8 (conditional)
@@ -89,7 +107,8 @@ pub mod prelude {
     pub use browerai_ai_core::{AiRuntime, InferenceEngine, ModelManager};
 
     // Renderers
-    pub use browerai_renderer_core::RenderEngine;
+    pub use browerai_renderer::RenderingPipeline;
+    pub use browerai_renderer_core::Renderer;
     pub use browerai_renderer_predictive::PredictiveRenderer;
 
     // Learning
@@ -101,6 +120,15 @@ pub mod prelude {
 
     // Testing
     pub use browerai_testing::{BenchmarkRunner, WebsiteTester};
+
+    // Cache
+    pub use browerai_cache::CacheStore;
+    pub use browerai_multilayer_cache::MultiLayerCache;
+
+
+
+    // Plugins
+    pub use browerai_plugins::{PluginLoader, PluginRegistry};
 }
 
 /// Version information

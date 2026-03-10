@@ -1,21 +1,38 @@
 [package]
 name = "browerai-js-parser"
 version = "0.2.0"
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-description = "JavaScript parser for BrowerAI"
+edition = "2021"
+authors = ["BrowerAI Contributors"]
+license = "MIT"
+description = "JavaScript parser for BrowerAI using Boa"
+repository = "https://github.com/vistone/BrowerAI"
 
 [dependencies]
-browerai-core = { workspace = true }
-anyhow = { workspace = true }
-log = { workspace = true }
-boa_parser = { workspace = true }
-boa_ast = { workspace = true }
-boa_interner = { workspace = true }
-boa_engine = { workspace = true }
+# Core
+browerai-core = { path = "../browerai-core" }
+browerai-ai-core = { path = "../browerai-ai-core", optional = true }
+
+# JavaScript parsing
+boa_parser = "0.20"
+boa_ast = "0.20"
+boa_interner = "0.20"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"], optional = true }
+serde_json = { version = "1.0", optional = true }
+
+# Error handling
+thiserror = "1.0"
+
+# Logging
+log = "0.4"
+
+[features]
+default = []
+ai = ["browerai-ai-core"]
+onnx = ["ai", "browerai-ai-core/onnx"]
+v8 = []
+serde = ["dep:serde", "dep:serde_json"]
 
 [dev-dependencies]
-env_logger = { workspace = true }
-tempfile = { workspace = true }
+pretty_assertions = "1.4"

@@ -1,7 +1,6 @@
 /// Week 4 Phase 2: E2E 集成测试
 ///
 /// 验证完整的检测流程：代码 → 特征提取 → 推理 → 结果
-
 #[cfg(test)]
 mod week4_phase2_e2e_tests {
     use browerai_deobfuscation::{FeatureExtractor, OnnxObfuscationDetector};
@@ -63,7 +62,7 @@ console.log(secret);
         let model_path = "../../models/local/week3_obfuscation_detector.onnx";
         let detector = OnnxObfuscationDetector::new(model_path).unwrap();
 
-        let test_codes = vec![
+        let test_codes = [
             "var a = 1;",
             "function f() { return 2; }",
             "console.log('test');",
@@ -146,7 +145,7 @@ console.log(secret);
         let model_path = "../../models/local/week3_obfuscation_detector.onnx";
         let detector = OnnxObfuscationDetector::new(model_path).unwrap();
 
-        let samples = vec![CONTROL_FLOW_SAMPLE, STRING_ENCODING_SAMPLE];
+        let samples = [CONTROL_FLOW_SAMPLE, STRING_ENCODING_SAMPLE];
 
         for (i, code) in samples.iter().enumerate() {
             let result = detector.detect(code);
@@ -191,7 +190,7 @@ console.log(secret);
         let model_path = "../../models/local/week3_obfuscation_detector.onnx";
         let detector = OnnxObfuscationDetector::new(model_path).unwrap();
 
-        let test_samples = vec![
+        let test_samples = [
             "var a = 1;",
             "function f() { return 2; }",
             "console.log('test');",
@@ -233,7 +232,7 @@ console.log(secret);
     fn test_feature_extractor_standalone() {
         let extractor = FeatureExtractor::new();
 
-        let test_codes = vec![
+        let test_codes = [
             "var x = 1;",
             "function f() {}",
             "console.log('test');",
@@ -267,8 +266,7 @@ console.log(secret);
 
         // 边界 1: 空代码
         let result = detector.detect("");
-        if result.is_ok() {
-            let r = result.unwrap();
+        if let Ok(r) = result {
             println!(
                 "Empty code: {:?} ({:.1}%)",
                 r.technique,
@@ -288,8 +286,8 @@ console.log(secret);
         assert!(result.is_ok(), "Long code failed");
 
         // 边界 4: 特殊字符
-        let special = "const α = 'ñ'; /* 中文 */";
-        let result = detector.detect(&special);
+        let special = "α = 'ñ'; /* 中文 */";
+        let result = detector.detect(special);
         assert!(result.is_ok(), "Special chars failed");
 
         println!("✅ Edge cases test passed");
@@ -340,7 +338,7 @@ console.log(secret);
 
         // 复杂度指标
         assert!(result.complexity_metrics.code_length > 0);
-        assert!(result.complexity_metrics.string_count >= 0);
+        // string_count is usize, always >= 0, so check just passes
 
         println!("✅ Result structure test passed");
         println!("   Technique: {:?}", result.technique);

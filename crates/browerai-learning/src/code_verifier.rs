@@ -643,8 +643,8 @@ mod tests {
 
         let result = CodeVerifier::verify_all(html, css, js).unwrap();
         assert!(result.verification_score > 0.0);
-        assert_eq!(result.html.valid, true);
-        assert_eq!(result.css.valid, true);
-        assert_eq!(result.js.syntax_valid, true);
+        assert!(result.html.valid);
+        assert!(result.css.valid);
+        assert!(result.js.syntax_valid);
     }
 }

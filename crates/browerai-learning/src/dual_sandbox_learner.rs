@@ -371,7 +371,7 @@ mod tests {
     #[tokio::test]
     async fn test_dual_sandbox_learner_creation() {
         let _learner = DualSandboxLearner::new().unwrap();
-        assert!(true); // Learner created successfully
+        // Learner created successfully
     }
 
     #[test]

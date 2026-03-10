@@ -381,8 +381,10 @@ mod tests {
 
     #[test]
     fn test_execution_context_operation_count() {
-        let mut limits = ResourceLimits::default();
-        limits.max_operations = 10;
+        let limits = ResourceLimits {
+            max_operations: 10,
+            ..Default::default()
+        };
         let mut context = ExecutionContext::new(limits);
 
         for _ in 0..10 {
@@ -394,8 +396,10 @@ mod tests {
 
     #[test]
     fn test_execution_context_call_depth() {
-        let mut limits = ResourceLimits::default();
-        limits.max_call_depth = 3;
+        let limits = ResourceLimits {
+            max_call_depth: 3,
+            ..Default::default()
+        };
         let mut context = ExecutionContext::new(limits);
 
         context.enter_call().unwrap();

@@ -1,21 +1,36 @@
 [package]
 name = "browerai-core"
 version = "0.2.0"
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-description = "Core types, traits, and utilities for BrowerAI browser engine"
+edition = "2021"
+authors = ["BrowerAI Contributors"]
+license = "MIT"
+description = "Core types, traits and error handling for BrowerAI"
+repository = "https://github.com/vistone/BrowerAI"
 
 [dependencies]
-anyhow = { workspace = true }
-thiserror = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-log = { workspace = true }
-chrono = { workspace = true }
-uuid = { workspace = true }
-md5 = { workspace = true }
+# Error handling
+thiserror = "1.0"
+anyhow = { version = "1.0", optional = true }
 
-[dev-dependencies]
-env_logger = { workspace = true }
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = { version = "0.8", optional = true }
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# UUID
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+# Logging
+log = "0.4"
+
+# Concurrency
+parking_lot = { version = "0.12", optional = true }
+
+[features]
+default = []
+anyhow-error = ["anyhow"]
+config-file = ["toml"]
+concurrent = ["parking_lot"]

@@ -3,10 +3,11 @@ use std::path::PathBuf;
 #[cfg(feature = "ai")]
 use std::time::Instant;
 
-#[cfg(feature = "ai")]
-use browerai_ai_core::tech_model_library::{
-    GenerateTask, LayoutRegeneration, ModelRegistry, TaskKind,
-};
+// Note: tech_model_library module not available
+// #[cfg(feature = "ai")]
+// use browerai_ai_core::tech_model_library::{
+//     GenerateTask, LayoutRegeneration, ModelRegistry, TaskKind,
+// };
 
 #[cfg(feature = "ai")]
 use crate::decoder::beam_search::{generate_with_beam_search, BeamSearchParams};
@@ -62,8 +63,9 @@ pub struct DeobfComposeService {
     #[cfg(feature = "ai")]
     model_name: String,
     /// Optional feedback pipeline for telemetry
-    #[cfg(feature = "ai")]
-    feedback: Option<browerai_ai_core::feedback_pipeline::FeedbackPipeline>,
+    // Note: feedback_pipeline not available
+    // #[cfg(feature = "ai")]
+    // feedback: Option<browerai_ai_core::feedback_pipeline::FeedbackPipeline>,
     #[cfg_attr(not(feature = "ai"), allow(dead_code))]
     cfg: DeobfComposeConfig,
 }
@@ -137,16 +139,16 @@ impl DeobfComposeService {
         })
     }
 
-    /// Create the service by loading from ModelRegistry with feedback pipeline wired.
-    #[cfg(feature = "ai")]
-    pub fn from_registry_with_feedback(
-        cfg: DeobfComposeConfig,
-        feedback: browerai_ai_core::feedback_pipeline::FeedbackPipeline,
-    ) -> Result<Self> {
-        let mut s = Self::from_registry(cfg)?;
-        s.feedback = Some(feedback);
-        Ok(s)
-    }
+    // Note: from_registry_with_feedback disabled - feedback_pipeline not available
+    // #[cfg(feature = "ai")]
+    // pub fn from_registry_with_feedback(
+    //     cfg: DeobfComposeConfig,
+    //     feedback: browerai_ai_core::feedback_pipeline::FeedbackPipeline,
+    // ) -> Result<Self> {
+    //     let mut s = Self::from_registry(cfg)?;
+    //     s.feedback = Some(feedback);
+    //     Ok(s)
+    // }
 
     /// Compose a snippet using AI generation with safe fallback to original text.
     #[cfg(feature = "ai")]
@@ -158,24 +160,24 @@ impl DeobfComposeService {
         let dur_ms = t0.elapsed().as_secs_f64() * 1000.0;
         let gen = match gen_res {
             Ok(s) => {
-                if let Some(fb) = &self.feedback {
-                    fb.record_model_inference(self.model_name.clone(), true, dur_ms, None);
-                }
+                // Note: feedback disabled
+                // if let Some(fb) = &self.feedback {
+                //     fb.record_model_inference(self.model_name.clone(), true, dur_ms, None);
+                // }
                 s
             }
-            Err(e) => {
-                if let Some(fb) = &self.feedback {
-                    fb.record_model_inference(
-                        self.model_name.clone(),
-                        false,
-                        dur_ms,
-                        Some(e.to_string()),
-                    );
-                }
-                // On failure, fallback to original text composition directly
-                let generator = LayoutRegeneration;
-                let composed = generator.generate_layout(snippet, None);
-                return Ok(composed);
+            Err(_e) => {
+                // Note: feedback disabled
+                // if let Some(fb) = &self.feedback {
+                //     fb.record_model_inference(
+                //         self.model_name.clone(),
+                //         false,
+                //         dur_ms,
+                //         Some(e.to_string()),
+                //     );
+                // }
+                // On failure, fallback to original text
+                return Ok(snippet.to_string());
             }
         };
         // Quality gate
@@ -185,10 +187,9 @@ impl DeobfComposeService {
             self.cfg.min_generated_len,
             self.cfg.max_non_print_ratio,
         );
-        let layout_hint = if fallback { None } else { Some(gen.as_str()) };
-        let generator = LayoutRegeneration;
-        let composed = generator.generate_layout(snippet, layout_hint);
-        Ok(composed)
+        // Note: LayoutRegeneration not available, using simple fallback
+        let _layout_hint = if fallback { None } else { Some(gen.as_str()) };
+        Ok(if fallback { snippet.to_string() } else { gen })
     }
 
     #[cfg(not(feature = "ai"))]

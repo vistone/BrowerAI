@@ -316,8 +316,10 @@ mod tests {
 
     #[test]
     fn test_self_optimizer_should_optimize() {
-        let mut config = OptimizationConfig::default();
-        config.strategy = OptimizationStrategy::Accuracy; // Use accuracy strategy for simpler testing
+        let config = OptimizationConfig {
+            strategy: OptimizationStrategy::Accuracy,
+            ..Default::default()
+        };
         let mut optimizer = SelfOptimizer::new(config);
 
         // Not enough data
@@ -337,9 +339,11 @@ mod tests {
 
     #[test]
     fn test_self_optimizer_optimize() {
-        let mut config = OptimizationConfig::default();
-        config.auto_switch_models = true;
-        config.strategy = OptimizationStrategy::Accuracy; // Use accuracy strategy for simpler testing
+        let config = OptimizationConfig {
+            auto_switch_models: true,
+            strategy: OptimizationStrategy::Accuracy,
+            ..Default::default()
+        };
         let mut optimizer = SelfOptimizer::new(config);
 
         optimizer.record_performance("model_v1", 100.0, 0.80, 50.0);

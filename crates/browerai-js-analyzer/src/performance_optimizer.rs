@@ -356,7 +356,7 @@ mod tests {
         cache.put("key3".to_string(), Arc::<str>::from("data3"), 3);
 
         assert_eq!(cache.cache.len(), 2);
-        assert!(cache.cache.get("key1").is_none());
+        assert!(!cache.cache.contains_key("key1"));
     }
 
     #[test]

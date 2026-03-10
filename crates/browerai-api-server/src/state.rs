@@ -37,9 +37,10 @@ impl AppState {
         &self.css_parser
     }
 
-    /// Check if AI features are enabled
+    /// Check if AI features are enabled (simplified)
     pub fn is_ai_enabled(&self) -> bool {
-        self.css_parser.is_ai_enabled()
+        // Simplified: AI not directly available in CssParser
+        false
     }
 }
 

@@ -1,5 +1,4 @@
 /// Week 4 Phase 2: 压力测试与稳定性验证
-
 #[cfg(test)]
 mod week4_phase2_stress_tests {
     use browerai_deobfuscation::OnnxObfuscationDetector;
@@ -252,7 +251,7 @@ mod week4_phase2_stress_tests {
 
         println!("=== Random Input Test ===");
 
-        let templates = vec![
+        let templates = [
             "var x = {};",
             "function f() {{ return {}; }}",
             "if ({}) {{ ok(); }}",

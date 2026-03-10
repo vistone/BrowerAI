@@ -239,7 +239,7 @@ mod tests {
         assert_eq!(fallbacks.len(), 3);
         // Should keep the last 3
         // 修复: 使用更安全的断言方式，避免panic
-        if let Some(FallbackReason::ModelNotFound(name)) = fallbacks.get(0).map(|(_, r)| r) {
+        if let Some(FallbackReason::ModelNotFound(name)) = fallbacks.first().map(|(_, r)| r) {
             assert_eq!(name, "model2", "First fallback should be model2");
         } else {
             panic!("Expected ModelNotFound variant at index 0");

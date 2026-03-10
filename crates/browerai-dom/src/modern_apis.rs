@@ -420,8 +420,8 @@ mod tests {
     #[test]
     fn test_temporal_difference() {
         let temporal = TemporalAPI::new();
-        let t1 = 1000_000_000; // 1 second in nanoseconds
-        let t2 = 2000_000_000; // 2 seconds in nanoseconds
+        let t1 = 1_000_000_000; // 1 second in nanoseconds
+        let t2 = 2_000_000_000; // 2 seconds in nanoseconds
         let diff = temporal.difference(t2, t1);
         assert_eq!(diff, 1000); // 1000 milliseconds
     }

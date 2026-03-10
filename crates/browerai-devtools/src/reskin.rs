@@ -151,9 +151,11 @@ mod tests {
 
     #[test]
     fn host_mismatch_returns_none() {
-        let mut cfg = ReskinConfig::default();
-        cfg.enabled = true;
-        cfg.target_host = "example.com";
+        let cfg = ReskinConfig {
+            enabled: true,
+            target_host: "example.com",
+            ..Default::default()
+        };
         let pipeline = ReskinPipeline::new(cfg);
         let res = pipeline.apply("https://www.jd.com/").unwrap();
         assert!(res.is_none());
@@ -161,8 +163,10 @@ mod tests {
 
     #[test]
     fn match_returns_style() {
-        let mut cfg = ReskinConfig::default();
-        cfg.enabled = true;
+        let cfg = ReskinConfig {
+            enabled: true,
+            ..Default::default()
+        };
         let pipeline = ReskinPipeline::new(cfg);
         let res = pipeline.apply("https://www.jd.com/").unwrap();
         assert!(res.is_some());

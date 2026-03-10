@@ -1,0 +1,42 @@
+[package]
+name = "browerai-dual-sandbox"
+version = "0.2.0"
+edition = "2021"
+authors = ["BrowerAI Team"]
+description = "真正的双沙盒架构 - 标准渲染 + AI 学习"
+
+[dependencies]
+# 核心依赖
+anyhow = "1.0"
+thiserror = "1.0"
+log = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.35", features = ["full"] }
+
+# HTML/CSS/JS 解析
+cssparser = "0.33"
+selectors = "0.25"
+html5ever = "0.27"
+markup5ever_rcdom = "0.5.4-unofficial"
+
+# JS 分析 (简化版，不使用 swc)
+# swc_ecma_parser = "0.141"
+# swc_ecma_ast = "0.110"
+# swc_common = "0.33"
+
+# 网络请求
+reqwest = { version = "0.11", features = ["json"] }
+url = "2.5"
+
+# 颜色处理
+colorsys = "0.6"
+regex = "1.10"
+
+# 内部依赖
+browerai-html-parser = { path = "../browerai-html-parser" }
+browerai-core = { path = "../browerai-core" }
+
+[dev-dependencies]
+env_logger = "0.11"
+tokio-test = "0.4"

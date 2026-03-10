@@ -212,6 +212,9 @@ impl DualSandboxRenderer {
             "modern" => {
                 html.push_str(&Self::generate_modern_layout(core_functions)?);
             }
+            "government" => {
+                html.push_str(&Self::generate_government_layout(core_functions)?);
+            }
             "classic" => {
                 html.push_str(&Self::generate_classic_layout(core_functions)?);
             }
@@ -281,6 +284,58 @@ impl DualSandboxRenderer {
         }
 
         layout.push_str("</div>");
+        Ok(layout)
+    }
+
+    fn generate_government_layout(features: &[CoreFeature]) -> Result<String> {
+        // 政府合规布局 - WCAG AAA标准
+        let mut layout = String::from(
+            "<div class=\"gov-container\" role=\"main\">\n\
+            <header class=\"gov-header\" role=\"banner\">\n\
+            <h1>政府门户网站</h1>\n\
+            <nav class=\"gov-nav\" aria-label=\"主导航\"></nav>\n\
+            </header>\n\
+            <main class=\"gov-main\">\n",
+        );
+
+        for feature in features {
+            let feature_id = feature.name.to_lowercase().replace(" ", "-");
+            layout.push_str(&format!(
+                "  <section class=\"gov-section\" id=\"feature-{}\" aria-labelledby=\"title-{}\">\n",
+                feature_id, feature_id
+            ));
+            layout.push_str(&format!(
+                "    <h2 id=\"title-{}\" class=\"gov-title\">{}</h2>\n",
+                feature_id, feature.name
+            ));
+            layout.push_str(&format!(
+                "    <div class=\"gov-content\">\n      <p class=\"gov-desc\">{}</p>\n",
+                feature.description
+            ));
+
+            // 生成交互元素（符合WCAG要求）
+            for action in &feature.user_actions {
+                layout.push_str(&format!(
+                    "      <button class=\"gov-button\" \
+                    data-action=\"{}\" \
+                    aria-label=\"{}\">{}</button>\n",
+                    action.to_lowercase().replace(" ", "-"),
+                    action,
+                    action
+                ));
+            }
+
+            layout.push_str("    </div>\n");
+            layout.push_str("  </section>\n");
+        }
+
+        layout.push_str(
+            "</main>\n\
+            <footer class=\"gov-footer\" role=\"contentinfo\">\n\
+            <p>政府网站 | 符合WCAG AAA标准</p>\n\
+            </footer>\n\
+            </div>",
+        );
         Ok(layout)
     }
 

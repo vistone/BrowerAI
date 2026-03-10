@@ -372,7 +372,7 @@ mod tests {
             .unwrap();
 
         // Should extract only valid links
-        assert!(links.len() >= 1);
+        assert!(!links.is_empty());
         assert!(links
             .iter()
             .any(|l| l.contains("/page1") || l.contains("/page2")));

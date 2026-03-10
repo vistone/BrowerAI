@@ -474,6 +474,6 @@ mod tests {
 
         // Find definitions
         let defs = graph.find_definitions("globalVar");
-        assert!(defs.len() >= 1); // At least from first definition
+        assert!(!defs.is_empty()); // At least from first definition
     }
 }

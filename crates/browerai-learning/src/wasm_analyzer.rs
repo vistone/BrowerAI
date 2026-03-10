@@ -740,10 +740,10 @@ mod tests {
     #[test]
     fn test_wasm_analyzer_creation() {
         let analyzer = WasmAnalyzer::new(true);
-        assert_eq!(analyzer.enable_decompilation, true);
+        assert!(analyzer.enable_decompilation);
 
         let default_analyzer = WasmAnalyzer::default();
-        assert_eq!(default_analyzer.enable_decompilation, false);
+        assert!(!default_analyzer.enable_decompilation);
     }
 
     #[test]

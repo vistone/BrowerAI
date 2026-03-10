@@ -1,0 +1,23 @@
+[package]
+name = "visual-learner"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+image = { version = "0.25", features = ["png", "jpeg"] }
+imageproc = "0.25"
+ab_glyph = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+playwright = "0.0.20"
+auto-observer = { path = "../auto-observer" }
+log = "0.4"
+env_logger = "0.11"
+palette = "0.7"
+kdtree = "0.7"
+rayon = "1.8"
+
+[dev-dependencies]
+tokio-test = "0.4"

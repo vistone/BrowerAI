@@ -494,7 +494,7 @@ mod tests {
 
         let record = recorder.stop_recording().await;
         assert_eq!(record.page_url, "https://example.com");
-        assert!(record.duration_ms >= 0);
+        // duration_ms is u64, always >= 0
     }
 
     #[tokio::test]

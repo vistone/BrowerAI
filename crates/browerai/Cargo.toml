@@ -15,6 +15,14 @@ path = "src/main.rs"
 name = "framework_detection_demo"
 path = "../../examples/framework_detection_demo.rs"
 
+[[example]]
+name = "functional_transform_demo"
+path = "../../examples/functional_transform_demo.rs"
+
+[[example]]
+name = "website_parsing_demo"
+path = "../../examples/website_parsing_demo.rs"
+
 [dependencies]
 browerai-core = { workspace = true }
 browerai-dom = { workspace = true }
@@ -29,6 +37,7 @@ browerai-ml = { workspace = true, optional = true }
 browerai-renderer-core = { workspace = true }
 browerai-renderer-predictive = { workspace = true }
 browerai-intelligent-rendering = { workspace = true }
+browerai-dual-sandbox = { workspace = true }
 browerai-learning = { workspace = true }
 browerai-network = { workspace = true }
 browerai-devtools = { workspace = true }
@@ -36,6 +45,14 @@ browerai-testing = { workspace = true }
 browerai-plugins = { workspace = true }
 browerai-metrics = { workspace = true, optional = true }
 browerai-deobfuscation = { workspace = true }
+browerai-cache = { workspace = true }
+browerai-multilayer-cache = { workspace = true }
+browerai-persistent-layer = { workspace = true }
+browerai-db = { workspace = true, optional = true }
+browerai-redis-integration = { workspace = true, optional = true }
+
+browerai-api-server = { workspace = true, optional = true }
+browerai-renderer = { workspace = true }
 
 anyhow = { workspace = true }
 log = { workspace = true }
@@ -56,6 +73,12 @@ ml = ["browerai-ml"]
 v8 = ["browerai-js-v8"]
 # Enable Prometheus metrics collection
 metrics = ["browerai-metrics"]
+# Enable database support
+db = ["browerai-db"]
+# Enable Redis integration
+redis = ["browerai-redis-integration"]
+# Enable API server
+api-server = ["browerai-api-server"]
 
 [dev-dependencies]
 tempfile = { workspace = true }

@@ -1,26 +1,27 @@
 [package]
 name = "browerai-js-analyzer"
 version = "0.2.0"
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-description = "JavaScript deep analysis for BrowerAI"
+edition = "2021"
+authors = ["BrowerAI Contributors"]
+license = "MIT"
+description = "JavaScript deep analysis layer with 7-stage pipeline for BrowerAI"
+repository = "https://github.com/vistone/BrowerAI"
 
 [dependencies]
-browerai-core = { workspace = true }
-browerai-js-parser = { workspace = true }
-anyhow = { workspace = true }
-log = { workspace = true }
-boa_parser = { workspace = true }
-boa_ast = { workspace = true }
-boa_interner = { workspace = true }
-swc_core = { workspace = true }
-regex = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-once_cell = "1.19"
+# Core
+browerai-core = { path = "../browerai-core" }
+browerai-js-parser = { path = "../browerai-js-parser" }
+
+# Analysis dependencies
+petgraph = "0.6"          # Graph structures for CFG and CallGraph
+fixedbitset = "0.4"       # Bit sets for dataflow analysis
+indexmap = "2.0"          # Ordered map for scope analysis
+
+# Error handling
+thiserror = "1.0"
+
+# Logging
+log = "0.4"
 
 [dev-dependencies]
-env_logger = { workspace = true }
-tempfile = { workspace = true }
+pretty_assertions = "1.4"

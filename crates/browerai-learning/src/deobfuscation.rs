@@ -646,7 +646,7 @@ mod tests {
         let score_obfuscated = deobf.calculate_readability(obfuscated);
 
         // Both should be valid scores
-        assert!(score_readable >= 0.0 && score_readable <= 1.0);
-        assert!(score_obfuscated >= 0.0 && score_obfuscated <= 1.0);
+        assert!((0.0..=1.0).contains(&score_readable));
+        assert!((0.0..=1.0).contains(&score_obfuscated));
     }
 }
