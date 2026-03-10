@@ -28,6 +28,7 @@ log = "0.4"
 [dev-dependencies]
 # Testing
 pretty_assertions = "1.4"
+criterion = "0.5"
 
 [features]
 default = []

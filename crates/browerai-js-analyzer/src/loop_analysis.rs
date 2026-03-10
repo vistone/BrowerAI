@@ -53,6 +53,11 @@ impl LoopAnalyzer {
         }
     }
 
+    /// 获取配置中的最大嵌套深度阈值
+    pub fn max_nesting_depth(&self) -> usize {
+        self.max_nesting_depth
+    }
+
     /// 检测无限循环
     pub fn detect_infinite_loops(&self, _loops: &[LoopInfo]) -> Vec<usize> {
         // 简化实现

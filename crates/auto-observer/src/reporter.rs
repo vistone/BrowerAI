@@ -441,3 +441,9 @@ impl ExplorationReporter {
             .join("")
     }
 }
+
+impl Default for ExplorationReporter {
+    fn default() -> Self {
+        Self::new()
+    }
+}

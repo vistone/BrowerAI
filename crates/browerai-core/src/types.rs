@@ -410,16 +410,18 @@ impl VersionInfo {
         })
     }
 
-    /// 转换为字符串
-    pub fn to_string(&self) -> String {
-        let mut s = format!("{}.{}.{}", self.major, self.minor, self.patch);
+}
+
+impl std::fmt::Display for VersionInfo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}.{}.{}", self.major, self.minor, self.patch)?;
         if let Some(ref pre) = self.prerelease {
-            s.push_str(&format!("-{}", pre));
+            write!(f, "-{}", pre)?;
         }
         if let Some(ref build) = self.build {
-            s.push_str(&format!("+{}", build));
+            write!(f, "+{}", build)?;
         }
-        s
+        Ok(())
     }
 }
 

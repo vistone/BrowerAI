@@ -14,6 +14,7 @@ use std::time::SystemTime;
 #[derive(Debug, Clone)]
 pub struct LearningEngine {
     /// 配置
+    #[allow(dead_code)]
     config: LearningConfig,
     /// 是否启用
     enabled: bool,

@@ -3,7 +3,6 @@
 //! 提供 BrowerAI 的 DOM 表示
 
 use std::collections::HashMap;
-use std::sync::Arc;
 
 /// DOM 文档
 #[derive(Debug, Clone)]
@@ -95,8 +94,6 @@ pub struct Node {
     pub node_type: NodeType,
     /// 子节点
     children: Vec<Node>,
-    /// 父节点（弱引用）
-    parent: Option<Arc<Node>>,
 }
 
 impl Node {
@@ -110,7 +107,6 @@ impl Node {
                 id: None,
             }),
             children: Vec::new(),
-            parent: None,
         }
     }
 
@@ -119,7 +115,6 @@ impl Node {
         Self {
             node_type: NodeType::Text(content.into()),
             children: Vec::new(),
-            parent: None,
         }
     }
 
@@ -128,7 +123,6 @@ impl Node {
         Self {
             node_type: NodeType::Comment(content.into()),
             children: Vec::new(),
-            parent: None,
         }
     }
 
@@ -368,7 +362,6 @@ impl Element {
         Node {
             node_type: NodeType::Element(self.clone()),
             children: Vec::new(),
-            parent: None,
         }
     }
 

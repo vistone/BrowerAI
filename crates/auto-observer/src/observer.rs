@@ -442,6 +442,12 @@ impl BehaviorObserver {
     }
 }
 
+impl Default for BehaviorObserver {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// 观察分析结果
 #[derive(Debug, Default)]
 pub struct ObservationAnalysis {

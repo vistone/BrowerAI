@@ -20,7 +20,7 @@
 
 #![warn(missing_docs)]
 
-use browerai_core::{traits::Analyzer, Result};
+use browerai_core::Result;
 use browerai_js_parser::{JsParser, JsAst};
 
 pub mod scope;
@@ -226,9 +226,7 @@ mod tests {
         
         let result = analyzer.analyze_quick(js).unwrap();
         
-        // 快速分析应该返回非零的函数和变量计数
-        // 实际计数取决于解析器的实现
-        assert!(result.function_count >= 0); // 简化：只检查不panic
+        assert_eq!(result.function_count, 1);
     }
 
     #[test]
@@ -247,7 +245,6 @@ mod tests {
         
         let result = analyzer.analyze(js).unwrap();
         
-        // 验证分析完成（不检查具体结果，因为实现是简化的）
-        assert!(!result.callgraph.is_empty() || result.callgraph.is_empty()); // 总是true
+        assert_eq!(result.summary.metrics.function_count, 1);
     }
 }

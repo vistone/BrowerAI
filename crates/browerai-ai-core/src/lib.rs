@@ -134,7 +134,7 @@ impl Default for AiCore {
 }
 
 /// AI核心配置
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct AiCoreConfig {
     /// 模型配置
     pub model_config: models::ModelManagerConfig,
@@ -144,17 +144,6 @@ pub struct AiCoreConfig {
     pub inference_config: inference::InferenceConfig,
     /// 学习配置
     pub learning_config: learning::LearningConfig,
-}
-
-impl Default for AiCoreConfig {
-    fn default() -> Self {
-        Self {
-            model_config: models::ModelManagerConfig::default(),
-            feature_config: features::FeatureExtractorConfig::default(),
-            inference_config: inference::InferenceConfig::default(),
-            learning_config: learning::LearningConfig::default(),
-        }
-    }
 }
 
 /// AI核心状态

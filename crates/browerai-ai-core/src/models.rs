@@ -16,6 +16,7 @@ pub struct ModelManager {
     /// 已加载的模型
     models: HashMap<String, ModelHandle>,
     /// 模型配置
+    #[allow(dead_code)]
     config: ModelManagerConfig,
     /// 模型存储路径
     model_path: PathBuf,

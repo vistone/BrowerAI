@@ -13,6 +13,7 @@ use std::collections::HashMap;
 #[derive(Debug, Clone)]
 pub struct FeatureExtractor {
     /// 配置
+    #[allow(dead_code)]
     config: FeatureExtractorConfig,
     /// 特征缓存
     cache: HashMap<String, FeatureVector>,
@@ -161,7 +162,7 @@ impl FeatureExtractor {
     /// 计算最大括号深度
     fn calculate_max_bracket_depth(&self, code: &str) -> usize {
         let mut max_depth = 0;
-        let mut current_depth = 0;
+        let mut current_depth: usize = 0;
         
         for ch in code.chars() {
             match ch {
@@ -170,9 +171,7 @@ impl FeatureExtractor {
                     max_depth = max_depth.max(current_depth);
                 }
                 '}' | ')' | ']' => {
-                    if current_depth > 0 {
-                        current_depth -= 1;
-                    }
+                    current_depth = current_depth.saturating_sub(1);
                 }
                 _ => {}
             }

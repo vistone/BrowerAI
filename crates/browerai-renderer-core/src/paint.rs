@@ -108,6 +108,7 @@ pub enum PaintCommand {
         text: String,
         /// 位置
         x: f32,
+        /// 位置Y
         y: f32,
         /// 字体大小
         font_size: f32,
@@ -133,6 +134,7 @@ pub enum PaintCommand {
         blur_radius: f32,
         /// 偏移
         offset_x: f32,
+        /// 垂直偏移
         offset_y: f32,
     },
     /// 裁剪
@@ -287,7 +289,7 @@ mod tests {
 
     #[test]
     fn test_paint_commands() {
-        let commands = vec![
+        let commands = [
             PaintCommand::DrawRect {
                 rect: Rect::new(0.0, 0.0, 100.0, 100.0),
                 color: Color::white(),

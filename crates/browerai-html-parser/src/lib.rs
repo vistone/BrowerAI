@@ -35,8 +35,6 @@ pub use dom::{Document, Element, Node, NodeType};
 ///
 /// 支持传统解析和可选的 AI 增强
 pub struct HtmlParser {
-    /// 基础解析器
-    base_parser: RcDom,
     /// AI 增强器（可选）
     ai_enhancer: Option<Box<dyn AiModel<Input = String, Output = Document>>>,
     /// 是否忽略解析错误
@@ -47,7 +45,6 @@ impl HtmlParser {
     /// 创建新的 HTML 解析器
     pub fn new() -> Self {
         Self {
-            base_parser: RcDom::default(),
             ai_enhancer: None,
             ignore_errors: true,
         }

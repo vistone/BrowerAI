@@ -45,6 +45,7 @@ impl SwcTransformer {
     pub fn transform(&self, code: &str) -> Result<String> {
         // 实际实现需要集成SWC
         // 这里返回原始代码作为占位
+        let _preserve_comments = self.preserve_comments;
         Ok(code.to_string())
     }
 
@@ -69,6 +70,7 @@ impl Default for SwcTransformer {
 
 /// ECMAScript目标版本
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(missing_docs)]
 pub enum EsTarget {
     Es5,
     Es2015,

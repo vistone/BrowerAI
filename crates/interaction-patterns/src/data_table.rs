@@ -11,6 +11,12 @@ impl DataTablePattern {
     }
 }
 
+impl Default for DataTablePattern {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PatternImplementation for DataTablePattern {
     fn pattern_type(&self) -> ComplexPatternType {
         ComplexPatternType::DataTable

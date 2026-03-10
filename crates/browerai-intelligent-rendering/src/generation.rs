@@ -316,8 +316,8 @@ mod tests {
     use crate::reasoning::IntelligentReasoning;
     use crate::site_understanding::SiteUnderstanding;
 
-    #[test]
-    fn test_generation_process() {
+    #[tokio::test]
+    async fn test_generation_process() {
         let html = "<html><body><input type='search'/></body></html>".to_string();
         let css = "".to_string();
         let js = "".to_string();
@@ -327,7 +327,7 @@ mod tests {
         let reasoning_result = reasoning.reason().unwrap();
 
         let generation = IntelligentGeneration::with_content(reasoning_result, html, css);
-        let experiences = generation.generate().unwrap();
+        let experiences = generation.generate().await.unwrap();
 
         assert!(!experiences.is_empty());
 
@@ -339,8 +339,8 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_content_preservation() {
+    #[tokio::test]
+    async fn test_content_preservation() {
         let original_html = "<html><head><title>Test</title></head><body><h1>Hello</h1></body></html>".to_string();
         let original_css = "body { color: black; }".to_string();
         let js = "".to_string();
@@ -350,7 +350,7 @@ mod tests {
         let reasoning_result = reasoning.reason().unwrap();
 
         let generation = IntelligentGeneration::with_content(reasoning_result, original_html.clone(), original_css.clone());
-        let experiences = generation.generate().unwrap();
+        let experiences = generation.generate().await.unwrap();
 
         assert!(!experiences.is_empty());
 

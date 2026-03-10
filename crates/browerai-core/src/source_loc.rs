@@ -155,8 +155,8 @@ impl SourceInfo {
         } else {
             // 多行
             let mut result = String::new();
-            for i in start_line..=end_line {
-                result.push_str(lines[i]);
+            for line in lines.iter().take(end_line + 1).skip(start_line) {
+                result.push_str(line);
                 result.push('\n');
             }
             Some(result)

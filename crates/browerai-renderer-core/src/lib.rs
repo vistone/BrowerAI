@@ -97,7 +97,7 @@ impl Renderer {
         // 阶段5: 生成输出
         let output = RenderOutput {
             layers,
-            viewport: viewport.clone(),
+            viewport: *viewport,
             metadata: RenderMetadata {
                 layer_count: self.compositor.layer_count(),
                 paint_count: paint_records.len(),
@@ -116,7 +116,7 @@ impl Renderer {
         // 返回空输出作为占位
         Ok(RenderOutput {
             layers: Vec::new(),
-            viewport: viewport.clone(),
+            viewport: *viewport,
             metadata: RenderMetadata {
                 layer_count: 0,
                 paint_count: 0,
@@ -143,6 +143,11 @@ impl Renderer {
     /// 获取资源管理器
     pub fn resource_manager(&self) -> &ResourceManager {
         &self.resource_manager
+    }
+
+    /// 获取渲染器配置
+    pub fn config(&self) -> &RenderConfig {
+        &self.config
     }
 
     /// 清除缓存
@@ -174,7 +179,7 @@ impl Default for Renderer {
 }
 
 /// 渲染配置
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct RenderConfig {
     /// 布局配置
     pub layout_config: layout::LayoutConfig,
@@ -186,18 +191,6 @@ pub struct RenderConfig {
     pub resource_config: resources::ResourceConfig,
     /// 启用AI增强
     pub ai_enhanced: bool,
-}
-
-impl Default for RenderConfig {
-    fn default() -> Self {
-        Self {
-            layout_config: layout::LayoutConfig::default(),
-            paint_config: paint::PaintConfig::default(),
-            compositor_config: compositing::CompositorConfig::default(),
-            resource_config: resources::ResourceConfig::default(),
-            ai_enhanced: false,
-        }
-    }
 }
 
 /// 视口

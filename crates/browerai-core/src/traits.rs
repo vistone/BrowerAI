@@ -159,20 +159,15 @@ pub struct RenderMetadata {
 }
 
 /// 渲染模式
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum RenderMode {
     /// 传统渲染
+    #[default]
     Traditional,
     /// AI 增强渲染
     AiEnhanced,
     /// 混合渲染
     Hybrid,
-}
-
-impl Default for RenderMode {
-    fn default() -> Self {
-        RenderMode::Traditional
-    }
 }
 
 /// 渲染器能力

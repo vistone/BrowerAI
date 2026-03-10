@@ -124,9 +124,10 @@ impl Default for InferenceEngine {
 }
 
 /// 推理后端
-#[derive(Debug)]
+#[derive(Debug, Default)]
 enum InferenceBackend {
     /// 占位符后端
+    #[default]
     Placeholder,
     #[cfg(feature = "onnx")]
     /// ONNX运行时
@@ -169,12 +170,6 @@ impl InferenceBackend {
             #[cfg(feature = "onnx")]
             Self::Onnx(_) => true,
         }
-    }
-}
-
-impl Default for InferenceBackend {
-    fn default() -> Self {
-        Self::Placeholder
     }
 }
 
@@ -372,9 +367,8 @@ mod tests {
         assert!(result.is_ok());
         
         let output = result.unwrap().output;
-        match output {
-            InferenceOutput::Raw(v) => assert_eq!(v.len(), 10),
-            _ => {}
+        if let InferenceOutput::Raw(v) = output {
+            assert_eq!(v.len(), 10)
         }
     }
 

@@ -60,6 +60,6 @@ mod tests {
     #[test]
     fn test_dashboard_creation() {
         let dashboard = create_dashboard();
-        assert!(dashboard.get_uptime_secs() >= 0);
+        assert!(dashboard.get_all_metrics().contains("Uptime"));
     }
 }

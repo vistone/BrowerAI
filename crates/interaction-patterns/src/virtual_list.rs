@@ -92,6 +92,12 @@ impl VirtualListPattern {
     }
 }
 
+impl Default for VirtualListPattern {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PatternImplementation for VirtualListPattern {
     fn pattern_type(&self) -> ComplexPatternType {
         ComplexPatternType::VirtualList

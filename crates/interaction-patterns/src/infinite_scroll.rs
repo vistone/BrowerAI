@@ -132,6 +132,12 @@ impl InfiniteScrollPattern {
     }
 }
 
+impl Default for InfiniteScrollPattern {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PatternImplementation for InfiniteScrollPattern {
     fn pattern_type(&self) -> ComplexPatternType {
         ComplexPatternType::InfiniteScroll

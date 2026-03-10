@@ -192,7 +192,7 @@ pub enum ProxyType {
 }
 
 /// 解析配置
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ParseConfig {
     /// HTML 解析配置
     pub html: HtmlParseConfig,
@@ -200,16 +200,6 @@ pub struct ParseConfig {
     pub css: CssParseConfig,
     /// JS 解析配置
     pub js: JsParseConfig,
-}
-
-impl Default for ParseConfig {
-    fn default() -> Self {
-        Self {
-            html: HtmlParseConfig::default(),
-            css: CssParseConfig::default(),
-            js: JsParseConfig::default(),
-        }
-    }
 }
 
 /// HTML 解析配置

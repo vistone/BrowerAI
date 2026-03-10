@@ -1,5 +1,7 @@
 //! JavaScript AST 类型
 
+#![allow(missing_docs)]
+
 /// JavaScript AST
 #[derive(Debug, Clone, Default)]
 pub struct JsAst {
@@ -104,18 +106,13 @@ impl JsAst {
 }
 
 /// AST 类型
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum AstKind {
     /// 脚本
+    #[default]
     Script,
     /// 模块
     Module,
-}
-
-impl Default for AstKind {
-    fn default() -> Self {
-        AstKind::Script
-    }
 }
 
 /// AST 节点

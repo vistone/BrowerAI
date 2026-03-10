@@ -11,6 +11,12 @@ impl RichEditorPattern {
     }
 }
 
+impl Default for RichEditorPattern {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PatternImplementation for RichEditorPattern {
     fn pattern_type(&self) -> ComplexPatternType {
         ComplexPatternType::RichEditor

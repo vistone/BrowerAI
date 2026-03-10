@@ -180,6 +180,7 @@ impl WebsiteTester {
     }
 
     /// Count elements in DOM
+    #[allow(dead_code)]
     fn count_elements(dom: &markup5ever_rcdom::RcDom) -> usize {
         use markup5ever_rcdom::NodeData;
         let mut count = 0;

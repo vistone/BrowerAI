@@ -104,7 +104,7 @@ impl UnifiedAnalysis {
         
         let mi = 171.0 - 5.2 * halstead_volume.ln() - 0.23 * cc - 16.2 * loc.ln();
         
-        mi.max(0.0).min(100.0)
+        mi.clamp(0.0, 100.0)
     }
 
     /// 识别代码问题
@@ -352,6 +352,7 @@ impl CodeMetrics {
 
 /// 可维护性等级
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(missing_docs)]
 pub enum MaintainabilityLevel {
     VeryLow,
     Low,
@@ -375,6 +376,7 @@ pub struct CodeIssue {
 
 /// 问题严重程度
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[allow(missing_docs)]
 pub enum IssueSeverity {
     Error,
     Warning,
@@ -383,6 +385,7 @@ pub enum IssueSeverity {
 
 /// 问题类别
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(missing_docs)]
 pub enum IssueCategory {
     Complexity,
     Maintainability,
@@ -406,6 +409,7 @@ pub struct OptimizationSuggestion {
 
 /// 优先级
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[allow(missing_docs)]
 pub enum Priority {
     Low,
     Medium,
@@ -415,6 +419,7 @@ pub enum Priority {
 
 /// 优化类别
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(missing_docs)]
 pub enum OptimizationCategory {
     Performance,
     Readability,
@@ -437,6 +442,7 @@ pub struct SecurityRisk {
 
 /// 风险等级
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[allow(missing_docs)]
 pub enum RiskLevel {
     Low,
     Medium,
@@ -446,6 +452,7 @@ pub enum RiskLevel {
 
 /// 安全类别
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(missing_docs)]
 pub enum SecurityCategory {
     CodeInjection,
     DataExposure,
@@ -464,9 +471,21 @@ pub struct PerformanceAnalysis {
     pub bottleneck_functions: Vec<String>,
 }
 
+impl Default for DataflowResult {
+    fn default() -> Self {
+        use crate::dataflow::DataflowAnalysisType;
+        Self {
+            analysis_type: DataflowAnalysisType::ReachingDefinitions,
+            variable_states: std::collections::HashMap::new(),
+            constants: std::collections::HashMap::new(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{CallGraph, ControlFlowGraph, ScopeTree};
     use browerai_js_parser::JsAst;
 
     #[test]
@@ -503,16 +522,5 @@ mod tests {
         assert_ne!(IssueSeverity::Error, IssueSeverity::Warning);
         assert_ne!(IssueSeverity::Warning, IssueSeverity::Info);
         assert!(IssueSeverity::Error < IssueSeverity::Warning); // Error has higher priority
-    }
-}
-
-impl Default for DataflowResult {
-    fn default() -> Self {
-        use crate::dataflow::DataflowAnalysisType;
-        Self {
-            analysis_type: DataflowAnalysisType::ReachingDefinitions,
-            variable_states: std::collections::HashMap::new(),
-            constants: std::collections::HashMap::new(),
-        }
     }
 }

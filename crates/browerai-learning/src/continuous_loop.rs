@@ -290,7 +290,7 @@ impl ContinuousLearningLoop {
         use std::collections::HashMap;
 
         let code_types = [CodeType::Html, CodeType::Css, CodeType::JavaScript];
-        let code_type = code_types[self.stats.iterations % code_types.len()].clone();
+        let code_type = code_types[self.stats.iterations % code_types.len()];
 
         let mut constraints = HashMap::new();
 

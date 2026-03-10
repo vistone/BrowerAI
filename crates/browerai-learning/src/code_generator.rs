@@ -112,7 +112,7 @@ impl CodeGenerator {
 
         Ok(GeneratedCode {
             code,
-            code_type: request.code_type.clone(),
+            code_type: request.code_type,
             confidence: 0.85, // Placeholder - would be from model
             metadata: GenerationMetadata {
                 patterns_used: vec!["basic_structure".to_string()],

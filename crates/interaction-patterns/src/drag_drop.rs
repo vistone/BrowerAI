@@ -144,6 +144,12 @@ impl DragDropPattern {
     }
 }
 
+impl Default for DragDropPattern {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PatternImplementation for DragDropPattern {
     fn pattern_type(&self) -> ComplexPatternType {
         ComplexPatternType::DragAndDrop

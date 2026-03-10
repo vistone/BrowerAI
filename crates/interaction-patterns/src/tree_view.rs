@@ -11,6 +11,12 @@ impl TreeViewPattern {
     }
 }
 
+impl Default for TreeViewPattern {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PatternImplementation for TreeViewPattern {
     fn pattern_type(&self) -> ComplexPatternType {
         ComplexPatternType::TreeView

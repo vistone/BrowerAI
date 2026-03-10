@@ -64,6 +64,11 @@ impl ControlFlowGraph {
         self.exit
     }
 
+    /// 获取节点映射数量
+    pub fn node_map_len(&self) -> usize {
+        self.node_map.len()
+    }
+
     /// 获取基本块
     pub fn get_block(&self, index: NodeIndex) -> Option<&BasicBlock> {
         self.graph.node_weight(index)

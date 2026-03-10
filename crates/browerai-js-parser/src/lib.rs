@@ -38,7 +38,7 @@ pub struct JsParser {
 }
 
 /// ECMAScript 版本
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum EcmaVersion {
     /// ES5
     ES5,
@@ -53,15 +53,10 @@ pub enum EcmaVersion {
     /// ES2021
     ES2021,
     /// ES2022
+    #[default]
     ES2022,
     /// ESNext
     ESNext,
-}
-
-impl Default for EcmaVersion {
-    fn default() -> Self {
-        EcmaVersion::ES2022
-    }
 }
 
 impl JsParser {

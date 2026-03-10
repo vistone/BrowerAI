@@ -119,6 +119,12 @@ impl PatternRecognizer {
     }
 }
 
+impl Default for PatternRecognizer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// 模式特征
 #[derive(Debug, Default)]
 pub struct PatternFeatures {

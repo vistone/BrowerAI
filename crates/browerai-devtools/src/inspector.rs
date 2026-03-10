@@ -80,6 +80,11 @@ impl DomInspector {
         self.selected_node.as_deref()
     }
 
+    /// 获取检查器配置
+    pub fn config(&self) -> &InspectorConfig {
+        &self.config
+    }
+
     /// 清除选择
     pub fn clear_selection(&mut self) {
         self.selected_node = None;

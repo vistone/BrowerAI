@@ -188,12 +188,16 @@ pub mod parse {
     /// HTML 解析错误
     #[derive(Debug, Clone)]
     pub struct HtmlParseError {
+        /// 人类可读的错误信息。
         pub message: String,
+        /// 错误所在行号（1-based）。
         pub line: Option<usize>,
+        /// 错误所在列号（1-based）。
         pub column: Option<usize>,
     }
 
     impl HtmlParseError {
+        /// 使用错误消息创建 HTML 解析错误。
         pub fn new(message: impl Into<String>) -> Self {
             Self {
                 message: message.into(),
@@ -202,6 +206,7 @@ pub mod parse {
             }
         }
 
+        /// 附加错误位置信息（行、列）。
         pub fn with_location(mut self, line: usize, column: usize) -> Self {
             self.line = Some(line);
             self.column = Some(column);
@@ -224,11 +229,14 @@ pub mod parse {
     /// CSS 解析错误
     #[derive(Debug, Clone)]
     pub struct CssParseError {
+        /// 人类可读的错误信息。
         pub message: String,
+        /// 错误位置描述（如 selector/offset）。
         pub location: Option<String>,
     }
 
     impl CssParseError {
+        /// 使用错误消息创建 CSS 解析错误。
         pub fn new(message: impl Into<String>) -> Self {
             Self {
                 message: message.into(),
@@ -240,8 +248,11 @@ pub mod parse {
     /// JS 解析错误
     #[derive(Debug, Clone)]
     pub struct JsParseError {
+        /// 人类可读的错误信息。
         pub message: String,
+        /// 错误所在行号（1-based）。
         pub line: Option<usize>,
+        /// 错误所在列号（1-based）。
         pub column: Option<usize>,
     }
 }
@@ -253,11 +264,14 @@ pub mod ai {
     /// 模型加载错误
     #[derive(Debug, Clone)]
     pub struct ModelLoadError {
+        /// 模型文件路径。
         pub model_path: PathBuf,
+        /// 加载失败原因。
         pub reason: String,
     }
 
     impl ModelLoadError {
+        /// 创建模型加载错误。
         pub fn new(path: impl Into<PathBuf>, reason: impl Into<String>) -> Self {
             Self {
                 model_path: path.into(),
@@ -277,11 +291,14 @@ pub mod ai {
     /// 推理错误
     #[derive(Debug, Clone)]
     pub struct InferenceError {
+        /// 人类可读的错误信息。
         pub message: String,
+        /// 可选的模型名称。
         pub model_name: Option<String>,
     }
 
     impl InferenceError {
+        /// 使用错误消息创建推理错误。
         pub fn new(message: impl Into<String>) -> Self {
             Self {
                 message: message.into(),
@@ -289,6 +306,7 @@ pub mod ai {
             }
         }
 
+        /// 设置产生该错误的模型名称。
         pub fn with_model(mut self, name: impl Into<String>) -> Self {
             self.model_name = Some(name.into());
             self
@@ -303,11 +321,14 @@ pub mod network {
     /// 超时错误
     #[derive(Debug, Clone)]
     pub struct TimeoutError {
+        /// 请求 URL。
         pub url: String,
+        /// 超时时长（秒）。
         pub timeout_secs: u64,
     }
 
     impl TimeoutError {
+        /// 创建超时错误。
         pub fn new(url: impl Into<String>, secs: u64) -> Self {
             Self {
                 url: url.into(),

@@ -238,7 +238,7 @@ impl InteractionPatternLibrary {
     pub fn recognize_patterns(&self, observations: &[auto_observer::Observation]) -> Vec<InteractionPattern> {
         let mut recognized = Vec::new();
 
-        for (_, implementation) in &self.patterns {
+        for implementation in self.patterns.values() {
             if let Some(pattern) = implementation.recognize(observations) {
                 if pattern.confidence >= 0.7 {
                     recognized.push(pattern);

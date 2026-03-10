@@ -105,6 +105,12 @@ impl PriorityStrategy {
     }
 }
 
+impl Default for PriorityStrategy {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[async_trait::async_trait]
 impl ExplorationStrategy for PriorityStrategy {
     async fn next_element(&mut self, elements: &[ElementInfo]) -> Option<ElementInfo> {
@@ -144,6 +150,12 @@ impl RandomStrategy {
         Self {
             explored_selectors: HashSet::new(),
         }
+    }
+}
+
+impl Default for RandomStrategy {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -200,6 +212,12 @@ impl BreadthFirstStrategy {
         } else {
             "unknown".to_string()
         }
+    }
+}
+
+impl Default for BreadthFirstStrategy {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -276,6 +294,12 @@ impl SmartStrategy {
     }
 }
 
+impl Default for SmartStrategy {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[async_trait::async_trait]
 impl ExplorationStrategy for SmartStrategy {
     async fn next_element(&mut self, elements: &[ElementInfo]) -> Option<ElementInfo> {
@@ -314,23 +338,12 @@ impl ExplorationStrategy for SmartStrategy {
 /// 表单专用策略
 pub struct FormStrategy {
     explored_forms: HashSet<String>,
-    current_form: Option<String>,
-    form_state: HashMap<String, Vec<FormField>>,
-}
-
-#[derive(Debug, Clone)]
-struct FormField {
-    selector: String,
-    field_type: String,
-    filled: bool,
 }
 
 impl FormStrategy {
     pub fn new() -> Self {
         Self {
             explored_forms: HashSet::new(),
-            current_form: None,
-            form_state: HashMap::new(),
         }
     }
 
@@ -344,6 +357,12 @@ impl FormStrategy {
                 e.attributes.get("type") == Some(&"submit".to_string())
             })
             .collect()
+    }
+}
+
+impl Default for FormStrategy {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

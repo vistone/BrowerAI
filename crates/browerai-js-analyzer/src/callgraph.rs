@@ -47,7 +47,7 @@ impl CallGraph {
     /// 添加调用边
     pub fn add_call(&mut self, from: NodeIndex, to: NodeIndex, call_site: CallSite) {
         let edge = CallEdge {
-            call_site_id: self.call_sites.len(),
+            _call_site_id: self.call_sites.len(),
         };
         self.call_sites.push(call_site);
         self.graph.add_edge(from, to, edge);
@@ -223,7 +223,7 @@ pub struct FunctionId(pub usize);
 #[derive(Debug, Clone)]
 pub struct CallEdge {
     /// 调用点ID
-    call_site_id: usize,
+    _call_site_id: usize,
 }
 
 /// 调用点
@@ -322,7 +322,7 @@ mod tests {
     fn test_add_function() {
         let mut cg = CallGraph::new();
         let func = FunctionNode::new(FunctionId(0), "test");
-        let idx = cg.add_function(func);
+        let _idx = cg.add_function(func);
         
         assert_eq!(cg.function_count(), 1);
         assert!(cg.find_function("test").is_some());

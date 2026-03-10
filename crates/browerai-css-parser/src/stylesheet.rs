@@ -111,7 +111,7 @@ impl Rule {
 
     /// 序列化为 CSS
     pub fn to_css(&self) -> String {
-        let mut result = format!("{} {{\n", self.selector.to_string());
+        let mut result = format!("{} {{\n", self.selector);
         
         for decl in &self.declarations {
             result.push_str(&format!("  {};\n", decl.to_css()));
@@ -157,10 +157,10 @@ impl Selector {
         
         if raw == "*" {
             SelectorType::Universal
-        } else if raw.starts_with('#') {
-            SelectorType::Id(raw[1..].to_string())
-        } else if raw.starts_with('.') {
-            SelectorType::Class(raw[1..].to_string())
+        } else if let Some(stripped) = raw.strip_prefix('#') {
+            SelectorType::Id(stripped.to_string())
+        } else if let Some(stripped) = raw.strip_prefix('.') {
+            SelectorType::Class(stripped.to_string())
         } else if raw.contains(':') {
             SelectorType::Pseudo(raw.to_string())
         } else if raw.contains('[') {
@@ -182,16 +182,17 @@ impl Selector {
     }
 }
 
-impl ToString for Selector {
-    fn to_string(&self) -> String {
-        self.raw.clone()
+impl std::fmt::Display for Selector {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.raw)
     }
 }
 
 /// 选择器类型
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum SelectorType {
     /// 通用选择器 *
+    #[default]
     Universal,
     /// 元素选择器
     Element(String),
@@ -203,12 +204,6 @@ pub enum SelectorType {
     Attribute(String),
     /// 伪类/伪元素选择器
     Pseudo(String),
-}
-
-impl Default for SelectorType {
-    fn default() -> Self {
-        SelectorType::Universal
-    }
 }
 
 /// CSS 声明

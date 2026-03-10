@@ -135,7 +135,7 @@ impl NetworkMonitor {
     /// 获取平均响应时间
     pub fn average_response_time(&self) -> Option<Duration> {
         let durations: Vec<_> = self.responses.iter()
-            .filter_map(|r| r.duration_ms.map(|d| Duration::from_millis(d)))
+            .filter_map(|r| r.duration_ms.map(Duration::from_millis))
             .collect();
         
         if durations.is_empty() {

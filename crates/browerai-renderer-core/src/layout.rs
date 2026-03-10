@@ -58,7 +58,7 @@ impl LayoutEngine {
                 root.id.clone(),
                 ComputedBox {
                     rect: Rect::new(0.0, 0.0, viewport.width as f32, viewport.height as f32),
-                    box_model: root.box_model.clone(),
+                    box_model: root.box_model,
                 }
             );
         }

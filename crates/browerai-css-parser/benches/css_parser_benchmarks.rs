@@ -1,4 +1,5 @@
 use browerai_css_parser::CssParser;
+use browerai_core::traits::Parser;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 fn benchmark_simple_css(c: &mut Criterion) {
@@ -48,19 +49,9 @@ fn benchmark_complex_css(c: &mut Criterion) {
     });
 }
 
-fn benchmark_validate_css(c: &mut Criterion) {
-    let parser = CssParser::new();
-    let css = "div { margin: 10px; padding: 5px; }";
-
-    c.bench_function("validate css", |b| {
-        b.iter(|| parser.validate(black_box(css)))
-    });
-}
-
 criterion_group!(
     benches,
     benchmark_simple_css,
-    benchmark_complex_css,
-    benchmark_validate_css
+    benchmark_complex_css
 );
 criterion_main!(benches);

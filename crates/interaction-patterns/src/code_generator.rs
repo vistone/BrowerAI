@@ -93,6 +93,12 @@ impl PatternCodeGenerator {
     }
 }
 
+impl Default for PatternCodeGenerator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// 组件库
 #[derive(Debug, Clone)]
 pub struct ComponentLibrary {
