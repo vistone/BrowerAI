@@ -64,6 +64,7 @@ pub enum OptimizationLevel {
 
 /// 无障碍级别
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[allow(non_camel_case_types)]
 pub enum AccessibilityLevel {
     None,
     WCAG_A,
@@ -112,7 +113,7 @@ pub struct Dependency {
 /// 代码生成引擎
 pub struct CodeGenerationEngine {
     config: GenerationConfig,
-    template_engine: TemplateEngine,
+    _template_engine: TemplateEngine,
     component_builder: ComponentBuilder,
     style_generator: StyleGenerator,
     script_generator: ScriptGenerator,
@@ -123,7 +124,7 @@ impl CodeGenerationEngine {
     pub fn new(config: GenerationConfig) -> Self {
         Self {
             config: config.clone(),
-            template_engine: TemplateEngine::new(&config),
+            _template_engine: TemplateEngine::new(&config),
             component_builder: ComponentBuilder::new(&config),
             style_generator: StyleGenerator::new(&config),
             script_generator: ScriptGenerator::new(&config),
@@ -280,25 +281,22 @@ document.addEventListener('DOMContentLoaded', init);
     async fn generate_config_files(&self) -> Result<Vec<GeneratedFile>> {
         let mut configs = Vec::new();
 
-        match self.config.target_framework {
-            Framework::React => {
-                configs.push(GeneratedFile {
-                    path: "package.json".to_string(),
-                    content: self.generate_package_json(),
-                    file_type: FileType::Config,
-                });
-                configs.push(GeneratedFile {
-                    path: "tsconfig.json".to_string(),
-                    content: self.generate_tsconfig(),
-                    file_type: FileType::Config,
-                });
-                configs.push(GeneratedFile {
-                    path: "vite.config.ts".to_string(),
-                    content: self.generate_vite_config(),
-                    file_type: FileType::Config,
-                });
-            }
-            _ => {}
+        if let Framework::React = self.config.target_framework {
+            configs.push(GeneratedFile {
+                path: "package.json".to_string(),
+                content: self.generate_package_json(),
+                file_type: FileType::Config,
+            });
+            configs.push(GeneratedFile {
+                path: "tsconfig.json".to_string(),
+                content: self.generate_tsconfig(),
+                file_type: FileType::Config,
+            });
+            configs.push(GeneratedFile {
+                path: "vite.config.ts".to_string(),
+                content: self.generate_vite_config(),
+                file_type: FileType::Config,
+            });
         }
 
         Ok(configs)
@@ -395,7 +393,7 @@ export default defineConfig({
     fn generate_component_test(&self, component_path: &str) -> String {
         let component_name = component_path
             .split('/')
-            .last()
+            .next_back()
             .unwrap_or("Component")
             .replace(".tsx", "");
 

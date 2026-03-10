@@ -173,6 +173,7 @@ impl DualSandboxEngine {
     }
 
     /// 推断网站类型
+    #[allow(dead_code)]
     fn infer_website_type(&self, intent_type: &crate::sandbox2_learning::WebsiteType) -> crate::generator::WebsiteType {
         use crate::sandbox2_learning::WebsiteType as LearnedType;
         use crate::generator::WebsiteType as GenType;

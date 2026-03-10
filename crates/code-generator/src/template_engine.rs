@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 pub struct TemplateEngine {
     handlebars: Handlebars<'static>,
-    config: GenerationConfig,
+  _config: GenerationConfig,
 }
 
 impl TemplateEngine {
@@ -19,7 +19,7 @@ impl TemplateEngine {
 
         Self {
             handlebars,
-            config: config.clone(),
+          _config: config.clone(),
         }
     }
 

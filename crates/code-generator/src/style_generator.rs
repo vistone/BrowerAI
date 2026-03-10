@@ -96,7 +96,7 @@ impl StyleGenerator {
             css.push_str(&format!("  --color-success: {};\n", c.to_hex()));
         }
 
-        css.push_str("\n");
+        css.push('\n');
 
         // 间距变量
         css.push_str(&format!("  --spacing-unit: {}px;\n", analysis.spacing.base_unit));
@@ -104,14 +104,14 @@ impl StyleGenerator {
             css.push_str(&format!("  --spacing-{}: {}px;\n", i + 1, value));
         }
 
-        css.push_str("\n");
+        css.push('\n');
 
         // 排版变量
         for (i, &size) in analysis.typography.font_sizes.iter().enumerate() {
             css.push_str(&format!("  --font-size-{}: {}px;\n", i + 1, size));
         }
 
-        css.push_str("\n");
+        css.push('\n');
 
         // 圆角变量
         css.push_str("  --radius-sm: 4px;\n");
@@ -119,7 +119,7 @@ impl StyleGenerator {
         css.push_str("  --radius-lg: 12px;\n");
         css.push_str("  --radius-full: 9999px;\n");
 
-        css.push_str("\n");
+        css.push('\n');
 
         // 阴影变量
         css.push_str("  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);\n");
@@ -301,7 +301,7 @@ impl StyleGenerator {
         for section in &analysis.layout.sections {
             let section_class = section.name.to_lowercase();
             css.push_str(&format!(".{} {{\n", section_class));
-            css.push_str(&format!("  padding: var(--spacing-3);\n"));
+            css.push_str("  padding: var(--spacing-3);\n");
             
             match section.section_type {
                 visual_learner::SectionType::Header => {

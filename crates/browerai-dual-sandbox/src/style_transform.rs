@@ -383,6 +383,12 @@ impl StyleTransformer {
     }
 }
 
+impl Default for StyleTransformer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// 生成 CSS 代码
 pub fn generate_css(styles: &StyleSystem) -> String {
     let mut css = String::new();

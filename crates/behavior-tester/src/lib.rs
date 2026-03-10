@@ -229,19 +229,19 @@ impl BehaviorTestEngine {
     pub fn generate_report(&self, results: &TestReport) -> String {
         let mut report = String::new();
 
-        report.push_str(&format!("# Test Report\n\n"));
+        report.push_str("# Test Report\n\n");
         report.push_str(&format!("**Test Run ID:** {}\n", results.test_run_id));
         report.push_str(&format!("**Timestamp:** {}\n", results.timestamp));
         report.push_str(&format!("**Overall Score:** {:.1}%\n", results.overall_score * 100.0));
         report.push_str(&format!("**Status:** {}\n\n", if results.passed { "✅ PASSED" } else { "❌ FAILED" }));
 
-        report.push_str(&format!("## Summary\n\n"));
+        report.push_str("## Summary\n\n");
         report.push_str(&format!("- Total Tests: {}\n", results.summary.total_tests));
         report.push_str(&format!("- Passed: {}\n", results.summary.passed_tests));
         report.push_str(&format!("- Failed: {}\n", results.summary.failed_tests));
         report.push_str(&format!("- Duration: {}ms\n\n", results.summary.total_duration_ms));
 
-        report.push_str(&format!("## Detailed Results\n\n"));
+        report.push_str("## Detailed Results\n\n");
         for result in &results.results {
             report.push_str(&format!("### {}\n", result.test_name));
             report.push_str(&format!("- Type: {:?}\n", result.test_type));
@@ -250,12 +250,12 @@ impl BehaviorTestEngine {
             report.push_str(&format!("- Duration: {}ms\n", result.duration_ms));
             
             if !result.errors.is_empty() {
-                report.push_str(&format!("\n**Errors:**\n"));
+                report.push_str("\n**Errors:**\n");
                 for error in &result.errors {
                     report.push_str(&format!("- Step {}: {}\n", error.step, error.message));
                 }
             }
-            report.push_str(&format!("\n"));
+            report.push('\n');
         }
 
         report

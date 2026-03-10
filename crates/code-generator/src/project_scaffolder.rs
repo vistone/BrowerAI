@@ -37,45 +37,42 @@ impl ProjectScaffolder {
     fn get_dependencies(&self) -> Vec<Dependency> {
         let mut deps = vec![];
 
-        match self.config.target_framework {
-            Framework::React => {
-                deps.push(Dependency {
-                    name: "react".to_string(),
-                    version: "^18.2.0".to_string(),
-                    is_dev: false,
-                });
-                deps.push(Dependency {
-                    name: "react-dom".to_string(),
-                    version: "^18.2.0".to_string(),
-                    is_dev: false,
-                });
-                deps.push(Dependency {
-                    name: "@types/react".to_string(),
-                    version: "^18.2.0".to_string(),
-                    is_dev: true,
-                });
-                deps.push(Dependency {
-                    name: "@types/react-dom".to_string(),
-                    version: "^18.2.0".to_string(),
-                    is_dev: true,
-                });
-                deps.push(Dependency {
-                    name: "@vitejs/plugin-react".to_string(),
-                    version: "^4.0.0".to_string(),
-                    is_dev: true,
-                });
-                deps.push(Dependency {
-                    name: "vite".to_string(),
-                    version: "^5.0.0".to_string(),
-                    is_dev: true,
-                });
-                deps.push(Dependency {
-                    name: "typescript".to_string(),
-                    version: "^5.0.0".to_string(),
-                    is_dev: true,
-                });
-            }
-            _ => {}
+        if let Framework::React = self.config.target_framework {
+            deps.push(Dependency {
+                name: "react".to_string(),
+                version: "^18.2.0".to_string(),
+                is_dev: false,
+            });
+            deps.push(Dependency {
+                name: "react-dom".to_string(),
+                version: "^18.2.0".to_string(),
+                is_dev: false,
+            });
+            deps.push(Dependency {
+                name: "@types/react".to_string(),
+                version: "^18.2.0".to_string(),
+                is_dev: true,
+            });
+            deps.push(Dependency {
+                name: "@types/react-dom".to_string(),
+                version: "^18.2.0".to_string(),
+                is_dev: true,
+            });
+            deps.push(Dependency {
+                name: "@vitejs/plugin-react".to_string(),
+                version: "^4.0.0".to_string(),
+                is_dev: true,
+            });
+            deps.push(Dependency {
+                name: "vite".to_string(),
+                version: "^5.0.0".to_string(),
+                is_dev: true,
+            });
+            deps.push(Dependency {
+                name: "typescript".to_string(),
+                version: "^5.0.0".to_string(),
+                is_dev: true,
+            });
         }
 
         // 测试依赖
@@ -145,6 +142,7 @@ impl ProjectScaffolder {
         ]
     }
 
+    #[allow(clippy::vec_init_then_push)]
     async fn create_config_files(&self) -> Result<Vec<GeneratedFile>> {
         let mut files = Vec::new();
 

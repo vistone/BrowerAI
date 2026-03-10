@@ -4,7 +4,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 // 核心模块
@@ -175,6 +175,7 @@ async fn learn_and_generate(url: &str, output_dir: &PathBuf, variant_count: usiz
 }
 
 /// 将样式注入 HTML
+#[allow(dead_code)]
 fn inject_styles(html: &str, css: &str) -> String {
     let style_tag = format!("<style>\n{}\n</style>\n", css);
     
@@ -194,7 +195,7 @@ fn inject_styles(html: &str, css: &str) -> String {
 /// 保存学习结果到本地
 async fn save_learning_results(
     result: &browerai_dual_sandbox::ProcessedWebsite,
-    output_dir: &PathBuf,
+    output_dir: &Path,
 ) -> Result<()> {
     let learning_dir = output_dir.join("learning_results");
     fs::create_dir_all(&learning_dir)?;

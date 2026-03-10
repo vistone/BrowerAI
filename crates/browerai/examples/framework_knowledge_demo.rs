@@ -38,7 +38,7 @@ fn main() {
         println!("     Matched signatures: {:?}", result.matched_signatures);
         println!(
             "     Strategies available: {}",
-            result.applicable_strategies.len()
+            result.recommended_strategies.len()
         );
     }
     println!();
@@ -218,7 +218,7 @@ fn main() {
             result.confidence * 100.0
         );
         println!("     Available strategies:");
-        for strategy in &result.applicable_strategies {
+        for strategy in &result.recommended_strategies {
             println!(
                 "       - {} (success rate: {:.0}%, priority: {})",
                 strategy.name,
@@ -247,6 +247,7 @@ fn main() {
     }
     println!();
 
+    let stats = kb.get_knowledge_base_stats();
     println!("✅ Framework Knowledge Base demonstration complete!");
     println!(
         "   This system can detect and analyze {} frameworks worldwide",

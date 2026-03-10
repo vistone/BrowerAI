@@ -30,7 +30,7 @@ struct ComponentFeatures {
     max_area: u32,
     has_text: bool,
     border_radius_range: (u8, u8),
-    typical_colors: Vec<Color>,
+    _typical_colors: Vec<Color>,
 }
 
 impl ComponentDetector {
@@ -55,7 +55,7 @@ impl ComponentDetector {
                     max_area: 50000,
                     has_text: true,
                     border_radius_range: (2, 12),
-                    typical_colors: vec![],
+                    _typical_colors: vec![],
                 },
                 confidence_weight: 1.0,
             },
@@ -68,7 +68,7 @@ impl ComponentDetector {
                     max_area: 100000,
                     has_text: false,
                     border_radius_range: (2, 8),
-                    typical_colors: vec![],
+                    _typical_colors: vec![],
                 },
                 confidence_weight: 1.0,
             },
@@ -81,7 +81,7 @@ impl ComponentDetector {
                     max_area: 500000,
                     has_text: true,
                     border_radius_range: (4, 16),
-                    typical_colors: vec![],
+                    _typical_colors: vec![],
                 },
                 confidence_weight: 0.9,
             },
@@ -94,7 +94,7 @@ impl ComponentDetector {
                     max_area: 200000,
                     has_text: true,
                     border_radius_range: (0, 4),
-                    typical_colors: vec![],
+                    _typical_colors: vec![],
                 },
                 confidence_weight: 0.85,
             },
@@ -107,7 +107,7 @@ impl ComponentDetector {
                     max_area: 10000,
                     has_text: false,
                     border_radius_range: (50, 50), // 圆形
-                    typical_colors: vec![],
+                    _typical_colors: vec![],
                 },
                 confidence_weight: 0.9,
             },
@@ -120,7 +120,7 @@ impl ComponentDetector {
                     max_area: 2500,
                     has_text: false,
                     border_radius_range: (0, 0),
-                    typical_colors: vec![],
+                    _typical_colors: vec![],
                 },
                 confidence_weight: 0.8,
             },
@@ -377,7 +377,7 @@ impl ComponentDetector {
         let step = (rgba.width() * rgba.height() / 1000).max(1);
         
         for (idx, pixel) in rgba.pixels().enumerate() {
-            if idx as u32 % step != 0 {
+            if !(idx as u32).is_multiple_of(step) {
                 continue;
             }
             

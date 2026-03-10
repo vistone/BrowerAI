@@ -86,12 +86,9 @@ impl ComponentBuilder {
 
         // 根据行为添加hooks和事件处理
         for behavior in related_behaviors {
-            match behavior.pattern_type {
-                interaction_patterns::ComplexPatternType::DragAndDrop => {
-                    imports.push("import { useDragDrop } from '../hooks/useDragDrop';".to_string());
-                    hooks.push(format!("  const {{ {}, isDragging }} = useDragDrop();", component_name.to_lowercase()));
-                }
-                _ => {}
+          if behavior.pattern_type == interaction_patterns::ComplexPatternType::DragAndDrop {
+            imports.push("import { useDragDrop } from '../hooks/useDragDrop';".to_string());
+            hooks.push(format!("  const {{ {}, isDragging }} = useDragDrop();", component_name.to_lowercase()));
             }
         }
 

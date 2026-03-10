@@ -6,7 +6,7 @@ use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 
 /// 功能意图库
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct FunctionIntents {
     /// 交互功能
     pub interactions: Vec<InteractionIntent>,
@@ -471,14 +471,8 @@ impl JsUnderstander {
     }
 }
 
-impl Default for FunctionIntents {
+impl Default for JsUnderstander {
     fn default() -> Self {
-        Self {
-            interactions: Vec::new(),
-            data_flows: Vec::new(),
-            state_management: Vec::new(),
-            api_intents: Vec::new(),
-            animations: Vec::new(),
-        }
+        Self::new()
     }
 }

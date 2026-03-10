@@ -11,7 +11,7 @@ use crate::component_extractor::ComponentLibrary;
 /// 功能实现生成器
 pub struct FunctionGenerator {
     intents: FunctionIntents,
-    components: ComponentLibrary,
+    _components: ComponentLibrary,
 }
 
 /// 生成的功能代码
@@ -42,7 +42,10 @@ pub enum TargetFramework {
 
 impl FunctionGenerator {
     pub fn new(intents: FunctionIntents, components: ComponentLibrary) -> Self {
-        Self { intents, components }
+        Self {
+            intents,
+            _components: components,
+        }
     }
 
     /// 生成功能代码

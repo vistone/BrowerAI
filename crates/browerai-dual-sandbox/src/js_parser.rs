@@ -112,27 +112,14 @@ impl JsParser {
 
     /// 解析 JS 代码
     pub fn parse(&self, code: &str) -> ParsedJs {
-        let mut parsed = ParsedJs::default();
-        
-        // 检测混淆
-        parsed.obfuscation = self.detect_obfuscation(code);
-        
-        // 计算复杂度
-        parsed.complexity = self.calculate_complexity(code);
-        
-        // 提取函数
-        parsed.functions = self.extract_functions(code);
-        
-        // 提取变量
-        parsed.variables = self.extract_variables(code);
-        
-        // 提取事件处理器
-        parsed.event_handlers = self.extract_event_handlers(code);
-        
-        // 提取 API 调用
-        parsed.api_calls = self.extract_api_calls(code);
-        
-        parsed
+        ParsedJs {
+            obfuscation: self.detect_obfuscation(code),
+            complexity: self.calculate_complexity(code),
+            functions: self.extract_functions(code),
+            variables: self.extract_variables(code),
+            event_handlers: self.extract_event_handlers(code),
+            api_calls: self.extract_api_calls(code),
+        }
     }
 
     /// 检测混淆
@@ -526,6 +513,12 @@ impl JsParser {
         }
         
         formatted
+    }
+}
+
+impl Default for JsParser {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

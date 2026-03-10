@@ -233,7 +233,7 @@ pub enum SectionType {
 }
 
 /// 配色方案
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ColorScheme {
     pub primary: Option<Color>,
     pub secondary: Option<Color>,
@@ -312,6 +312,16 @@ impl VisualLearningEngine {
             color_extractor: ColorExtractor::new(&config),
             style_inferencer: StyleInferencer::new(&config),
         }
+    }
+
+    /// 获取学习引擎配置
+    pub fn config(&self) -> &VisualLearningConfig {
+        &self.config
+    }
+
+    /// 获取视觉分析器
+    pub fn analyzer(&self) -> &VisualAnalyzer {
+        &self.analyzer
     }
 
     /// 分析页面截图
@@ -404,7 +414,7 @@ impl VisualLearningEngine {
         let mut sorted_colors: Vec<_> = color_frequencies.values().collect();
         sorted_colors.sort_by(|a, b| b.1.cmp(&a.1));
         
-        if sorted_colors.len() >= 1 {
+        if !sorted_colors.is_empty() {
             design_system.primary_color = Some(sorted_colors[0].0.clone());
         }
         if sorted_colors.len() >= 2 {
@@ -424,7 +434,7 @@ impl VisualLearningEngine {
         }
         
         let mut sorted_gaps: Vec<_> = gap_counts.iter().collect();
-        sorted_gaps.sort_by(|a, b| b.1.cmp(&a.1));
+        sorted_gaps.sort_by(|a, b| b.1.cmp(a.1));
         
         if let Some((base, _)) = sorted_gaps.first() {
             design_system.spacing_base = Some(**base as u8);

@@ -16,6 +16,11 @@ impl VisualAnalyzer {
         }
     }
 
+    /// 获取分析器配置
+    pub fn config(&self) -> &VisualLearningConfig {
+        &self.config
+    }
+
     /// 分析图像
     pub fn analyze(&self, _image: &image::DynamicImage) -> Result<VisualAnalysis> {
         // 这里可以协调多个分析器的调用

@@ -44,7 +44,7 @@ impl ColorExtractor {
         let step = ((rgba.width() * rgba.height()) / 10000).max(1);
         
         for (idx, pixel) in rgba.pixels().enumerate() {
-            if idx as u32 % step != 0 {
+            if !(idx as u32).is_multiple_of(step) {
                 continue;
             }
             
@@ -336,20 +336,3 @@ impl ColorExtractor {
     }
 }
 
-impl Default for ColorScheme {
-    fn default() -> Self {
-        Self {
-            primary: None,
-            secondary: None,
-            background: None,
-            surface: None,
-            text_primary: None,
-            text_secondary: None,
-            accent: None,
-            error: None,
-            warning: None,
-            success: None,
-            all_colors: Vec::new(),
-        }
-    }
-}

@@ -421,11 +421,9 @@ impl LearningSandbox {
                     seen_text.insert(hex);
                     colors.text_colors.push(color);
                 }
-            } else {
-                if !seen_primary.contains(&hex) && colors.primary_colors.len() < MAX_COLORS_PER_TYPE {
-                    seen_primary.insert(hex);
-                    colors.primary_colors.push(color);
-                }
+            } else if !seen_primary.contains(&hex) && colors.primary_colors.len() < MAX_COLORS_PER_TYPE {
+                seen_primary.insert(hex);
+                colors.primary_colors.push(color);
             }
         }
     }
@@ -595,16 +593,16 @@ impl LearningSandbox {
     /// 分析布局模式
     fn analyze_layout_patterns(&self, dom: &DomTree, layouts: &mut LayoutExtraction) {
         // 检测 header-main-footer 模式
-        let has_header = dom.query_selector("header").len() > 0;
-        let has_footer = dom.query_selector("footer").len() > 0;
-        let has_main = dom.query_selector("main").len() > 0;
+        let has_header = !dom.query_selector("header").is_empty();
+        let has_footer = !dom.query_selector("footer").is_empty();
+        let has_main = !dom.query_selector("main").is_empty();
 
         if has_header && has_footer && has_main {
             layouts.patterns.push(LayoutPattern::HeaderMainFooter);
         }
 
         // 检测 sidebar-content 模式
-        let has_aside = dom.query_selector("aside").len() > 0;
+        let has_aside = !dom.query_selector("aside").is_empty();
         if has_aside && has_main {
             layouts.patterns.push(LayoutPattern::SidebarContent);
         }
@@ -625,18 +623,16 @@ impl LearningSandbox {
 
     /// 分析资源
     async fn analyze_resources(&self, rendered: &RenderedPage) -> Result<ResourceAnalysis> {
-        let mut resources = ResourceAnalysis::default();
-
-        // 计算性能影响
-        resources.performance_impact = PerformanceImpact {
-            total_download_bytes: rendered.stats.bytes_downloaded,
-            css_bytes: rendered.css_resources.iter().map(|c| c.content.len()).sum(),
-            js_bytes: rendered.js_resources.iter().map(|j| j.content.len()).sum(),
-            image_bytes: 0,
-            estimated_load_time_ms: (rendered.stats.bytes_downloaded / 10000) as u32,
-        };
-
-        Ok(resources)
+        Ok(ResourceAnalysis {
+            performance_impact: PerformanceImpact {
+                total_download_bytes: rendered.stats.bytes_downloaded,
+                css_bytes: rendered.css_resources.iter().map(|c| c.content.len()).sum(),
+                js_bytes: rendered.js_resources.iter().map(|j| j.content.len()).sum(),
+                image_bytes: 0,
+                estimated_load_time_ms: (rendered.stats.bytes_downloaded / 10000) as u32,
+            },
+            ..ResourceAnalysis::default()
+        })
     }
 
     /// 生成新样式
@@ -683,5 +679,11 @@ impl LearningSandbox {
     fn transform_to_warm_theme(&self, colors: &ColorScheme) -> ColorScheme {
         // 简化实现
         colors.clone()
+    }
+}
+
+impl Default for LearningSandbox {
+    fn default() -> Self {
+        Self::new()
     }
 }

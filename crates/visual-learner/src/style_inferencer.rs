@@ -201,7 +201,7 @@ impl StyleInferencer {
         let mut css = String::new();
 
         // 基础样式
-        css.push_str(&format!(".{} {{\n", component.component_type.to_string().to_lowercase()));
+        css.push_str(&format!(".{} {{\n", format!("{:?}", component.component_type).to_lowercase()));
 
         // 尺寸
         css.push_str(&format!("  width: {}px;\n", component.bounding_box.width));
@@ -280,7 +280,7 @@ impl StyleInferencer {
 
         // CSS变量
         css.push_str(&self.generate_css_variables(analysis));
-        css.push_str("\n");
+        css.push('\n');
 
         // 基础样式
         css.push_str("/* Base Styles */\n");
@@ -304,7 +304,7 @@ impl StyleInferencer {
         css.push_str("/* Component Styles */\n");
         for component in &analysis.components {
             css.push_str(&self.generate_component_styles(component));
-            css.push_str("\n");
+            css.push('\n');
         }
 
         // 布局样式
@@ -372,8 +372,3 @@ impl StyleInferencer {
     }
 }
 
-impl ComponentType {
-    fn to_string(&self) -> String {
-        format!("{:?}", self)
-    }
-}

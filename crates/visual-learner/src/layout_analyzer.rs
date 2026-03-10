@@ -16,6 +16,11 @@ impl LayoutAnalyzer {
         }
     }
 
+    /// 获取布局分析器配置
+    pub fn config(&self) -> &VisualLearningConfig {
+        &self.config
+    }
+
     /// 分析布局
     pub fn analyze_layout(&self, image: &image::DynamicImage, components: &[VisualComponent]) -> Result<LayoutInfo> {
         let width = image.width();
@@ -361,7 +366,7 @@ impl LayoutAnalyzer {
         match layout.layout_type {
             LayoutType::Grid => {
                 if let Some(cols) = layout.grid_columns {
-                    css.push_str(&format!("  display: grid;\n"));
+                    css.push_str("  display: grid;\n");
                     css.push_str(&format!("  grid-template-columns: repeat({}, 1fr);\n", cols));
                     css.push_str(&format!("  gap: {}px;\n", layout.gap));
                 }
@@ -387,7 +392,7 @@ impl LayoutAnalyzer {
         for section in &layout.sections {
             let class_name = section.name.to_lowercase();
             css.push_str(&format!(".{} {{\n", class_name));
-            css.push_str(&format!("  position: absolute;\n"));
+            css.push_str("  position: absolute;\n");
             css.push_str(&format!("  left: {}px;\n", section.bounding_box.x));
             css.push_str(&format!("  top: {}px;\n", section.bounding_box.y));
             css.push_str(&format!("  width: {}px;\n", section.bounding_box.width));

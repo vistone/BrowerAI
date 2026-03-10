@@ -7,7 +7,7 @@
 /// ```bash
 /// cargo run --example enhanced_js_deobfuscation_demo
 /// ```
-use browerai::learning::EnhancedDeobfuscator;
+use browerai_deobfuscation::EnhancedDeobfuscator;
 
 fn main() -> anyhow::Result<()> {
     println!("==============================================");

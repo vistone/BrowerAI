@@ -4,13 +4,13 @@ use crate::*;
 use anyhow::Result;
 
 pub struct ScriptGenerator {
-    config: GenerationConfig,
+  _config: GenerationConfig,
 }
 
 impl ScriptGenerator {
     pub fn new(config: &GenerationConfig) -> Self {
         Self {
-            config: config.clone(),
+        _config: config.clone(),
         }
     }
 
@@ -383,6 +383,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
         })
     }
 
+    #[allow(clippy::vec_init_then_push)]
     async fn generate_utils(&self) -> Result<Vec<GeneratedFile>> {
         let mut utils = Vec::new();
 

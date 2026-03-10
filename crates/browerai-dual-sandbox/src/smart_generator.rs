@@ -77,7 +77,7 @@ pub struct ButtonInfo {
 pub struct SmartGenerator {
     structure: PageStructure,
     styles: StyleSystem,
-    intents: FunctionIntents,
+    _intents: FunctionIntents,
 }
 
 /// 生成的网站（转换为标准格式）
@@ -86,7 +86,11 @@ pub type SmartGeneratedWebsite = GeneratedWebsite;
 impl SmartGenerator {
     pub fn new(html: &str, styles: StyleSystem, intents: FunctionIntents) -> Self {
         let structure = Self::analyze_structure(html);
-        Self { structure, styles, intents }
+        Self {
+            structure,
+            styles,
+            _intents: intents,
+        }
     }
 
     /// 分析页面结构
@@ -343,8 +347,8 @@ impl SmartGenerator {
         
         // Head
         html.push_str("<head>\n");
-        html.push_str(&format!("<meta charset=\"UTF-8\">\n"));
-        html.push_str(&format!("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"));
+        html.push_str("<meta charset=\"UTF-8\">\n");
+        html.push_str("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
         html.push_str(&format!("<title>{}</title>\n", self.structure.title));
         html.push_str(&format!("<meta name=\"description\" content=\"{}\">\n", self.structure.description));
         html.push_str("<link rel=\"stylesheet\" href=\"styles.css\">\n");

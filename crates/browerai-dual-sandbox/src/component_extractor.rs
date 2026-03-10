@@ -7,7 +7,7 @@ use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 
 /// UI组件库
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ComponentLibrary {
     /// 按钮组件
     pub buttons: Vec<ButtonComponent>,
@@ -291,7 +291,7 @@ impl ComponentExtractor {
         
         Some(ButtonComponent {
             name: format!("button_{}", selector.replace('.', "")),
-            html_template: format!("<button class='{{classes}}'>{{content}}</button>"),
+            html_template: "<button class='{{classes}}'>{{content}}</button>".to_string(),
             styles: self.extract_component_styles(css, selector),
             behaviors: vec![
                 InteractionBehavior {
@@ -317,42 +317,34 @@ impl ComponentExtractor {
 
     /// 提取表单组件
     fn extract_forms(&self, _html: &str, _css: &str) -> Vec<FormComponent> {
-        let forms = Vec::new();
-        
         // 识别表单结构
         // 提取字段类型、验证规则、提交行为
-        
-        forms
+
+        Vec::new()
     }
 
     /// 提取导航组件
     fn extract_navigations(&self, _html: &str, _css: &str) -> Vec<NavComponent> {
-        let navs = Vec::new();
-        
         // 识别导航模式
         // 水平导航、垂直导航、汉堡菜单等
-        
-        navs
+
+        Vec::new()
     }
 
     /// 提取卡片组件
     fn extract_cards(&self, _html: &str, _css: &str) -> Vec<CardComponent> {
-        let cards = Vec::new();
-        
         // 识别卡片结构
         // header-body-footer 模式
-        
-        cards
+
+        Vec::new()
     }
 
     /// 提取布局组件
     fn extract_layouts(&self, _html: &str, _css: &str) -> Vec<LayoutComponent> {
-        let layouts = Vec::new();
-        
         // 识别布局模式
         // header-main-footer, sidebar-content, grid等
-        
-        layouts
+
+        Vec::new()
     }
 
     /// 提取其他组件
@@ -371,16 +363,9 @@ impl ComponentExtractor {
     }
 }
 
-impl Default for ComponentLibrary {
+impl Default for ComponentExtractor {
     fn default() -> Self {
-        Self {
-            buttons: Vec::new(),
-            forms: Vec::new(),
-            navigations: Vec::new(),
-            cards: Vec::new(),
-            layouts: Vec::new(),
-            others: Vec::new(),
-        }
+        Self::new()
     }
 }
 

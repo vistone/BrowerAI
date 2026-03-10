@@ -24,7 +24,7 @@ fn test_vue3_application() -> Result<()> {
     "#;
 
     let kb = FrameworkKnowledgeBase::new();
-    let detections = kb.analyze_code(vue_bundle)?;
+    let detections = kb.analyze_code(vue_bundle);
 
     println!("📊 Detected {} frameworks:", detections.len());
     for detection in &detections {
@@ -80,7 +80,7 @@ fn test_angular_application() -> Result<()> {
     "#;
 
     let kb = FrameworkKnowledgeBase::new();
-    let detections = kb.analyze_code(angular_code)?;
+    let detections = kb.analyze_code(angular_code);
 
     println!("📊 Detected {} frameworks:", detections.len());
     for detection in &detections {
@@ -148,7 +148,7 @@ fn test_react_comprehensive() -> Result<()> {
     "#;
 
     let kb = FrameworkKnowledgeBase::new();
-    let detections = kb.analyze_code(react_code)?;
+    let detections = kb.analyze_code(react_code);
 
     println!("📊 Detected {} frameworks:", detections.len());
     for detection in &detections {
@@ -203,7 +203,7 @@ fn test_webpack_bundle() -> Result<()> {
     "#;
 
     let kb = FrameworkKnowledgeBase::new();
-    let detections = kb.analyze_code(webpack_code)?;
+    let detections = kb.analyze_code(webpack_code);
 
     println!("📊 Detected {} frameworks:", detections.len());
     for detection in &detections {
@@ -248,7 +248,7 @@ fn test_react_application() -> Result<()> {
     "#;
 
     let kb = FrameworkKnowledgeBase::new();
-    let detections = kb.analyze_code(react_code)?;
+    let detections = kb.analyze_code(react_code);
 
     println!("📊 Detected {} frameworks:", detections.len());
     for detection in &detections {
@@ -279,7 +279,7 @@ fn test_performance() -> Result<()> {
     let code = "function test() {}".repeat(100);
 
     let start = Instant::now();
-    let _ = kb.analyze_code(&code)?;
+    let _ = kb.analyze_code(&code);
     let duration = start.elapsed();
 
     println!("✅ Analysis time: {:?}", duration);

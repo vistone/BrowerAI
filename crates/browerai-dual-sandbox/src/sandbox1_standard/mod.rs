@@ -389,3 +389,9 @@ impl StandardSandbox {
         })
     }
 }
+
+impl Default for StandardSandbox {
+    fn default() -> Self {
+        Self::new()
+    }
+}
