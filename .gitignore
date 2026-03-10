@@ -72,3 +72,6 @@ training/logs/
 models/trained_*/
 output/
 
+# Training crawler local cache database
+training/crawlers/real_data/cache/*.db
+
