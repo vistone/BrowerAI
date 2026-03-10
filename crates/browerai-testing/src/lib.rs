@@ -139,7 +139,10 @@ impl WebsiteTester {
         match self.js_parser.parse(js) {
             Ok(ast) => {
                 let duration = start.elapsed();
-                (true, duration, ast.statement_count())
+                let count = ast
+                    .statement_count()
+                    .max(ast.function_decls.len() + ast.variable_decls.len());
+                (true, duration, count)
             }
             Err(_) => (false, start.elapsed(), 0),
         }

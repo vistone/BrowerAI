@@ -91,11 +91,22 @@ impl IntelligentGeneration {
                 FallbackStyleGenerator::generate(idx)
             };
 
+            // 保留原始样式并叠加新体验样式，确保功能相关视觉规则不丢失
+            let composed_css = if self.original_css.trim().is_empty() {
+                generated_style.css.clone()
+            } else {
+                format!(
+                    "/* BrowerAI Preserved Original CSS */\n{}\n\n/* BrowerAI Generated Variant CSS */\n{}",
+                    self.original_css,
+                    generated_style.css
+                )
+            };
+
             // 2. 生成功能桥接JS
             let bridge_js = self.generate_function_bridge(variant)?;
 
             // 3. 生成HTML（保留原始内容 + 注入新样式和JS）
-            let html = self.generate_html_for_variant(variant, &generated_style.css, &bridge_js)?;
+            let html = self.generate_html_for_variant(variant, &composed_css, &bridge_js)?;
 
             // 4. 验证功能完整性
             let validation = self.validate_functions(&html, &bridge_js)?;
@@ -104,7 +115,7 @@ impl IntelligentGeneration {
                 experiences.push(GeneratedExperience {
                     variant_id: variant.name.clone(),
                     html,
-                    css: generated_style.css,
+                    css: composed_css,
                     bridge_js,
                     function_validation: validation,
                 });
