@@ -267,3 +267,130 @@ impl Default for BehaviorTestEngine {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_behavior_test_engine_new() {
+        let engine = BehaviorTestEngine::new();
+        // Engine should be created successfully
+    }
+
+    #[test]
+    fn test_behavior_test_engine_default() {
+        let engine: BehaviorTestEngine = Default::default();
+        // Should use default implementation
+    }
+
+    #[test]
+    fn test_test_summary_creation() {
+        let summary = TestSummary {
+            total_tests: 10,
+            passed_tests: 8,
+            failed_tests: 2,
+            skipped_tests: 0,
+            total_duration_ms: 1000,
+            average_score: 0.85,
+        };
+        assert_eq!(summary.total_tests, 10);
+        assert_eq!(summary.passed_tests, 8);
+        assert_eq!(summary.average_score, 0.85);
+    }
+
+    #[test]
+    fn test_test_result_creation() {
+        let result = TestResult {
+            test_name: "functional_test".to_string(),
+            test_type: TestType::Functional,
+            passed: true,
+            score: 0.95,
+            duration_ms: 100,
+            details: TestDetails {
+                steps_executed: 5,
+                assertions_passed: 10,
+                assertions_failed: 0,
+                screenshots: vec![],
+                logs: vec![],
+            },
+            errors: vec![],
+        };
+        assert!(result.passed);
+        assert_eq!(result.score, 0.95);
+    }
+
+    #[test]
+    fn test_test_type_variants() {
+        let types = vec![
+            TestType::Functional,
+            TestType::Visual,
+            TestType::Performance,
+            TestType::Accessibility,
+            TestType::CrossBrowser,
+        ];
+        assert_eq!(types.len(), 5);
+    }
+
+    #[test]
+    fn test_error_severity_variants() {
+        let severities = vec![
+            ErrorSeverity::Info,
+            ErrorSeverity::Warning,
+            ErrorSeverity::Critical,
+        ];
+        assert_eq!(severities.len(), 3);
+    }
+
+    #[test]
+    fn test_test_error_creation() {
+        let error = TestError {
+            step: 1,
+            message: "Element not found".to_string(),
+            expected: "button".to_string(),
+            actual: "div".to_string(),
+            severity: ErrorSeverity::Critical,
+        };
+        assert_eq!(error.step, 1);
+        assert!(matches!(error.severity, ErrorSeverity::Critical));
+    }
+
+    #[test]
+    fn test_equivalence_result_creation() {
+        let result = EquivalenceResult {
+            equivalent: true,
+            similarity_score: 0.98,
+            differences: vec![],
+            original_events: vec![],
+            generated_events: vec![],
+        };
+        assert!(result.equivalent);
+        assert_eq!(result.similarity_score, 0.98);
+    }
+
+    #[test]
+    fn test_visual_regression_result_creation() {
+        let result = VisualRegressionResult {
+            similarity: 0.99,
+            diff_image_path: None,
+            pixel_diff_count: 0,
+            pixel_diff_percentage: 0.0,
+            passed: true,
+        };
+        assert!(result.passed);
+        assert_eq!(result.similarity, 0.99);
+    }
+
+    #[test]
+    fn test_performance_result_creation() {
+        let result = PerformanceResult {
+            metric: "load_time".to_string(),
+            original_value: 1000.0,
+            generated_value: 900.0,
+            ratio: 0.9,
+            passed: true,
+        };
+        assert!(result.passed);
+        assert_eq!(result.metric, "load_time");
+    }
+}

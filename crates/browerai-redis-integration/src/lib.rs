@@ -1,20 +1,21 @@
 //! Redis 分布式缓存集成 - Week 6
 //!
-//! 支持连接池、降级、分布式锁、集群模式和故障转移
+//! 支持连接池、降级、分布式锁和故障转移
+//! 注意：集群模式暂时禁用，等待redis_cluster_async更新
 
-pub mod cluster_connection;
-pub mod cluster_hash_tag;
-pub mod cluster_layer;
-pub mod cluster_sentinel;
+// pub mod cluster_connection;  // Temporarily disabled - redis_cluster_async uses old redis
+// pub mod cluster_hash_tag;
+// pub mod cluster_layer;
+// pub mod cluster_sentinel;
 pub mod connection;
 pub mod distributed_lock;
 pub mod layer;
 pub mod sentinel;
 
-pub use cluster_connection::{RedisClusterConfig, RedisClusterPool};
-pub use cluster_hash_tag::ClusterHashTag;
-pub use cluster_layer::RedisClusterLayer;
-pub use cluster_sentinel::{RedisClusterPoolWithSentinel, SentinelConfig};
+// pub use cluster_connection::{RedisClusterConfig, RedisClusterPool};  // Temporarily disabled
+// pub use cluster_hash_tag::ClusterHashTag;
+// pub use cluster_layer::RedisClusterLayer;
+// pub use cluster_sentinel::{RedisClusterPoolWithSentinel, SentinelConfig};
 pub use connection::{RedisConfig, RedisPool};
 pub use distributed_lock::{DistributedLock, LockGuard};
 pub use layer::RedisLayer;

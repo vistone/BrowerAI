@@ -474,3 +474,151 @@ pub struct DesignSystem {
     pub font_sizes: Vec<u8>,
     pub font_weights: Vec<u16>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_color_to_hex() {
+        let color = Color { r: 255, g: 128, b: 64, a: 255 };
+        assert_eq!(color.to_hex(), "#ff8040");
+        
+        let color_with_alpha = Color { r: 255, g: 128, b: 64, a: 128 };
+        assert_eq!(color_with_alpha.to_hex(), "#ff804080");
+    }
+
+    #[test]
+    fn test_color_to_rgb() {
+        let color = Color { r: 255, g: 128, b: 64, a: 255 };
+        assert_eq!(color.to_rgb(), "rgb(255, 128, 64)");
+    }
+
+    #[test]
+    fn test_color_to_rgba() {
+        let color = Color { r: 255, g: 128, b: 64, a: 128 };
+        assert_eq!(color.to_rgba(), "rgba(255, 128, 64, 0.5019608)");
+    }
+
+    #[test]
+    fn test_color_luminance() {
+        let white = Color { r: 255, g: 255, b: 255, a: 255 };
+        let black = Color { r: 0, g: 0, b: 0, a: 255 };
+        
+        assert!(white.luminance() > 0.9);
+        assert!(black.luminance() < 0.1);
+    }
+
+    #[test]
+    fn test_color_is_dark() {
+        let dark = Color { r: 30, g: 30, b: 30, a: 255 };
+        let light = Color { r: 200, g: 200, b: 200, a: 255 };
+        
+        assert!(dark.is_dark());
+        assert!(!light.is_dark());
+    }
+
+    #[test]
+    fn test_bounding_box_center() {
+        let bbox = BoundingBox { x: 100, y: 100, width: 200, height: 100 };
+        assert_eq!(bbox.center(), (200, 150));
+    }
+
+    #[test]
+    fn test_bounding_box_area() {
+        let bbox = BoundingBox { x: 0, y: 0, width: 100, height: 50 };
+        assert_eq!(bbox.area(), 5000);
+    }
+
+    #[test]
+    fn test_bounding_box_intersects() {
+        let bbox1 = BoundingBox { x: 0, y: 0, width: 100, height: 100 };
+        let bbox2 = BoundingBox { x: 50, y: 50, width: 100, height: 100 };
+        let bbox3 = BoundingBox { x: 200, y: 200, width: 100, height: 100 };
+        
+        assert!(bbox1.intersects(&bbox2));
+        assert!(!bbox1.intersects(&bbox3));
+    }
+
+    #[test]
+    fn test_bounding_box_contains() {
+        let parent = BoundingBox { x: 0, y: 0, width: 200, height: 200 };
+        let child = BoundingBox { x: 50, y: 50, width: 100, height: 100 };
+        let outside = BoundingBox { x: 300, y: 300, width: 50, height: 50 };
+        
+        assert!(parent.contains(&child));
+        assert!(!parent.contains(&outside));
+    }
+
+    #[test]
+    fn test_component_type_variants() {
+        let types = vec![
+            ComponentType::Button,
+            ComponentType::Input,
+            ComponentType::Card,
+            ComponentType::Modal,
+        ];
+        assert_eq!(types.len(), 4);
+    }
+
+    #[test]
+    fn test_layout_type_variants() {
+        let types = vec![
+            LayoutType::SingleColumn,
+            LayoutType::Grid,
+            LayoutType::FlexRow,
+            LayoutType::Masonry,
+        ];
+        assert_eq!(types.len(), 4);
+    }
+
+    #[test]
+    fn test_section_type_variants() {
+        let types = vec![
+            SectionType::Header,
+            SectionType::Content,
+            SectionType::Footer,
+        ];
+        assert_eq!(types.len(), 3);
+    }
+
+    #[test]
+    fn test_visual_learning_config_default() {
+        let config = VisualLearningConfig::default();
+        assert_eq!(config.screenshot_quality, 90);
+        assert!(config.full_page);
+        assert!(!config.capture_hover_states);
+        assert_eq!(config.component_confidence_threshold, 0.7);
+    }
+
+    #[test]
+    fn test_design_system_default() {
+        let ds = DesignSystem::default();
+        assert!(ds.primary_color.is_none());
+        assert!(ds.spacing_scale.is_empty());
+    }
+
+    #[test]
+    fn test_visual_component_creation() {
+        let component = VisualComponent {
+            id: "btn-1".to_string(),
+            component_type: ComponentType::Button,
+            bounding_box: BoundingBox { x: 10, y: 20, width: 100, height: 40 },
+            confidence: 0.95,
+            visual_style: VisualStyle {
+                background_color: Some(Color { r: 0, g: 120, b: 255, a: 255 }),
+                text_color: None,
+                border_color: None,
+                border_width: 0,
+                border_radius: 4,
+                shadow: None,
+                opacity: 1.0,
+            },
+            semantic_label: Some("Submit button".to_string()),
+            children: vec![],
+            parent: None,
+        };
+        assert_eq!(component.id, "btn-1");
+        assert_eq!(component.confidence, 0.95);
+    }
+}

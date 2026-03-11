@@ -542,3 +542,96 @@ MIT
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_generation_config_default() {
+        let config = GenerationConfig::default();
+        assert_eq!(config.project_name, "generated-website");
+        assert_eq!(config.output_dir, "./output");
+        assert!(config.include_tests);
+        assert!(config.include_documentation);
+    }
+
+    #[test]
+    fn test_framework_variants() {
+        let frameworks = vec![
+            Framework::VanillaJS,
+            Framework::React,
+            Framework::Vue,
+            Framework::Svelte,
+            Framework::NextJS,
+            Framework::Nuxt,
+        ];
+        assert_eq!(frameworks.len(), 6);
+    }
+
+    #[test]
+    fn test_optimization_level_variants() {
+        assert_eq!(OptimizationLevel::None, OptimizationLevel::None);
+        assert_ne!(OptimizationLevel::None, OptimizationLevel::Standard);
+        assert_ne!(OptimizationLevel::Standard, OptimizationLevel::Aggressive);
+    }
+
+    #[test]
+    fn test_accessibility_level_variants() {
+        let levels = vec![
+            AccessibilityLevel::None,
+            AccessibilityLevel::WCAG_A,
+            AccessibilityLevel::WCAG_AA,
+            AccessibilityLevel::WCAG_AAA,
+        ];
+        assert_eq!(levels.len(), 4);
+    }
+
+    #[test]
+    fn test_generated_file_creation() {
+        let file = GeneratedFile {
+            path: "src/App.tsx".to_string(),
+            content: "export function App() {{}}".to_string(),
+            file_type: FileType::Component,
+        };
+        assert_eq!(file.path, "src/App.tsx");
+        assert_eq!(file.file_type, FileType::Component);
+    }
+
+    #[test]
+    fn test_file_type_variants() {
+        let types = vec![
+            FileType::Component,
+            FileType::Style,
+            FileType::Script,
+            FileType::Config,
+            FileType::Documentation,
+            FileType::Test,
+            FileType::Asset,
+        ];
+        assert_eq!(types.len(), 7);
+    }
+
+    #[test]
+    fn test_dependency_creation() {
+        let dep = Dependency {
+            name: "react".to_string(),
+            version: "^18.2.0".to_string(),
+            is_dev: false,
+        };
+        assert_eq!(dep.name, "react");
+        assert!(!dep.is_dev);
+    }
+
+    #[test]
+    fn test_generated_project_creation() {
+        let project = GeneratedProject {
+            name: "test-project".to_string(),
+            framework: Framework::React,
+            files: vec![],
+            dependencies: vec![],
+            scripts: HashMap::new(),
+        };
+        assert_eq!(project.name, "test-project");
+    }
+}

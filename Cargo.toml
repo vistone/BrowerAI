@@ -30,12 +30,12 @@ members = [
     "crates/browerai-ml",
     "crates/browerai-metrics",
     "crates/browerai-cache",
+    "crates/browerai-multilayer-cache",
+    "crates/browerai-persistent-layer",
+    "crates/browerai-redis-integration",
     "crates/browerai-db",
     "crates/browerai-api-server",
     "crates/browerai",
-    "crates/browerai-multilayer-cache",
-    "crates/browerai-redis-integration",
-    "crates/browerai-persistent-layer",
 ]
 
 [workspace.package]

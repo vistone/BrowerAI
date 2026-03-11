@@ -262,3 +262,122 @@ impl Default for ViewportConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_exploration_config_default() {
+        let config = ExplorationConfig::default();
+        assert_eq!(config.max_pages, 50);
+        assert_eq!(config.max_time_seconds, 300);
+        assert_eq!(config.max_depth, 3);
+        assert!(config.respect_robots_txt);
+    }
+
+    #[test]
+    fn test_viewport_config_default() {
+        let config = ViewportConfig::default();
+        assert_eq!(config.width, 1280);
+        assert_eq!(config.height, 720);
+        assert_eq!(config.device_scale_factor, 1.0);
+    }
+
+    #[test]
+    fn test_observation_creation() {
+        let observation = Observation {
+            timestamp: Utc::now(),
+            event_type: "click".to_string(),
+            target: ElementInfo {
+                tag: "button".to_string(),
+                id: Some("test-btn".to_string()),
+                classes: vec!["btn".to_string()],
+                attributes: HashMap::new(),
+                text_content: Some("Click me".to_string()),
+                selector: "#test-btn".to_string(),
+                bounding_box: Some(BoundingBox {
+                    x: 0.0,
+                    y: 0.0,
+                    width: 100.0,
+                    height: 50.0,
+                }),
+                is_visible: true,
+                is_interactive: true,
+            },
+            page_url: "https://example.com".to_string(),
+            details: HashMap::new(),
+            before_state: None,
+            after_state: None,
+        };
+        assert_eq!(observation.event_type, "click");
+        assert!(observation.target.is_interactive);
+    }
+
+    #[test]
+    fn test_element_info_creation() {
+        let element = ElementInfo {
+            tag: "div".to_string(),
+            id: None,
+            classes: vec![],
+            attributes: HashMap::new(),
+            text_content: None,
+            selector: "div".to_string(),
+            bounding_box: None,
+            is_visible: false,
+            is_interactive: false,
+        };
+        assert_eq!(element.tag, "div");
+        assert!(!element.is_visible);
+    }
+
+    #[test]
+    fn test_interaction_action_variants() {
+        let click = InteractionAction::Click;
+        let input = InteractionAction::Input { value: "test".to_string() };
+        let scroll = InteractionAction::Scroll { direction: ScrollDirection::Down, amount: 100 };
+        
+        match click {
+            InteractionAction::Click => (),
+            _ => panic!("Expected Click variant"),
+        }
+        
+        match input {
+            InteractionAction::Input { value } => assert_eq!(value, "test"),
+            _ => panic!("Expected Input variant"),
+        }
+        
+        match scroll {
+            InteractionAction::Scroll { direction, amount } => {
+                assert!(matches!(direction, ScrollDirection::Down));
+                assert_eq!(amount, 100);
+            }
+            _ => panic!("Expected Scroll variant"),
+        }
+    }
+
+    #[test]
+    fn test_pattern_type_variants() {
+        let patterns = vec![
+            PatternType::ClickToNavigate,
+            PatternType::ClickToToggle,
+            PatternType::FormSubmission,
+            PatternType::Custom("custom".to_string()),
+        ];
+        
+        assert!(matches!(patterns[0], PatternType::ClickToNavigate));
+        assert!(matches!(patterns[3], PatternType::Custom(_)));
+    }
+
+    #[test]
+    fn test_coverage_report_default() {
+        let report = CoverageReport {
+            total_elements: 100,
+            explored_elements: 50,
+            coverage_percentage: 50.0,
+            by_type: HashMap::new(),
+            unexplored_elements: vec![],
+        };
+        assert_eq!(report.coverage_percentage, 50.0);
+    }
+}

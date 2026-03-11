@@ -274,3 +274,119 @@ impl Default for InteractionPatternLibrary {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_complex_pattern_type_variants() {
+        let types = vec![
+            ComplexPatternType::DragAndDrop,
+            ComplexPatternType::InfiniteScroll,
+            ComplexPatternType::VirtualList,
+            ComplexPatternType::TreeView,
+            ComplexPatternType::RichEditor,
+            ComplexPatternType::DataTable,
+        ];
+        assert_eq!(types.len(), 6);
+    }
+
+    #[test]
+    fn test_trigger_type_variants() {
+        let triggers = vec![
+            TriggerType::Click,
+            TriggerType::MouseDown,
+            TriggerType::DragStart,
+            TriggerType::Scroll,
+            TriggerType::KeyDown,
+        ];
+        assert_eq!(triggers.len(), 5);
+    }
+
+    #[test]
+    fn test_condition_operator_variants() {
+        let ops = vec![
+            ConditionOperator::Equals,
+            ConditionOperator::GreaterThan,
+            ConditionOperator::Contains,
+        ];
+        assert_eq!(ops.len(), 3);
+    }
+
+    #[test]
+    fn test_behavior_type_variants() {
+        let behaviors = vec![
+            BehaviorType::Move,
+            BehaviorType::Show,
+            BehaviorType::Hide,
+            BehaviorType::AddClass,
+        ];
+        assert_eq!(behaviors.len(), 4);
+    }
+
+    #[test]
+    fn test_code_language_variants() {
+        let langs = vec![
+            CodeLanguage::TypeScript,
+            CodeLanguage::React,
+            CodeLanguage::Vue,
+            CodeLanguage::Rust,
+        ];
+        assert_eq!(langs.len(), 4);
+    }
+
+    #[test]
+    fn test_interaction_pattern_creation() {
+        let pattern = InteractionPattern {
+            pattern_type: ComplexPatternType::DragAndDrop,
+            name: "Drag and Drop".to_string(),
+            description: "Drag elements to reorder".to_string(),
+            triggers: vec![],
+            behaviors: vec![],
+            state_machine: PatternStateMachine {
+                initial_state: "idle".to_string(),
+                states: vec![],
+                transitions: vec![],
+            },
+            confidence: 0.85,
+        };
+        assert_eq!(pattern.name, "Drag and Drop");
+        assert_eq!(pattern.confidence, 0.85);
+    }
+
+    #[test]
+    fn test_pattern_trigger_creation() {
+        let trigger = PatternTrigger {
+            trigger_type: TriggerType::MouseDown,
+            selector: ".draggable".to_string(),
+            conditions: vec![],
+        };
+        assert_eq!(trigger.selector, ".draggable");
+    }
+
+    #[test]
+    fn test_animation_config_creation() {
+        let anim = AnimationConfig {
+            duration_ms: 300,
+            easing: "ease-in-out".to_string(),
+            properties: vec!["transform".to_string(), "opacity".to_string()],
+        };
+        assert_eq!(anim.duration_ms, 300);
+        assert_eq!(anim.properties.len(), 2);
+    }
+
+    #[test]
+    fn test_generated_code_creation() {
+        let code = GeneratedCode {
+            pattern_type: ComplexPatternType::Tabs,
+            language: CodeLanguage::React,
+            component_name: "Tabs".to_string(),
+            code: "export function Tabs() {{}}".to_string(),
+            css: None,
+            tests: None,
+            documentation: "Tabs component".to_string(),
+        };
+        assert_eq!(code.component_name, "Tabs");
+    }
+}

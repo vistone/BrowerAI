@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use anyhow::{Context, Result};
 use deadpool_redis::{Config, Pool, Runtime};
-use redis::AsyncCommands;
+use deadpool_redis::redis::AsyncCommands;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use tracing::{debug, warn};
@@ -243,11 +243,10 @@ impl RedisPool {
                 .iter()
                 .map(|(k, v)| (k.as_str(), v.as_str()))
                 .collect();
-            redis::pipe()
-                .atomic()
-                .mset(&kv_refs)
-                .query_async::<_, ()>(&mut *conn)
-                .await?;
+            // 使用单个命令替代pipeline（简化实现）
+            for (key, value) in &kv_refs {
+                conn.set::<_, _, ()>(key, value).await?;
+            }
 
             // 批量设置过期时间
             for (key, _) in &pairs {
