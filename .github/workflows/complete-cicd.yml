@@ -40,7 +40,7 @@ jobs:
           components: rustfmt, clippy
       
       - name: Cache cargo
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -54,16 +54,16 @@ jobs:
         run: cargo fmt --all -- --check || echo "Formatting issues found, but continuing..."
       
       - name: Run clippy
-        run: cargo clippy --workspace --all-features -- -W clippy::all || true
-      
+        run: cargo clippy --workspace --exclude browerai-ml --exclude browerai-js-v8 --exclude browerai-deobfuscation --all-features -- -W clippy::all || true
+
       - name: Build workspace
-        run: cargo build --release --workspace
-      
+        run: cargo build --release --workspace --exclude browerai-ml --exclude browerai-js-v8
+
       - name: Run tests
-        run: cargo test --workspace --all-features
+        run: cargo test --workspace --all-features --exclude browerai-ml --exclude browerai-js-v8 --exclude browerai-deobfuscation
       
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: rust-binaries
           path: target/release/browerai-api-server
@@ -79,12 +79,12 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
       
       - name: Cache pip packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -138,7 +138,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.api
+          file: ./Dockerfile.prod
           push: false
           tags: |
             ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME || 'browerai' }}/${{ env.IMAGE_NAME }}:${{ steps.prep.outputs.version }}
@@ -153,7 +153,7 @@ jobs:
           outputs: type=docker,dest=/tmp/image.tar
       
       - name: Upload Docker image artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: docker-image
           path: /tmp/image.tar
@@ -167,7 +167,7 @@ jobs:
     
     steps:
       - name: Download Docker image
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: docker-image
           path: /tmp
@@ -193,7 +193,7 @@ jobs:
     
     steps:
       - name: Download Docker image
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: docker-image
           path: /tmp

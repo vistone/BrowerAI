@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 use tracing::{debug, warn};
 
 use crate::connection::RedisPool;
@@ -87,10 +87,10 @@ impl DistributedLock {
     pub async fn release(&self) -> Result<()> {
         let timeout = Duration::from_secs(2);
         let key = self.key.clone();
-        let value = self.value.clone();
+        let _value = self.value.clone();
 
         // Lua 脚本：仅当值匹配时删除（避免误删其他实例的锁）
-        let script = r#"
+        let _script = r#"
             if redis.call("GET", KEYS[1]) == ARGV[1] then
                 return redis.call("DEL", KEYS[1])
             else
