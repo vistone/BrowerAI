@@ -49,7 +49,7 @@ browerai-cache = { workspace = true }
 browerai-multilayer-cache = { workspace = true }
 browerai-persistent-layer = { workspace = true }
 browerai-db = { workspace = true, optional = true }
-# browerai-redis-integration = { workspace = true, optional = true }  # Temporarily disabled
+browerai-redis-integration = { workspace = true, optional = true }  # Re-enabled after fixing redis version conflict
 
 browerai-api-server = { workspace = true, optional = true }
 browerai-renderer = { workspace = true }
@@ -76,7 +76,7 @@ metrics = ["browerai-metrics"]
 # Enable database support
 db = ["browerai-db"]
 # Enable Redis integration
-# redis = ["browerai-redis-integration"]  # Temporarily disabled
+redis = ["browerai-redis-integration"]
 # Enable API server
 api-server = ["browerai-api-server"]
 

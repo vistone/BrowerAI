@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use anyhow::{Context, Result};
 use deadpool_redis::{Config, Pool, Runtime};
-use deadpool_redis::redis::AsyncCommands;
+use deadpool_redis::redis::{self, AsyncCommands};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use tracing::{debug, warn};

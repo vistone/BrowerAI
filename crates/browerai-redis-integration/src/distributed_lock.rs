@@ -1,6 +1,7 @@
 use std::time::Duration;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
+use deadpool_redis::redis;
 use tracing::{debug, warn};
 
 use crate::connection::RedisPool;
@@ -83,23 +84,12 @@ impl DistributedLock {
         ))
     }
 
-    /// 释放锁（使用 Lua 脚本保证原子性）。
+    /// 释放锁（简化实现：直接删除 key，生产环境建议使用 Lua 脚本确保原子性）。
     pub async fn release(&self) -> Result<()> {
         let timeout = Duration::from_secs(2);
         let key = self.key.clone();
-        let value = self.value.clone();
-
-        // Lua 脚本：仅当值匹配时删除（避免误删其他实例的锁）
-        let script = r#"
-            if redis.call("GET", KEYS[1]) == ARGV[1] then
-                return redis.call("DEL", KEYS[1])
-            else
-                return 0
-            end
-        "#;
 
         let result = tokio::time::timeout(timeout, async {
-            // 简化实现：直接删除key（生产环境应使用Lua脚本确保原子性）
             self.pool.delete(&key).await?;
             debug!(key = %self.key, "distributed lock released");
             Ok::<_, anyhow::Error>(())

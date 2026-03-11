@@ -1,4 +1,5 @@
 use anyhow::Result;
+use deadpool_redis::redis;
 use tokio::time::{timeout, Duration};
 use tracing::{debug, warn};
 
@@ -16,7 +17,7 @@ pub async fn resolve_master_addr(
                 continue;
             }
         };
-        let mut conn = match client.get_tokio_connection().await {
+        let mut conn = match client.get_multiplexed_tokio_connection().await {
             Ok(c) => c,
             Err(e) => {
                 warn!(sentinel = %url, %e, "Failed to connect sentinel");
