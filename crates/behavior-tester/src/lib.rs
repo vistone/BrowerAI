@@ -6,14 +6,14 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub mod equivalence_tester;
-pub mod visual_regression;
 pub mod performance_tester;
 pub mod test_scenarios;
+pub mod visual_regression;
 
 pub use equivalence_tester::EquivalenceTester;
-pub use visual_regression::VisualRegressionTester;
 pub use performance_tester::PerformanceTester;
-pub use test_scenarios::{TestScenario, TestStep, TestAction};
+pub use test_scenarios::{TestAction, TestScenario, TestStep};
+pub use visual_regression::VisualRegressionTester;
 
 /// 测试报告
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -162,36 +162,35 @@ impl BehaviorTestEngine {
         scenarios: &[TestScenario],
     ) -> Result<TestReport> {
         log::info!("Starting full test suite");
-        
+
         let mut results = Vec::new();
         let start_time = std::time::Instant::now();
 
         // 1. 功能等价性测试
         for scenario in scenarios {
-            let result = self.equivalence_tester.test_scenario(
-                original_url,
-                generated_url,
-                scenario,
-            ).await?;
+            let result = self
+                .equivalence_tester
+                .test_scenario(original_url, generated_url, scenario)
+                .await?;
             results.push(result);
         }
 
         // 2. 视觉回归测试
-        let visual_result = self.visual_tester.compare_pages(
-            original_url,
-            generated_url,
-        ).await?;
+        let visual_result = self
+            .visual_tester
+            .compare_pages(original_url, generated_url)
+            .await?;
         results.push(visual_result);
 
         // 3. 性能测试
-        let perf_result = self.performance_tester.compare_performance(
-            original_url,
-            generated_url,
-        ).await?;
+        let perf_result = self
+            .performance_tester
+            .compare_performance(original_url, generated_url)
+            .await?;
         results.push(perf_result);
 
         let total_duration = start_time.elapsed().as_millis() as u64;
-        
+
         // 计算总分
         let average_score = if results.is_empty() {
             0.0
@@ -232,23 +231,39 @@ impl BehaviorTestEngine {
         report.push_str("# Test Report\n\n");
         report.push_str(&format!("**Test Run ID:** {}\n", results.test_run_id));
         report.push_str(&format!("**Timestamp:** {}\n", results.timestamp));
-        report.push_str(&format!("**Overall Score:** {:.1}%\n", results.overall_score * 100.0));
-        report.push_str(&format!("**Status:** {}\n\n", if results.passed { "✅ PASSED" } else { "❌ FAILED" }));
+        report.push_str(&format!(
+            "**Overall Score:** {:.1}%\n",
+            results.overall_score * 100.0
+        ));
+        report.push_str(&format!(
+            "**Status:** {}\n\n",
+            if results.passed {
+                "✅ PASSED"
+            } else {
+                "❌ FAILED"
+            }
+        ));
 
         report.push_str("## Summary\n\n");
         report.push_str(&format!("- Total Tests: {}\n", results.summary.total_tests));
         report.push_str(&format!("- Passed: {}\n", results.summary.passed_tests));
         report.push_str(&format!("- Failed: {}\n", results.summary.failed_tests));
-        report.push_str(&format!("- Duration: {}ms\n\n", results.summary.total_duration_ms));
+        report.push_str(&format!(
+            "- Duration: {}ms\n\n",
+            results.summary.total_duration_ms
+        ));
 
         report.push_str("## Detailed Results\n\n");
         for result in &results.results {
             report.push_str(&format!("### {}\n", result.test_name));
             report.push_str(&format!("- Type: {:?}\n", result.test_type));
             report.push_str(&format!("- Score: {:.1}%\n", result.score * 100.0));
-            report.push_str(&format!("- Status: {}\n", if result.passed { "✅" } else { "❌" }));
+            report.push_str(&format!(
+                "- Status: {}\n",
+                if result.passed { "✅" } else { "❌" }
+            ));
             report.push_str(&format!("- Duration: {}ms\n", result.duration_ms));
-            
+
             if !result.errors.is_empty() {
                 report.push_str("\n**Errors:**\n");
                 for error in &result.errors {

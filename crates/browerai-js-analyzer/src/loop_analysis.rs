@@ -6,9 +6,9 @@
 //! - 循环复杂度
 //! - 无限循环检测
 
+use crate::cfg::ControlFlowGraph;
 use browerai_core::Result;
 use browerai_js_parser::JsAst;
-use crate::cfg::ControlFlowGraph;
 
 /// 循环分析器
 #[derive(Debug, Clone, Default)]
@@ -28,13 +28,13 @@ impl LoopAnalyzer {
     /// 分析循环
     pub fn analyze(&mut self, _ast: &JsAst, _cfg: &ControlFlowGraph) -> Result<Vec<LoopInfo>> {
         let loops = Vec::new();
-        
+
         // 简化实现：基于AST中的函数声明分析循环
         // 实际实现需要遍历AST中的所有循环语句
-        
+
         // 这里我们创建一个示例循环信息
         // 实际应该从AST中提取循环节点
-        
+
         Ok(loops)
     }
 
@@ -68,16 +68,11 @@ impl LoopAnalyzer {
     /// 计算循环复杂度
     pub fn calculate_complexity(&self, loops: &[LoopInfo]) -> LoopComplexity {
         let total_loops = loops.len();
-        let max_depth = loops.iter()
-            .map(|l| l.nesting_depth)
-            .max()
-            .unwrap_or(0);
-        
+        let max_depth = loops.iter().map(|l| l.nesting_depth).max().unwrap_or(0);
+
         // 计算嵌套循环数量
-        let nested_loops = loops.iter()
-            .filter(|l| l.nesting_depth > 0)
-            .count();
-        
+        let nested_loops = loops.iter().filter(|l| l.nesting_depth > 0).count();
+
         LoopComplexity {
             total_loops,
             max_nesting_depth: max_depth,
@@ -91,7 +86,7 @@ impl LoopAnalyzer {
         let base_score = total as u32 * 10;
         let nesting_penalty = (max_depth as u32).pow(2) * 5;
         let nested_bonus = nested as u32 * 15;
-        
+
         base_score + nesting_penalty + nested_bonus
     }
 }
@@ -148,9 +143,7 @@ impl LoopInfo {
     pub fn is_potentially_infinite(&self) -> bool {
         // 简化判断：没有break/return的while(true)或for(;;)
         match self.kind {
-            LoopKind::While | LoopKind::For => {
-                !self.has_break && !self.has_return
-            }
+            LoopKind::While | LoopKind::For => !self.has_break && !self.has_return,
             _ => false,
         }
     }
@@ -342,7 +335,7 @@ mod tests {
             ..Default::default()
         };
         let cfg = ControlFlowGraph::new();
-        
+
         let loops = analyzer.analyze(&ast, &cfg).unwrap();
         assert!(loops.is_empty());
     }
@@ -356,7 +349,7 @@ mod tests {
             max_nesting_depth: 2,
             ..Default::default()
         };
-        
+
         assert!(stats.has_loops());
         assert!(stats.has_nested_loops());
         assert_eq!(stats.loop_density(2), 2.5);
@@ -370,7 +363,7 @@ mod tests {
             nested_loops: 5,
             score: 75,
         };
-        
+
         assert_eq!(complexity.level(), ComplexityLevel::High);
     }
 
@@ -379,7 +372,7 @@ mod tests {
         let mut loop_info = LoopInfo::new(0, LoopKind::For);
         loop_info.nesting_depth = 2;
         loop_info.has_break = true;
-        
+
         assert!(loop_info.is_nested());
         assert!(!loop_info.is_potentially_infinite());
     }

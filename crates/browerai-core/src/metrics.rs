@@ -330,7 +330,7 @@ impl MetricsDashboard {
         // 直方图
         for (name, histogram) in &self.histograms {
             output.push_str(&format!("# TYPE {} histogram\n", name));
-            
+
             let mut cumulative = 0u64;
             for (i, &bucket) in histogram.buckets.iter().enumerate() {
                 cumulative += histogram.counts[i];
@@ -342,7 +342,7 @@ impl MetricsDashboard {
             // +Inf bucket
             cumulative += histogram.counts[histogram.buckets.len()];
             output.push_str(&format!("{}_bucket{{le=\"+Inf\"}} {}\n", name, cumulative));
-            
+
             output.push_str(&format!("{}_sum {}\n", name, histogram.sum));
             output.push_str(&format!("{}_count {}\n\n", name, histogram.total_count));
         }
@@ -419,7 +419,7 @@ impl Timer {
 impl Drop for Timer {
     fn drop(&mut self) {
         let duration_ms = self.elapsed().as_millis() as f64;
-        
+
         if let Some(ref dashboard) = self.dashboard {
             if let Ok(mut d) = dashboard.lock() {
                 d.observe_histogram(format!("{}_duration_ms", self.name), duration_ms);
@@ -437,7 +437,7 @@ mod tests {
         let metric = Metric::counter("test_counter", 42.0)
             .with_label("method", "GET")
             .with_description("Test counter");
-        
+
         assert_eq!(metric.name, "test_counter");
         assert_eq!(metric.value, 42.0);
         assert_eq!(metric.labels.get("method"), Some(&"GET".to_string()));
@@ -446,11 +446,11 @@ mod tests {
     #[test]
     fn test_histogram() {
         let mut hist = Histogram::default_latency();
-        
+
         hist.observe(10.0);
         hist.observe(50.0);
         hist.observe(100.0);
-        
+
         assert_eq!(hist.total_count, 3);
         assert_eq!(hist.sum, 160.0);
         assert!(hist.percentile(0.5) >= 10.0);
@@ -460,7 +460,7 @@ mod tests {
     fn test_metric_stats() {
         let samples = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let stats = MetricStats::from_samples(&samples);
-        
+
         assert_eq!(stats.count, 5);
         assert_eq!(stats.sum, 15.0);
         assert_eq!(stats.avg, 3.0);
@@ -471,12 +471,12 @@ mod tests {
     #[test]
     fn test_dashboard() {
         let mut dashboard = MetricsDashboard::new();
-        
+
         dashboard.increment_counter("requests");
         dashboard.increment_counter("requests");
         dashboard.set_gauge("active_connections", 10.0);
         dashboard.observe_histogram("response_time", 100.0);
-        
+
         assert_eq!(dashboard.get_counter("requests"), 2);
         assert_eq!(dashboard.get_gauge("active_connections"), Some(10.0));
     }

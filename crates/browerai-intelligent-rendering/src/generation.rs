@@ -39,8 +39,12 @@ pub struct GeneratedExperience {
 
 impl IntelligentGeneration {
     /// 创建生成实例（带原始内容）
-    pub fn with_content(reasoning: ReasoningResult, original_html: String, original_css: String) -> Self {
-        Self { 
+    pub fn with_content(
+        reasoning: ReasoningResult,
+        original_html: String,
+        original_css: String,
+    ) -> Self {
+        Self {
             reasoning,
             original_html,
             original_css,
@@ -49,7 +53,7 @@ impl IntelligentGeneration {
 
     /// 创建生成实例（仅推理结果，向后兼容）
     pub fn new(reasoning: ReasoningResult) -> Self {
-        Self { 
+        Self {
             reasoning,
             original_html: String::new(),
             original_css: String::new(),
@@ -57,7 +61,7 @@ impl IntelligentGeneration {
     }
 
     /// 生成保持功能的新体验
-    /// 
+    ///
     /// 使用训练好的模型库生成样式，如果模型 API 不可用则使用回退方案
     pub async fn generate(&self) -> Result<Vec<GeneratedExperience>> {
         let mut experiences = Vec::new();
@@ -70,15 +74,21 @@ impl IntelligentGeneration {
         for (idx, variant) in self.reasoning.experience_variants.iter().enumerate() {
             // 1. 使用模型生成样式（或回退方案）
             let generated_style = if api_available {
-                match api_client.generate_style_from_content(
-                    &variant.name,
-                    &self.original_html,
-                    &self.original_css,
-                    "", // scripts
-                    &format!("variant_{}", idx),
-                ).await {
+                match api_client
+                    .generate_style_from_content(
+                        &variant.name,
+                        &self.original_html,
+                        &self.original_css,
+                        "", // scripts
+                        &format!("variant_{}", idx),
+                    )
+                    .await
+                {
                     Ok(style) => {
-                        log::info!("✅ Model API generated style with confidence: {:.2}", style.confidence);
+                        log::info!(
+                            "✅ Model API generated style with confidence: {:.2}",
+                            style.confidence
+                        );
                         style
                     }
                     Err(e) => {
@@ -125,7 +135,12 @@ impl IntelligentGeneration {
         Ok(experiences)
     }
 
-    fn generate_html_for_variant(&self, variant: &ExperienceVariant, css: &str, js: &str) -> Result<String> {
+    fn generate_html_for_variant(
+        &self,
+        variant: &ExperienceVariant,
+        css: &str,
+        js: &str,
+    ) -> Result<String> {
         // 如果有原始HTML，基于原始内容添加新样式
         if !self.original_html.is_empty() {
             return self.inject_styles_into_original(&self.original_html, variant, css, js);
@@ -136,7 +151,13 @@ impl IntelligentGeneration {
     }
 
     /// 将新样式注入原始HTML
-    fn inject_styles_into_original(&self, original_html: &str, variant: &ExperienceVariant, css: &str, js: &str) -> Result<String> {
+    fn inject_styles_into_original(
+        &self,
+        original_html: &str,
+        variant: &ExperienceVariant,
+        css: &str,
+        js: &str,
+    ) -> Result<String> {
         let mut modified_html = original_html.to_string();
 
         // 在 </head> 前注入变体特定的样式类
@@ -225,10 +246,7 @@ impl IntelligentGeneration {
     }
 
     /// 生成 CSS（现在由模型 API 或回退生成器处理，此函数保留用于兼容性）
-    fn _generate_css_for_variant(
-        &self, 
-        _variant: &ExperienceVariant,
-    ) -> Result<String> {
+    fn _generate_css_for_variant(&self, _variant: &ExperienceVariant) -> Result<String> {
         // 样式现在由 ModelApiClient 或 FallbackStyleGenerator 生成
         // 此函数保留用于向后兼容
         Ok(String::new())
@@ -252,10 +270,14 @@ impl IntelligentGeneration {
         // 为每个核心功能生成桥接
         for (original_name, new_id) in &variant.function_mapping {
             bridge_code.push_str(&format!("      // Bridge function: {}\n", original_name));
-            bridge_code.push_str(&format!("      this.bridgeFunction('{}', '{}');\n", original_name, new_id));
+            bridge_code.push_str(&format!(
+                "      this.bridgeFunction('{}', '{}');\n",
+                original_name, new_id
+            ));
         }
 
-        bridge_code.push_str("\n      console.log('[BrowerAI] All function bridges initialized');\n");
+        bridge_code
+            .push_str("\n      console.log('[BrowerAI] All function bridges initialized');\n");
         bridge_code.push_str("    },\n\n");
 
         bridge_code.push_str("    bridgeFunction: function(originalName, newId) {\n");
@@ -263,7 +285,8 @@ impl IntelligentGeneration {
         bridge_code.push_str("      const originalElements = document.querySelectorAll('[data-original-function=\"' + originalName + '\"]');\n\n");
         bridge_code.push_str("      if (newElement) {\n");
         bridge_code.push_str("        newElement.addEventListener('click', (e) => {\n");
-        bridge_code.push_str("          console.log('[BrowerAI] Function triggered: ' + originalName);\n");
+        bridge_code
+            .push_str("          console.log('[BrowerAI] Function triggered: ' + originalName);\n");
         bridge_code.push_str("          // Trigger original functionality\n");
         bridge_code.push_str("          originalElements.forEach(el => {\n");
         bridge_code.push_str("            if (el.click) el.click();\n");
@@ -275,7 +298,9 @@ impl IntelligentGeneration {
 
         bridge_code.push_str("  // Initialize when DOM is ready\n");
         bridge_code.push_str("  if (document.readyState === 'loading') {\n");
-        bridge_code.push_str("    document.addEventListener('DOMContentLoaded', () => BrowerAI.init());\n");
+        bridge_code.push_str(
+            "    document.addEventListener('DOMContentLoaded', () => BrowerAI.init());\n",
+        );
         bridge_code.push_str("  } else {\n");
         bridge_code.push_str("    BrowerAI.init();\n");
         bridge_code.push_str("  }\n");
@@ -333,7 +358,8 @@ mod tests {
         let css = "".to_string();
         let js = "".to_string();
 
-        let understanding = SiteUnderstanding::learn_from_content(html.clone(), css.clone(), js).unwrap();
+        let understanding =
+            SiteUnderstanding::learn_from_content(html.clone(), css.clone(), js).unwrap();
         let reasoning = IntelligentReasoning::new(understanding);
         let reasoning_result = reasoning.reason().unwrap();
 
@@ -352,22 +378,35 @@ mod tests {
 
     #[tokio::test]
     async fn test_content_preservation() {
-        let original_html = "<html><head><title>Test</title></head><body><h1>Hello</h1></body></html>".to_string();
+        let original_html =
+            "<html><head><title>Test</title></head><body><h1>Hello</h1></body></html>".to_string();
         let original_css = "body { color: black; }".to_string();
         let js = "".to_string();
 
-        let understanding = SiteUnderstanding::learn_from_content(original_html.clone(), original_css.clone(), js).unwrap();
+        let understanding =
+            SiteUnderstanding::learn_from_content(original_html.clone(), original_css.clone(), js)
+                .unwrap();
         let reasoning = IntelligentReasoning::new(understanding);
         let reasoning_result = reasoning.reason().unwrap();
 
-        let generation = IntelligentGeneration::with_content(reasoning_result, original_html.clone(), original_css.clone());
+        let generation = IntelligentGeneration::with_content(
+            reasoning_result,
+            original_html.clone(),
+            original_css.clone(),
+        );
         let experiences = generation.generate().await.unwrap();
 
         assert!(!experiences.is_empty());
 
         // 验证原始内容被保留
         let exp = &experiences[0];
-        assert!(exp.html.contains("<h1>Hello</h1>"), "Original content should be preserved");
-        assert!(exp.css.contains("color: black"), "Original CSS should be preserved");
+        assert!(
+            exp.html.contains("<h1>Hello</h1>"),
+            "Original content should be preserved"
+        );
+        assert!(
+            exp.css.contains("color: black"),
+            "Original CSS should be preserved"
+        );
     }
 }

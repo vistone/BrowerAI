@@ -7,9 +7,9 @@
 //! - 阴影效果
 //! - 图像绘制
 
-use browerai_core::{BrowserError, Result};
 use crate::layout::ComputedLayout;
 use crate::Rect;
+use browerai_core::{BrowserError, Result};
 
 /// 绘制引擎
 #[derive(Debug, Clone)]
@@ -27,17 +27,17 @@ impl PaintEngine {
     /// 生成绘制记录
     pub fn generate_paints(&self, layout: &ComputedLayout) -> Result<Vec<PaintRecord>> {
         let mut records = Vec::new();
-        
+
         // 简化实现：为每个布局节点生成绘制命令
         for (node_id, computed_box) in &layout.nodes {
             let mut commands = Vec::new();
-            
+
             // 背景绘制
             commands.push(PaintCommand::DrawRect {
                 rect: computed_box.rect,
                 color: Color::white(),
             });
-            
+
             // 边框绘制
             if computed_box.box_model.border != crate::layout::EdgeInsets::zero() {
                 commands.push(PaintCommand::DrawBorder {
@@ -46,7 +46,7 @@ impl PaintEngine {
                     color: Color::black(),
                 });
             }
-            
+
             records.push(PaintRecord {
                 node_id: node_id.clone(),
                 commands,
@@ -54,7 +54,7 @@ impl PaintEngine {
                 clip_rect: None,
             });
         }
-        
+
         Ok(records)
     }
 
@@ -182,13 +182,18 @@ impl Color {
 
     /// 透明
     pub fn transparent() -> Self {
-        Self { r: 0, g: 0, b: 0, a: 0 }
+        Self {
+            r: 0,
+            g: 0,
+            b: 0,
+            a: 0,
+        }
     }
 
     /// 从十六进制字符串解析
     pub fn from_hex(hex: &str) -> Result<Self> {
         let hex = hex.trim_start_matches('#');
-        
+
         match hex.len() {
             6 => {
                 let r = u8::from_str_radix(&hex[0..2], 16)
@@ -219,7 +224,13 @@ impl Color {
         if self.a == 255 {
             format!("#{:02x}{:02x}{:02x}", self.r, self.g, self.b)
         } else {
-            format!("rgba({}, {}, {}, {})", self.r, self.g, self.b, self.a as f32 / 255.0)
+            format!(
+                "rgba({}, {}, {}, {})",
+                self.r,
+                self.g,
+                self.b,
+                self.a as f32 / 255.0
+            )
         }
     }
 }
@@ -273,7 +284,7 @@ mod tests {
         assert_eq!(color.r, 255);
         assert_eq!(color.g, 128);
         assert_eq!(color.b, 64);
-        
+
         let color_with_alpha = Color::from_hex("FF804080").unwrap();
         assert_eq!(color_with_alpha.a, 128);
     }
@@ -282,7 +293,7 @@ mod tests {
     fn test_color_to_css() {
         let color = Color::rgb(255, 128, 64);
         assert_eq!(color.to_css_string(), "#ff8040");
-        
+
         let transparent = Color::new(255, 128, 64, 128);
         assert!(transparent.to_css_string().starts_with("rgba"));
     }
@@ -302,7 +313,7 @@ mod tests {
                 color: Color::black(),
             },
         ];
-        
+
         assert_eq!(commands.len(), 2);
     }
 }

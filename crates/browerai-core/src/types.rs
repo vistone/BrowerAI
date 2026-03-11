@@ -53,7 +53,10 @@ impl CodeType {
 
     /// 是否是 Web 前端代码
     pub fn is_frontend(&self) -> bool {
-        matches!(self, CodeType::Html | CodeType::Css | CodeType::JavaScript | CodeType::TypeScript)
+        matches!(
+            self,
+            CodeType::Html | CodeType::Css | CodeType::JavaScript | CodeType::TypeScript
+        )
     }
 }
 
@@ -391,7 +394,7 @@ impl VersionInfo {
 
         let major = parts[0].parse().ok()?;
         let minor = parts[1].parse().ok()?;
-        
+
         // 处理 patch 可能包含 prerelease
         let patch_part = parts[2];
         let (patch, prerelease) = if let Some(idx) = patch_part.find('-') {
@@ -409,7 +412,6 @@ impl VersionInfo {
             build: None,
         })
     }
-
 }
 
 impl std::fmt::Display for VersionInfo {

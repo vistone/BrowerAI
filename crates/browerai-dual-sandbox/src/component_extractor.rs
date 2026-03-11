@@ -3,7 +3,7 @@
 //! 不是复制HTML，而是理解组件结构和样式
 
 use crate::common::Color;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// UI组件库
@@ -264,7 +264,7 @@ impl ComponentExtractor {
     /// 提取按钮组件
     fn extract_buttons(&self, html: &str, css: &str) -> Vec<ButtonComponent> {
         let mut buttons = Vec::new();
-        
+
         // 识别按钮选择器模式
         let button_selectors = vec![
             "button",
@@ -274,21 +274,26 @@ impl ComponentExtractor {
             "input[type='submit']",
             "input[type='button']",
         ];
-        
+
         // 提取每种按钮的样式和结构
         for selector in button_selectors {
             if let Some(component) = self.extract_button_variant(html, css, selector) {
                 buttons.push(component);
             }
         }
-        
+
         buttons
     }
 
-    fn extract_button_variant(&self, _html: &str, css: &str, selector: &str) -> Option<ButtonComponent> {
+    fn extract_button_variant(
+        &self,
+        _html: &str,
+        css: &str,
+        selector: &str,
+    ) -> Option<ButtonComponent> {
         // 分析按钮的HTML结构和CSS样式
         // 提取抽象模板，不是具体HTML
-        
+
         Some(ButtonComponent {
             name: format!("button_{}", selector.replace('.', "")),
             html_template: "<button class='{{classes}}'>{{content}}</button>".to_string(),
@@ -300,18 +305,19 @@ impl ComponentExtractor {
                 },
                 InteractionBehavior {
                     trigger: InteractionTrigger::Hover,
-                    action: InteractionAction::ToggleClass("{{selector}}".to_string(), "hover".to_string()),
+                    action: InteractionAction::ToggleClass(
+                        "{{selector}}".to_string(),
+                        "hover".to_string(),
+                    ),
                 },
             ],
-            variants: vec![
-                ButtonVariant {
-                    name: "primary".to_string(),
-                    background_color: Color::default(),
-                    text_color: Color::default(),
-                    border_radius: "4px".to_string(),
-                    padding: "8px 16px".to_string(),
-                },
-            ],
+            variants: vec![ButtonVariant {
+                name: "primary".to_string(),
+                background_color: Color::default(),
+                text_color: Color::default(),
+                border_radius: "4px".to_string(),
+                padding: "8px 16px".to_string(),
+            }],
         })
     }
 

@@ -27,15 +27,15 @@
 
 use browerai_core::Result;
 
-pub mod inspector;
 pub mod console;
-pub mod profiler;
+pub mod inspector;
 pub mod network;
+pub mod profiler;
 
-pub use inspector::{DomInspector, NodeInfo, InspectionResult};
-pub use console::{Console, LogLevel, ConsoleMessage};
-pub use profiler::{Profiler, ProfileSummary, TimingMark};
+pub use console::{Console, ConsoleMessage, LogLevel};
+pub use inspector::{DomInspector, InspectionResult, NodeInfo};
 pub use network::{NetworkMonitor, NetworkRequest, NetworkResponse};
+pub use profiler::{ProfileSummary, Profiler, TimingMark};
 
 /// 开发者工具主入口
 #[derive(Debug)]
@@ -126,7 +126,7 @@ impl DevTools {
             network_requests: self.network.requests().iter().cloned().collect(),
             profile_summary: self.profiler.summary(),
         };
-        
+
         serde_json::to_string_pretty(&export)
             .map_err(|e| browerai_core::BrowserError::parse(e.to_string()))
     }
@@ -213,7 +213,7 @@ mod tests {
     fn test_devtools_console() {
         let mut devtools = DevTools::new();
         devtools.console().log("Test message");
-        
+
         assert_eq!(devtools.stats().console_message_count, 1);
     }
 
@@ -222,7 +222,7 @@ mod tests {
         let mut devtools = DevTools::new();
         devtools.console().log("Test");
         devtools.clear_all();
-        
+
         assert_eq!(devtools.stats().console_message_count, 0);
     }
 
@@ -230,7 +230,7 @@ mod tests {
     fn test_devtools_export() {
         let mut devtools = DevTools::new();
         devtools.console().log("Test message");
-        
+
         let json = devtools.export_json();
         assert!(json.is_ok());
         assert!(json.unwrap().contains("Test message"));
@@ -240,7 +240,7 @@ mod tests {
     fn test_devtools_enable_disable() {
         let mut devtools = DevTools::new();
         assert!(devtools.is_enabled());
-        
+
         devtools.set_enabled(false);
         assert!(!devtools.is_enabled());
     }

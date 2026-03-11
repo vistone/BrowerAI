@@ -6,10 +6,10 @@
 //! - Flexbox布局
 //! - 定位（Static/Relative/Absolute/Fixed）
 
+use crate::{Rect, Viewport};
 use browerai_core::Result;
 use browerai_css_parser::Stylesheet;
 use browerai_dom::Document;
-use crate::{Viewport, Rect};
 use std::collections::HashMap;
 
 /// 布局引擎
@@ -28,7 +28,7 @@ impl LayoutEngine {
     /// 构建布局树
     pub fn build_tree(&self, _document: &Document, _stylesheet: &Stylesheet) -> Result<LayoutTree> {
         let mut tree = LayoutTree::new();
-        
+
         // 简化实现：创建根节点
         let root = LayoutNode {
             id: "root".to_string(),
@@ -38,10 +38,10 @@ impl LayoutEngine {
             style_properties: HashMap::new(),
             positioning: Positioning::Static,
         };
-        
+
         tree.root = Some(root);
         tree.node_count = 1;
-        
+
         Ok(tree)
     }
 
@@ -52,17 +52,17 @@ impl LayoutEngine {
             nodes: HashMap::new(),
             viewport: *viewport,
         };
-        
+
         if let Some(ref root) = tree.root {
             computed.nodes.insert(
                 root.id.clone(),
                 ComputedBox {
                     rect: Rect::new(0.0, 0.0, viewport.width as f32, viewport.height as f32),
                     box_model: root.box_model,
-                }
+                },
             );
         }
-        
+
         Ok(computed)
     }
 
@@ -158,16 +158,24 @@ impl Default for BoxModel {
 impl BoxModel {
     /// 获取总宽度（内容 + 内边距 + 边框 + 外边距）
     pub fn total_width(&self) -> f32 {
-        self.margin.left + self.border.left + self.padding.left +
-        self.content_width +
-        self.padding.right + self.border.right + self.margin.right
+        self.margin.left
+            + self.border.left
+            + self.padding.left
+            + self.content_width
+            + self.padding.right
+            + self.border.right
+            + self.margin.right
     }
 
     /// 获取总高度
     pub fn total_height(&self) -> f32 {
-        self.margin.top + self.border.top + self.padding.top +
-        self.content_height +
-        self.padding.bottom + self.border.bottom + self.margin.bottom
+        self.margin.top
+            + self.border.top
+            + self.padding.top
+            + self.content_height
+            + self.padding.bottom
+            + self.border.bottom
+            + self.margin.bottom
     }
 
     /// 获取内容区域
@@ -197,17 +205,32 @@ pub struct EdgeInsets {
 impl EdgeInsets {
     /// 创建零边距
     pub fn zero() -> Self {
-        Self { top: 0.0, right: 0.0, bottom: 0.0, left: 0.0 }
+        Self {
+            top: 0.0,
+            right: 0.0,
+            bottom: 0.0,
+            left: 0.0,
+        }
     }
 
     /// 创建统一边距
     pub fn all(value: f32) -> Self {
-        Self { top: value, right: value, bottom: value, left: value }
+        Self {
+            top: value,
+            right: value,
+            bottom: value,
+            left: value,
+        }
     }
 
     /// 创建水平/垂直边距
     pub fn symmetric(horizontal: f32, vertical: f32) -> Self {
-        Self { top: vertical, right: horizontal, bottom: vertical, left: horizontal }
+        Self {
+            top: vertical,
+            right: horizontal,
+            bottom: vertical,
+            left: horizontal,
+        }
     }
 }
 
@@ -323,7 +346,7 @@ mod tests {
 
         // 总宽度 = 15 + 5 + 10 + 100 + 10 + 5 + 15 = 160
         assert_eq!(box_model.total_width(), 160.0);
-        
+
         // 总高度 = 15 + 5 + 10 + 50 + 10 + 5 + 15 = 110
         assert_eq!(box_model.total_height(), 110.0);
     }
@@ -332,10 +355,10 @@ mod tests {
     fn test_edge_insets() {
         let zero = EdgeInsets::zero();
         assert_eq!(zero.top, 0.0);
-        
+
         let all = EdgeInsets::all(10.0);
         assert_eq!(all.left, 10.0);
-        
+
         let sym = EdgeInsets::symmetric(20.0, 10.0);
         assert_eq!(sym.left, 20.0);
         assert_eq!(sym.top, 10.0);
@@ -347,12 +370,15 @@ mod tests {
             nodes: HashMap::new(),
             viewport: Viewport::new(800, 600),
         };
-        
-        layout.nodes.insert("test".to_string(), ComputedBox {
-            rect: Rect::new(0.0, 0.0, 100.0, 100.0),
-            box_model: BoxModel::default(),
-        });
-        
+
+        layout.nodes.insert(
+            "test".to_string(),
+            ComputedBox {
+                rect: Rect::new(0.0, 0.0, 100.0, 100.0),
+                box_model: BoxModel::default(),
+            },
+        );
+
         assert_eq!(layout.node_count(), 1);
         assert!(layout.get_box("test").is_some());
     }

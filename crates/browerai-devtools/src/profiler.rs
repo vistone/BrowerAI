@@ -51,7 +51,7 @@ impl Profiler {
     pub fn start(&mut self, name: impl Into<String>) {
         let name = name.into();
         self.active_measurements.push(name.clone());
-        
+
         self.marks.push(TimingMark {
             name: name.clone(),
             start_time: Instant::now(),
@@ -63,17 +63,22 @@ impl Profiler {
     /// 结束测量
     pub fn end(&mut self, name: &str) -> Option<Duration> {
         // 查找并更新标记
-        if let Some(mark) = self.marks.iter_mut().rev().find(|m| m.name == name && m.end_time.is_none()) {
+        if let Some(mark) = self
+            .marks
+            .iter_mut()
+            .rev()
+            .find(|m| m.name == name && m.end_time.is_none())
+        {
             let end_time = Instant::now();
             mark.end_time = Some(end_time);
             mark.duration = Some(end_time.duration_since(mark.start_time));
-            
+
             self.active_measurements.retain(|n| n != name);
             self.sample_count += 1;
-            
+
             return mark.duration;
         }
-        
+
         None
     }
 
@@ -103,9 +108,7 @@ impl Profiler {
 
     /// 获取特定名称的标记
     pub fn marks_by_name(&self, name: &str) -> Vec<&TimingMark> {
-        self.marks.iter()
-            .filter(|m| m.name == name)
-            .collect()
+        self.marks.iter().filter(|m| m.name == name).collect()
     }
 
     /// 获取平均执行时间
@@ -114,11 +117,9 @@ impl Profiler {
         if marks.is_empty() {
             return None;
         }
-        
-        let total: Duration = marks.iter()
-            .filter_map(|m| m.duration)
-            .sum();
-        
+
+        let total: Duration = marks.iter().filter_map(|m| m.duration).sum();
+
         Some(total / marks.len() as u32)
     }
 
@@ -136,7 +137,7 @@ impl Profiler {
     fn calculate_average_times(&self) -> HashMap<String, f64> {
         let mut times = HashMap::new();
         let mut counts: HashMap<String, usize> = HashMap::new();
-        
+
         for mark in &self.marks {
             if let Some(duration) = mark.duration {
                 let millis = duration.as_secs_f64() * 1000.0;
@@ -144,13 +145,13 @@ impl Profiler {
                 *counts.entry(mark.name.clone()).or_insert(0) += 1;
             }
         }
-        
+
         for (name, total) in &mut times {
             if let Some(count) = counts.get(name) {
                 *total /= *count as f64;
             }
         }
-        
+
         times
     }
 
@@ -269,11 +270,11 @@ mod tests {
     #[test]
     fn test_timing_mark() {
         let mut profiler = Profiler::new();
-        
+
         profiler.start("test-operation");
         thread::sleep(Duration::from_millis(10));
         let duration = profiler.end("test-operation");
-        
+
         assert!(duration.is_some());
         assert!(duration.unwrap() >= Duration::from_millis(10));
     }
@@ -281,12 +282,12 @@ mod tests {
     #[test]
     fn test_measure_function() {
         let mut profiler = Profiler::new();
-        
+
         let result = profiler.measure("computation", || {
             thread::sleep(Duration::from_millis(5));
             42
         });
-        
+
         assert_eq!(result, 42);
         assert_eq!(profiler.sample_count(), 1);
     }
@@ -294,10 +295,10 @@ mod tests {
     #[test]
     fn test_metrics() {
         let mut profiler = Profiler::new();
-        
+
         profiler.record_metric("memory_usage", 1024.0);
         profiler.record_metric("cpu_usage", 50.5);
-        
+
         assert_eq!(profiler.get_metric("memory_usage"), Some(1024.0));
         assert_eq!(profiler.get_metric("cpu_usage"), Some(50.5));
     }
@@ -305,13 +306,13 @@ mod tests {
     #[test]
     fn test_average_duration() {
         let mut profiler = Profiler::new();
-        
+
         for _ in 0..3 {
             profiler.start("operation");
             thread::sleep(Duration::from_millis(5));
             profiler.end("operation");
         }
-        
+
         let avg = profiler.average_duration("operation");
         assert!(avg.is_some());
         assert!(avg.unwrap() >= Duration::from_millis(5));
@@ -320,11 +321,11 @@ mod tests {
     #[test]
     fn test_summary() {
         let mut profiler = Profiler::new();
-        
+
         profiler.start("op1");
         profiler.end("op1");
         profiler.record_metric("metric1", 100.0);
-        
+
         let summary = profiler.summary();
         assert_eq!(summary.total_marks, 1);
         assert_eq!(summary.total_metrics, 1);
@@ -333,13 +334,13 @@ mod tests {
     #[test]
     fn test_clear() {
         let mut profiler = Profiler::new();
-        
+
         profiler.start("test");
         profiler.end("test");
         profiler.record_metric("test", 1.0);
-        
+
         profiler.clear();
-        
+
         assert_eq!(profiler.sample_count(), 0);
         assert!(profiler.get_metric("test").is_none());
     }

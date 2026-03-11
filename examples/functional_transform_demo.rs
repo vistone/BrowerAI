@@ -63,8 +63,18 @@ document.getElementById('login-btn').addEventListener('click', function() {
                 println!("  ✅ 生成成功");
                 println!("  📊 功能保留率: {:.1}%", result.preservation_ratio * 100.0);
                 println!("  🔍 核心功能数: {}", result.core_functions_count);
-                println!("  ✓ 验证状态: {}", if result.verified { "通过" } else { "未通过" });
-                println!("  📝 HTML大小: {} bytes", result.generated_website.html.len());
+                println!(
+                    "  ✓ 验证状态: {}",
+                    if result.verified {
+                        "通过"
+                    } else {
+                        "未通过"
+                    }
+                );
+                println!(
+                    "  📝 HTML大小: {} bytes",
+                    result.generated_website.html.len()
+                );
                 println!("  🎨 CSS大小: {} bytes", result.generated_website.css.len());
                 println!("  🔧 JS大小: {} bytes\n", result.generated_website.js.len());
 
@@ -89,12 +99,18 @@ document.getElementById('login-btn').addEventListener('click', function() {
     Ok(())
 }
 
-fn save_generated_files(website: &browerai_intelligent_rendering::GeneratedWebsite, style_name: &str) -> Result<()> {
+fn save_generated_files(
+    website: &browerai_intelligent_rendering::GeneratedWebsite,
+    style_name: &str,
+) -> Result<()> {
     use std::fs;
     use std::path::Path;
 
     // 创建输出目录
-    let output_dir = format!("target/functional_transform_demo/{}", style_name.to_lowercase().replace(" ", "_"));
+    let output_dir = format!(
+        "target/functional_transform_demo/{}",
+        style_name.to_lowercase().replace(" ", "_")
+    );
     fs::create_dir_all(&output_dir)?;
 
     // 保存文件

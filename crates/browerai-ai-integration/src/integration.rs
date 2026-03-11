@@ -176,9 +176,7 @@ pub struct HtmlValidationHookImpl {
 
 impl HtmlValidationHookImpl {
     pub fn new(inner: HtmlModelIntegration) -> Self {
-        Self {
-            inner,
-        }
+        Self { inner }
     }
 
     // pub fn new_with_feedback(...) -> Self { ... } // Disabled
@@ -218,7 +216,7 @@ pub fn attach_html_validation_hook(parser: &mut HtmlParser) {
 
     // Note: ModelRegistry not available, using default path
     let selected_path: Option<std::path::PathBuf> = None;
-    
+
     let integration = match HtmlModelIntegration::new(&engine, selected_path.as_deref(), None) {
         Ok(i) => i,
         Err(e) => {

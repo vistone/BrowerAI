@@ -2,10 +2,10 @@ use anyhow::Result;
 use reqwest::blocking::Client;
 use std::time::Duration;
 
+use browerai_core::traits::Parser;
 use browerai_css_parser::CssParser;
 use browerai_html_parser::HtmlParser;
 use browerai_js_parser::JsParser;
-use browerai_core::traits::Parser;
 // Note: RenderEngine not available in browerai_renderer_core
 // use browerai_renderer_core::RenderEngine;
 
@@ -95,7 +95,9 @@ impl WebsiteLearner {
         };
 
         // 3. Extract text content (simplified)
-        let text_content = dom.as_ref().map(|d| format!("{} text nodes", d.text_node_count()));
+        let text_content = dom
+            .as_ref()
+            .map(|d| format!("{} text nodes", d.text_node_count()));
 
         // 4. Find and parse CSS (simplified)
         log::info!("  🎨 Searching for CSS...");

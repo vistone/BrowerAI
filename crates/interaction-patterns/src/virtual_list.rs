@@ -19,13 +19,11 @@ impl VirtualListPattern {
             pattern_type: ComplexPatternType::VirtualList,
             name: "Virtual List".to_string(),
             description: "Render only visible items for large lists".to_string(),
-            triggers: vec![
-                PatternTrigger {
-                    trigger_type: TriggerType::Scroll,
-                    selector: container.to_string(),
-                    conditions: vec![],
-                },
-            ],
+            triggers: vec![PatternTrigger {
+                trigger_type: TriggerType::Scroll,
+                selector: container.to_string(),
+                conditions: vec![],
+            }],
             behaviors: vec![
                 PatternBehavior {
                     behavior_type: BehaviorType::InsertElement,
@@ -53,14 +51,12 @@ impl VirtualListPattern {
                         name: "scrolling".to_string(),
                         description: "User is scrolling".to_string(),
                         entry_actions: vec![],
-                        exit_actions: vec![
-                            PatternBehavior {
-                                behavior_type: BehaviorType::SetStyle,
-                                target: container.to_string(),
-                                animation: None,
-                                callback: None,
-                            },
-                        ],
+                        exit_actions: vec![PatternBehavior {
+                            behavior_type: BehaviorType::SetStyle,
+                            target: container.to_string(),
+                            animation: None,
+                            callback: None,
+                        }],
                     },
                 ],
                 transitions: vec![
@@ -76,14 +72,12 @@ impl VirtualListPattern {
                         to_state: "idle".to_string(),
                         trigger: "scrollEnd".to_string(),
                         guard: None,
-                        actions: vec![
-                            PatternBehavior {
-                                behavior_type: BehaviorType::InsertElement,
-                                target: container.to_string(),
-                                animation: None,
-                                callback: Some("updateVisibleRange".to_string()),
-                            },
-                        ],
+                        actions: vec![PatternBehavior {
+                            behavior_type: BehaviorType::InsertElement,
+                            target: container.to_string(),
+                            animation: None,
+                            callback: Some("updateVisibleRange".to_string()),
+                        }],
                     },
                 ],
             },
@@ -124,7 +118,11 @@ impl PatternImplementation for VirtualListPattern {
         }
     }
 
-    fn generate_code(&self, _pattern: &InteractionPattern, language: CodeLanguage) -> Result<GeneratedCode> {
+    fn generate_code(
+        &self,
+        _pattern: &InteractionPattern,
+        language: CodeLanguage,
+    ) -> Result<GeneratedCode> {
         let code = match language {
             CodeLanguage::TypeScript => self.generate_typescript(),
             CodeLanguage::React => self.generate_react(),
@@ -297,7 +295,8 @@ class VirtualList {
 }
 
 export { VirtualList, VirtualListOptions, VisibleRange };
-"#.to_string())
+"#
+        .to_string())
     }
 
     fn generate_react(&self) -> Result<String> {
@@ -381,7 +380,8 @@ export function VirtualList<T>({
         </div>
     );
 }
-"#.to_string())
+"#
+        .to_string())
     }
 
     fn generate_css(&self) -> String {
@@ -409,7 +409,8 @@ export function VirtualList<T>({
     right: 0;
     overflow: hidden;
 }
-"#.to_string()
+"#
+        .to_string()
     }
 
     fn generate_documentation(&self) -> String {
@@ -439,6 +440,7 @@ const virtualList = new VirtualList({
     overscan: 5
 });
 ```
-"#.to_string()
+"#
+        .to_string()
     }
 }

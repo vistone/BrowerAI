@@ -3,8 +3,8 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
 };
-use browerai_html_parser::HtmlParser;
 use browerai_core::traits::Parser;
+use browerai_html_parser::HtmlParser;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{error, info};

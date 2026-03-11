@@ -16,13 +16,23 @@ impl PatternCodeGenerator {
     }
 
     /// 生成模式代码
-    pub fn generate(&self, pattern: &InteractionPattern, language: CodeLanguage) -> Result<GeneratedCode> {
-        self.library.generate_pattern_code(pattern.pattern_type.clone(), pattern, language)
+    pub fn generate(
+        &self,
+        pattern: &InteractionPattern,
+        language: CodeLanguage,
+    ) -> Result<GeneratedCode> {
+        self.library
+            .generate_pattern_code(pattern.pattern_type.clone(), pattern, language)
     }
 
     /// 批量生成代码
-    pub fn generate_all(&self, patterns: &[InteractionPattern], language: CodeLanguage) -> Vec<Result<GeneratedCode>> {
-        patterns.iter()
+    pub fn generate_all(
+        &self,
+        patterns: &[InteractionPattern],
+        language: CodeLanguage,
+    ) -> Vec<Result<GeneratedCode>> {
+        patterns
+            .iter()
             .map(|p| self.generate(p, language.clone()))
             .collect()
     }
@@ -49,7 +59,10 @@ impl PatternCodeGenerator {
                     components.push(code);
                 }
                 Err(e) => {
-                    eprintln!("Failed to generate code for {:?}: {}", pattern.pattern_type, e);
+                    eprintln!(
+                        "Failed to generate code for {:?}: {}",
+                        pattern.pattern_type, e
+                    );
                 }
             }
         }
@@ -81,8 +94,7 @@ impl PatternCodeGenerator {
                 for component in components {
                     index.push_str(&format!(
                         "export {{ {} }} from './{}';\n",
-                        component.component_name,
-                        component.component_name
+                        component.component_name, component.component_name
                     ));
                 }
             }
@@ -113,7 +125,6 @@ impl ComponentLibrary {
     pub fn save_to_directory(&self, path: &str) -> Result<()> {
         use std::fs;
 
-
         // 创建目录
         fs::create_dir_all(path)?;
         fs::create_dir_all(format!("{}/components", path))?;
@@ -131,10 +142,11 @@ impl ComponentLibrary {
                 CodeLanguage::Rust => "rs",
             };
 
-            let filename = format!("{}/components/{}.{}"
-                , path
-                , component.component_name.to_lowercase()
-                , extension
+            let filename = format!(
+                "{}/components/{}.{}",
+                path,
+                component.component_name.to_lowercase(),
+                extension
             );
             fs::write(&filename, &component.code)?;
         }

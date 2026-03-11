@@ -264,7 +264,11 @@ impl StyleAnalyzer {
     }
 
     /// 基于原始特征生成新的配色方案
-    pub fn generate_color_scheme(&self, features: &StyleFeatures, variant_index: usize) -> ColorScheme {
+    pub fn generate_color_scheme(
+        &self,
+        features: &StyleFeatures,
+        variant_index: usize,
+    ) -> ColorScheme {
         match variant_index % 4 {
             0 => self.generate_modern_scheme(features),
             1 => self.generate_warm_scheme(features),
@@ -319,8 +323,14 @@ impl StyleAnalyzer {
     }
 
     /// 基于原始特征生成字体方案
-    pub fn generate_typography(&self, features: &StyleFeatures, variant_index: usize) -> Typography {
-        let base_font = features.font_families.first()
+    pub fn generate_typography(
+        &self,
+        features: &StyleFeatures,
+        variant_index: usize,
+    ) -> Typography {
+        let base_font = features
+            .font_families
+            .first()
             .cloned()
             .unwrap_or_else(|| "system-ui".to_string());
 

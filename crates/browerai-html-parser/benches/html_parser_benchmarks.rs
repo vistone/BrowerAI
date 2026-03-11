@@ -1,5 +1,5 @@
-use browerai_html_parser::HtmlParser;
 use browerai_core::traits::Parser;
+use browerai_html_parser::HtmlParser;
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 
 fn benchmark_simple_html(c: &mut Criterion) {

@@ -8,10 +8,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 // 核心模块
-use browerai_dual_sandbox::{
-    DualSandboxEngine,
-    ComponentExtractor, JsUnderstander,
-};
+use browerai_dual_sandbox::{ComponentExtractor, DualSandboxEngine, JsUnderstander};
 
 /// BrowerAI - AI驱动的智能浏览器
 #[derive(Parser)]
@@ -49,7 +46,11 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Learn { url, output, variants } => {
+        Commands::Learn {
+            url,
+            output,
+            variants,
+        } => {
             learn_and_generate(&url, &output, variants).await?;
         }
         Commands::Version => {
@@ -76,7 +77,7 @@ async fn learn_and_generate(url: &str, output_dir: &PathBuf, variant_count: usiz
     log::info!("\n[双沙盒处理] 启动双沙盒引擎...");
     let engine = DualSandboxEngine::new()?;
     let result = engine.process_website(url).await?;
-    
+
     // 额外：提取组件和理解JS，保存到本地
     log::info!("\n[保存学习结果] 将理解的内容保存到本地...");
     save_learning_results(&result, output_dir).await?;
@@ -90,13 +91,20 @@ async fn learn_and_generate(url: &str, output_dir: &PathBuf, variant_count: usiz
     // 输出沙盒2结果
     log::info!("\n[沙盒2 - AI 学习]");
     log::info!("   ✓ 网站意图: {:?}", result.learned.intent.primary_type);
-    log::info!("   ✓ 颜色: {} 种", 
-        result.learned.styles.colors.primary_colors.len() +
-        result.learned.styles.colors.background_colors.len() +
-        result.learned.styles.colors.text_colors.len()
+    log::info!(
+        "   ✓ 颜色: {} 种",
+        result.learned.styles.colors.primary_colors.len()
+            + result.learned.styles.colors.background_colors.len()
+            + result.learned.styles.colors.text_colors.len()
     );
-    log::info!("   ✓ 字体: {} 种", result.learned.styles.typography.font_families.len());
-    log::info!("   ✓ 功能点: {} 个", result.learned.functions.user_functions.len());
+    log::info!(
+        "   ✓ 字体: {} 种",
+        result.learned.styles.typography.font_families.len()
+    );
+    log::info!(
+        "   ✓ 功能点: {} 个",
+        result.learned.functions.user_functions.len()
+    );
 
     // 输出生成结果
     log::info!("\n[重组生成 - AI生成的新网站]");
@@ -104,9 +112,15 @@ async fn learn_and_generate(url: &str, output_dir: &PathBuf, variant_count: usiz
         log::info!("   ✓ 生成HTML: {} 字节", generated.html.len());
         log::info!("   ✓ 生成CSS: {} 字节", generated.css.len());
         log::info!("   ✓ 生成JS: {} 字节", generated.js.len());
-        log::info!("   ✓ 使用组件: {}", generated.metadata.components_used.join(", "));
-        log::info!("   ✓ 实现功能: {}", generated.metadata.features_implemented.join(", "));
-        
+        log::info!(
+            "   ✓ 使用组件: {}",
+            generated.metadata.components_used.join(", ")
+        );
+        log::info!(
+            "   ✓ 实现功能: {}",
+            generated.metadata.features_implemented.join(", ")
+        );
+
         // 保存AI生成的网站
         let generated_dir = output_dir.join("ai_generated");
         fs::create_dir_all(&generated_dir)?;
@@ -118,7 +132,7 @@ async fn learn_and_generate(url: &str, output_dir: &PathBuf, variant_count: usiz
 
     // 生成体验变体
     log::info!("\n[生成引擎 - 体验变体]");
-    
+
     for (idx, variant) in result.variants.iter().enumerate().take(variant_count) {
         let variant_dir = output_dir.join(format!("variant_{}", idx + 1));
         fs::create_dir_all(&variant_dir)?;
@@ -178,7 +192,7 @@ async fn learn_and_generate(url: &str, output_dir: &PathBuf, variant_count: usiz
 #[allow(dead_code)]
 fn inject_styles(html: &str, css: &str) -> String {
     let style_tag = format!("<style>\n{}\n</style>\n", css);
-    
+
     if let Some(head_end) = html.find("</head>") {
         let mut result = html.to_string();
         result.insert_str(head_end, &style_tag);
@@ -188,7 +202,10 @@ fn inject_styles(html: &str, css: &str) -> String {
         result.insert_str(body_start, &style_tag);
         result
     } else {
-        format!("<!DOCTYPE html>\n<html>\n<head>\n{}</head>\n<body>\n{}\n</body>\n</html>", style_tag, html)
+        format!(
+            "<!DOCTYPE html>\n<html>\n<head>\n{}</head>\n<body>\n{}\n</body>\n</html>",
+            style_tag, html
+        )
     }
 }
 
@@ -199,35 +216,38 @@ async fn save_learning_results(
 ) -> Result<()> {
     let learning_dir = output_dir.join("learning_results");
     fs::create_dir_all(&learning_dir)?;
-    
+
     // 1. 保存原始资源
     let raw_dir = learning_dir.join("raw");
     fs::create_dir_all(&raw_dir)?;
     fs::write(raw_dir.join("original.html"), &result.original.html)?;
-    
+
     // 保存CSS
     let css_dir = raw_dir.join("css");
     fs::create_dir_all(&css_dir)?;
     for (i, css) in result.original.css_resources.iter().enumerate() {
         fs::write(css_dir.join(format!("{}.css", i)), &css.content)?;
     }
-    
+
     // 保存JS
     let js_dir = raw_dir.join("js");
     fs::create_dir_all(&js_dir)?;
     for (i, js) in result.original.js_resources.iter().enumerate() {
         fs::write(js_dir.join(format!("{}.js", i)), &js.content)?;
     }
-    
+
     // 2. 提取并保存组件
     log::info!("   🔧 提取UI组件...");
     let component_extractor = ComponentExtractor::new();
-    let all_css = result.original.css_resources.iter()
+    let all_css = result
+        .original
+        .css_resources
+        .iter()
         .map(|c| c.content.as_str())
         .collect::<Vec<_>>()
         .join("\n");
     let components = component_extractor.extract(&result.original.html, &all_css);
-    
+
     let components_json = serde_json::json!({
         "summary": {
             "buttons": components.buttons.len(),
@@ -249,16 +269,19 @@ async fn save_learning_results(
         serde_json::to_string_pretty(&components_json)?,
     )?;
     log::info!("   ✓ 组件已保存到: learning_results/components.json");
-    
+
     // 3. 理解并保存JS意图
     log::info!("   📜 解析JS功能意图...");
     let js_understander = JsUnderstander::new();
-    let all_js = result.original.js_resources.iter()
+    let all_js = result
+        .original
+        .js_resources
+        .iter()
         .map(|j| j.content.as_str())
         .collect::<Vec<_>>()
         .join("\n");
     let intents = js_understander.understand(&all_js);
-    
+
     let intents_json = serde_json::json!({
         "summary": {
             "interactions": intents.interactions.len(),
@@ -278,7 +301,7 @@ async fn save_learning_results(
         serde_json::to_string_pretty(&intents_json)?,
     )?;
     log::info!("   ✓ 意图已保存到: learning_results/intents.json");
-    
+
     // 4. 保存样式系统
     let styles_json = serde_json::json!({
         "colors": {
@@ -298,12 +321,12 @@ async fn save_learning_results(
         serde_json::to_string_pretty(&styles_json)?,
     )?;
     log::info!("   ✓ 样式已保存到: learning_results/styles.json");
-    
+
     // 5. 创建可视化报告
     let report_html = generate_learning_report(&components, &intents);
     fs::write(learning_dir.join("report.html"), report_html)?;
     log::info!("   ✓ 可视化报告: learning_results/report.html");
-    
+
     log::info!("   📁 所有学习结果保存在: {}", learning_dir.display());
     Ok(())
 }
@@ -313,7 +336,8 @@ fn generate_learning_report(
     components: &browerai_dual_sandbox::ComponentLibrary,
     intents: &browerai_dual_sandbox::FunctionIntents,
 ) -> String {
-    format!(r#"<!DOCTYPE html>
+    format!(
+        r#"<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">

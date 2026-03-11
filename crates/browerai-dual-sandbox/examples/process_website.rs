@@ -22,7 +22,7 @@ async fn main() -> anyhow::Result<()> {
     // 输出结果
     println!("\n=== 处理结果 ===");
     println!();
-    
+
     // 原始渲染信息
     println!("[沙盒1 - 标准渲染]");
     println!("  HTML 大小: {} 字节", result.original.html.len());
@@ -36,21 +36,39 @@ async fn main() -> anyhow::Result<()> {
     println!("  网站意图: {:?}", result.learned.intent.primary_type);
     println!("  置信度: {:.0}%", result.learned.intent.confidence * 100.0);
     println!("  核心功能: {:?}", result.learned.intent.core_features);
-    println!("  颜色数量: {} 种", 
-        result.learned.styles.colors.primary_colors.len() +
-        result.learned.styles.colors.background_colors.len() +
-        result.learned.styles.colors.text_colors.len()
+    println!(
+        "  颜色数量: {} 种",
+        result.learned.styles.colors.primary_colors.len()
+            + result.learned.styles.colors.background_colors.len()
+            + result.learned.styles.colors.text_colors.len()
     );
-    println!("  字体数量: {} 种", result.learned.styles.typography.font_families.len());
-    println!("  功能点: {} 个", result.learned.functions.user_functions.len());
+    println!(
+        "  字体数量: {} 种",
+        result.learned.styles.typography.font_families.len()
+    );
+    println!(
+        "  功能点: {} 个",
+        result.learned.functions.user_functions.len()
+    );
     println!();
 
     // 生成的变体
     println!("[生成引擎 - 体验变体]");
     for (i, variant) in result.variants.iter().enumerate() {
         println!("  变体 {}: {}", i + 1, variant.name);
-        println!("    主色: {:?}", variant.styles.colors.primary_colors.first().map(|c| &c.hex));
-        println!("    字体: {:?}", variant.styles.typography.font_families.first().map(|f| &f.name));
+        println!(
+            "    主色: {:?}",
+            variant.styles.colors.primary_colors.first().map(|c| &c.hex)
+        );
+        println!(
+            "    字体: {:?}",
+            variant
+                .styles
+                .typography
+                .font_families
+                .first()
+                .map(|f| &f.name)
+        );
         println!("    功能映射: {} 个", variant.function_mappings.len());
     }
 

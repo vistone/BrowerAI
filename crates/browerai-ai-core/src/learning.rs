@@ -100,7 +100,12 @@ impl LearningEngine {
     }
 
     /// 提供反馈
-    pub fn feedback(&mut self, prediction_id: &str, correct: bool, correction: Option<String>) -> Result<()> {
+    pub fn feedback(
+        &mut self,
+        prediction_id: &str,
+        correct: bool,
+        correction: Option<String>,
+    ) -> Result<()> {
         if !self.enabled {
             return Ok(());
         }
@@ -156,8 +161,7 @@ impl LearningEngine {
         // 简化实现：返回JSON格式的知识
         Ok(format!(
             "{{\"samples\": {}, \"feedback\": {}}}",
-            self.stats.samples_learned,
-            self.stats.feedback_received
+            self.stats.samples_learned, self.stats.feedback_received
         ))
     }
 
@@ -319,7 +323,8 @@ impl KnowledgeBase {
 
     /// 按类型获取样本
     pub fn get_samples_by_type(&self, sample_type: SampleType) -> Vec<&TrainingSample> {
-        self.samples.iter()
+        self.samples
+            .iter()
             .filter(|s| s.sample_type == sample_type)
             .collect()
     }
@@ -393,7 +398,7 @@ mod tests {
         let sample = TrainingSample::new("test-1", vec![1.0, 2.0], vec![0.5])
             .with_type(SampleType::HtmlStructure)
             .with_metadata("url", "https://example.com");
-        
+
         assert_eq!(sample.id, "test-1");
         assert_eq!(sample.sample_type, SampleType::HtmlStructure);
         assert!(sample.metadata.contains_key("url"));
@@ -403,23 +408,23 @@ mod tests {
     fn test_learn_sample() {
         let mut engine = LearningEngine::new();
         let sample = TrainingSample::new("test-1", vec![1.0, 2.0], vec![0.5]);
-        
+
         let result = engine.learn(sample);
         assert!(result.is_ok());
-        
+
         let result = result.unwrap();
         assert!(result.success);
-        
+
         assert_eq!(engine.stats().samples_learned, 1);
     }
 
     #[test]
     fn test_feedback() {
         let mut engine = LearningEngine::new();
-        
+
         let result = engine.feedback("pred-1", false, Some("corrected".to_string()));
         assert!(result.is_ok());
-        
+
         assert_eq!(engine.stats().feedback_received, 1);
     }
 
@@ -431,10 +436,10 @@ mod tests {
             TrainingSample::new("test-2", vec![2.0], vec![0.2]),
             TrainingSample::new("test-3", vec![3.0], vec![0.3]),
         ];
-        
+
         let result = engine.learn_batch(samples);
         assert!(result.is_ok());
-        
+
         let batch_result = result.unwrap();
         assert_eq!(batch_result.total, 3);
         assert_eq!(batch_result.successful, 3);
@@ -446,20 +451,20 @@ mod tests {
             enabled: false,
             ..Default::default()
         });
-        
+
         let sample = TrainingSample::new("test-1", vec![1.0], vec![0.5]);
         let result = engine.learn(sample).unwrap();
-        
+
         assert!(!result.success);
     }
 
     #[test]
     fn test_knowledge_base() {
         let mut kb = KnowledgeBase::new();
-        
+
         let sample = TrainingSample::new("test-1", vec![1.0], vec![0.5]);
         kb.add_sample(sample);
-        
+
         assert_eq!(kb.sample_count(), 1);
     }
 }

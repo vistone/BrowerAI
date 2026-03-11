@@ -211,8 +211,8 @@ impl DomApiExtensions for Document {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use browerai_html_parser::HtmlParser;
     use browerai_core::traits::Parser;
+    use browerai_html_parser::HtmlParser;
 
     #[test]
     fn test_element_handle_tag_name() {

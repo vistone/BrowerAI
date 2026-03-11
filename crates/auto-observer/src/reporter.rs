@@ -18,19 +18,19 @@ impl ExplorationReporter {
 
         // 报告头部
         output.push_str(&self.format_header(report));
-        
+
         // 摘要
         output.push_str(&self.format_summary(report));
-        
+
         // 覆盖率详情
         output.push_str(&self.format_coverage(&report.coverage));
-        
+
         // 行为模式
         output.push_str(&self.format_behaviors(&report.unique_behaviors));
-        
+
         // 页面详情
         output.push_str(&self.format_pages(&report.pages_explored));
-        
+
         // 错误记录
         if !report.errors.is_empty() {
             output.push_str(&self.format_errors(&report.errors));
@@ -47,8 +47,9 @@ impl ExplorationReporter {
     /// 生成HTML报告
     pub fn generate_html_report(&self, report: &ExplorationReport) -> String {
         let duration = report.end_time.signed_duration_since(report.start_time);
-        
-        format!(r#"
+
+        format!(
+            r#"
 <!DOCTYPE html>
 <html>
 <head>
@@ -242,8 +243,9 @@ impl ExplorationReporter {
 
     fn format_header(&self, report: &ExplorationReport) -> String {
         let duration = report.end_time.signed_duration_since(report.start_time);
-        
-        format!(r#"
+
+        format!(
+            r#"
 ╔══════════════════════════════════════════════════════════════╗
 ║                    网站探索报告                               ║
 ╠══════════════════════════════════════════════════════════════╣
@@ -261,7 +263,8 @@ impl ExplorationReporter {
     }
 
     fn format_summary(&self, report: &ExplorationReport) -> String {
-        format!(r#"
+        format!(
+            r#"
 【摘要】
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   探索页面数:     {}
@@ -282,10 +285,9 @@ impl ExplorationReporter {
     fn format_coverage(&self, coverage: &CoverageReport) -> String {
         let mut output = String::from("\n【覆盖率详情】\n");
         output.push_str("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
-        output.push_str(&format!("总元素数: {} | 已探索: {} | 覆盖率: {:.1}%\n",
-            coverage.total_elements,
-            coverage.explored_elements,
-            coverage.coverage_percentage
+        output.push_str(&format!(
+            "总元素数: {} | 已探索: {} | 覆盖率: {:.1}%\n",
+            coverage.total_elements, coverage.explored_elements, coverage.coverage_percentage
         ));
         output.push_str("\n按类型统计:\n");
 
@@ -294,12 +296,9 @@ impl ExplorationReporter {
 
         for (element_type, stats) in types {
             let bar = self.render_progress_bar(stats.percentage, 30);
-            output.push_str(&format!("  {:12} {:30} {:3.0}% ({}/{})\n",
-                element_type,
-                bar,
-                stats.percentage,
-                stats.explored,
-                stats.total
+            output.push_str(&format!(
+                "  {:12} {:30} {:3.0}% ({}/{})\n",
+                element_type, bar, stats.percentage, stats.explored, stats.total
             ));
         }
 
@@ -317,10 +316,12 @@ impl ExplorationReporter {
             output.push_str(&format!("  触发: {:?}\n", behavior.trigger));
             output.push_str(&format!("  频率: {}次\n", behavior.frequency));
             output.push_str(&format!("  置信度: {:.0}%\n", behavior.confidence * 100.0));
-            
+
             if !behavior.typical_targets.is_empty() {
-                output.push_str(&format!("  典型目标: {}\n", 
-                    behavior.typical_targets.join(", ")));
+                output.push_str(&format!(
+                    "  典型目标: {}\n",
+                    behavior.typical_targets.join(", ")
+                ));
             }
         }
 
@@ -350,7 +351,8 @@ impl ExplorationReporter {
         output.push_str("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
         for error in errors {
-            output.push_str(&format!("\n[{}] {}\n", 
+            output.push_str(&format!(
+                "\n[{}] {}\n",
                 error.timestamp.format("%H:%M:%S"),
                 if error.recoverable { "⚠️" } else { "❌" }
             ));
@@ -366,16 +368,13 @@ impl ExplorationReporter {
     fn render_progress_bar(&self, percentage: f64, width: usize) -> String {
         let filled = ((percentage / 100.0) * width as f64) as usize;
         let empty = width - filled;
-        
-        format!("[{}{}]",
-            "█".repeat(filled),
-            "░".repeat(empty)
-        )
+
+        format!("[{}{}]", "█".repeat(filled), "░".repeat(empty))
     }
 
     fn format_coverage_table(&self, by_type: &HashMap<String, TypeCoverage>) -> String {
         let mut rows = String::new();
-        
+
         let mut types: Vec<_> = by_type.iter().collect();
         types.sort_by(|a, b| b.1.percentage.partial_cmp(&a.1.percentage).unwrap());
 
@@ -394,14 +393,20 @@ impl ExplorationReporter {
             return "<p>未发现行为模式</p>".to_string();
         }
 
-        behaviors.iter()
-            .map(|b| format!(
-                r#"<div class="behavior-item">
+        behaviors
+            .iter()
+            .map(|b| {
+                format!(
+                    r#"<div class="behavior-item">
                     <div class="behavior-type">{:?}</div>
                     <p>触发: {:?} | 频率: {}次 | 置信度: {:.0}%</p>
                 </div>"#,
-                b.pattern_type, b.trigger, b.frequency, b.confidence * 100.0
-            ))
+                    b.pattern_type,
+                    b.trigger,
+                    b.frequency,
+                    b.confidence * 100.0
+                )
+            })
             .collect::<Vec<_>>()
             .join("")
     }
@@ -411,15 +416,21 @@ impl ExplorationReporter {
             return "<p>未探索页面</p>".to_string();
         }
 
-        pages.iter()
-            .map(|p| format!(
-                r#"<div class="page-item">
+        pages
+            .iter()
+            .map(|p| {
+                format!(
+                    r#"<div class="page-item">
                     <div class="page-url">{}</div>
                     <p>{} | 交互: {} | 元素: {}/{}</p>
                 </div>"#,
-                p.url, p.title, p.interactions.len(), 
-                p.explored_elements.len(), p.elements_found.len()
-            ))
+                    p.url,
+                    p.title,
+                    p.interactions.len(),
+                    p.explored_elements.len(),
+                    p.elements_found.len()
+                )
+            })
             .collect::<Vec<_>>()
             .join("")
     }
@@ -429,14 +440,17 @@ impl ExplorationReporter {
             return "<p>无错误记录 ✓</p>".to_string();
         }
 
-        errors.iter()
-            .map(|e| format!(
-                r#"<div class="error-item">
+        errors
+            .iter()
+            .map(|e| {
+                format!(
+                    r#"<div class="error-item">
                     <strong>{}</strong> - {}
                     <p>{}</p>
                 </div>"#,
-                e.action, e.url, e.error_message
-            ))
+                    e.action, e.url, e.error_message
+                )
+            })
             .collect::<Vec<_>>()
             .join("")
     }

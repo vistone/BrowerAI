@@ -3,8 +3,8 @@
 
 use crate::*;
 use anyhow::Result;
-use playwright::Playwright;
 use playwright::api::Viewport;
+use playwright::Playwright;
 use std::collections::{HashMap, HashSet, VecDeque};
 use tokio::time::{timeout, Duration};
 
@@ -37,7 +37,7 @@ impl AutoExplorer {
     /// 开始探索
     pub async fn explore(&mut self, start_url: &str) -> Result<ExplorationReport> {
         log::info!("Starting exploration of: {}", start_url);
-        
+
         self.start_time = Some(Utc::now());
         self.url_queue.push_back((start_url.to_string(), 0));
 
@@ -46,7 +46,10 @@ impl AutoExplorer {
         self.playwright = Some(playwright);
 
         // 启动浏览器
-        let browser = self.playwright.as_ref().unwrap()
+        let browser = self
+            .playwright
+            .as_ref()
+            .unwrap()
             .chromium()
             .launcher()
             .headless(true)
@@ -54,7 +57,8 @@ impl AutoExplorer {
             .await?;
 
         // 创建浏览器上下文
-        let context = browser.context_builder()
+        let context = browser
+            .context_builder()
             .viewport(Some(Viewport {
                 width: self.config.viewport.width as i32,
                 height: self.config.viewport.height as i32,
@@ -102,10 +106,12 @@ impl AutoExplorer {
 
         // 生成报告
         let report = self.generate_report(start_url);
-        
-        log::info!("Exploration completed. Pages: {}, Observations: {}", 
-            report.pages_explored.len(), 
-            report.total_observations);
+
+        log::info!(
+            "Exploration completed. Pages: {}, Observations: {}",
+            report.pages_explored.len(),
+            report.total_observations
+        );
 
         Ok(report)
     }
@@ -120,10 +126,10 @@ impl AutoExplorer {
         log::info!("Exploring page: {} (depth: {})", url, depth);
 
         let page = context.new_page().await?;
-        
+
         // 导航到页面
         page.goto_builder(url).goto().await?;
-        
+
         // 获取页面基本信息
         let title = page.title().await?;
         let current_url = page.url()?;
@@ -152,7 +158,9 @@ impl AutoExplorer {
             match self.interact_with_element(&page, &element_info).await {
                 Ok(interaction) => {
                     page_exploration.interactions.push(interaction.clone());
-                    page_exploration.explored_elements.push(element_info.selector.clone());
+                    page_exploration
+                        .explored_elements
+                        .push(element_info.selector.clone());
 
                     // 记录观察
                     let observation = Observation {
@@ -176,7 +184,7 @@ impl AutoExplorer {
         }
 
         page.close(None).await?;
-        
+
         Ok(page_exploration)
     }
 
@@ -203,9 +211,12 @@ impl AutoExplorer {
 
         for selector in selectors {
             let elements = page.query_selector_all(selector).await?;
-            
+
             for (idx, element) in elements.iter().enumerate() {
-                if let Ok(info) = self.extract_element_info(page, element, &format!("{}[{}]", selector, idx)).await {
+                if let Ok(info) = self
+                    .extract_element_info(page, element, &format!("{}[{}]", selector, idx))
+                    .await
+                {
                     if info.is_visible && info.is_interactive {
                         all_elements.push(info);
                     }
@@ -228,13 +239,16 @@ impl AutoExplorer {
         selector: &str,
     ) -> Result<ElementInfo> {
         // 获取基本属性
-        let tag = element.get_attribute("tagName").await?
+        let tag = element
+            .get_attribute("tagName")
+            .await?
             .map(|s| s.to_lowercase())
             .unwrap_or_default();
-        
+
         let id = element.get_attribute("id").await?;
         let class_attr = element.get_attribute("class").await?;
-        let classes = class_attr.as_ref()
+        let classes = class_attr
+            .as_ref()
             .map(|c| c.split_whitespace().map(|s| s.to_string()).collect())
             .unwrap_or_default();
 
@@ -271,13 +285,14 @@ impl AutoExplorer {
 
     /// 优先级排序元素
     fn prioritize_elements(&self, elements: &[ElementInfo]) -> Vec<ElementInfo> {
-        let mut scored: Vec<(i32, ElementInfo)> = elements.iter()
+        let mut scored: Vec<(i32, ElementInfo)> = elements
+            .iter()
             .map(|e| (self.calculate_priority(e), e.clone()))
             .collect();
 
         // 按分数降序排序
         scored.sort_by(|a, b| b.0.cmp(&a.0));
-        
+
         scored.into_iter().map(|(_, e)| e).collect()
     }
 
@@ -333,7 +348,7 @@ impl AutoExplorer {
         element: &ElementInfo,
     ) -> Result<InteractionRecord> {
         let start = std::time::Instant::now();
-        
+
         // 记录交互前的状态
         let before_url = page.url()?;
 
@@ -342,7 +357,9 @@ impl AutoExplorer {
             "input" | "textarea" => {
                 // 输入测试数据
                 let test_value = self.generate_test_input(element);
-                page.fill_builder(&element.selector, &test_value).fill().await?;
+                page.fill_builder(&element.selector, &test_value)
+                    .fill()
+                    .await?;
                 InteractionAction::Input { value: test_value }
             }
             "select" => {
@@ -370,8 +387,9 @@ impl AutoExplorer {
         if navigation_occurred {
             let _ = timeout(
                 Duration::from_millis(self.config.wait_for_navigation_ms),
-                tokio::time::sleep(Duration::from_millis(100))
-            ).await;
+                tokio::time::sleep(Duration::from_millis(100)),
+            )
+            .await;
         }
 
         let duration = start.elapsed().as_millis() as u64;
@@ -384,7 +402,11 @@ impl AutoExplorer {
                 success: true,
                 state_changed: true,
                 navigation_occurred,
-                new_url: if navigation_occurred { Some(after_url) } else { None },
+                new_url: if navigation_occurred {
+                    Some(after_url)
+                } else {
+                    None
+                },
                 errors: vec![],
             },
             duration_ms: duration,
@@ -393,8 +415,12 @@ impl AutoExplorer {
 
     /// 生成测试输入
     fn generate_test_input(&self, element: &ElementInfo) -> String {
-        let input_type = element.attributes.get("type").map(|s| s.as_str()).unwrap_or("text");
-        
+        let input_type = element
+            .attributes
+            .get("type")
+            .map(|s| s.as_str())
+            .unwrap_or("text");
+
         match input_type {
             "email" => "test@example.com".to_string(),
             "password" => "TestPassword123!".to_string(),
@@ -407,16 +433,22 @@ impl AutoExplorer {
     }
 
     /// 发现新链接
-    async fn discover_new_links(&mut self, page: &playwright::api::Page, current_depth: usize) -> Result<()> {
-        let links: Result<serde_json::Value, _> = page.evaluate_on_selector_all(
-            "a[href]",
-            r#"
+    async fn discover_new_links(
+        &mut self,
+        page: &playwright::api::Page,
+        current_depth: usize,
+    ) -> Result<()> {
+        let links: Result<serde_json::Value, _> = page
+            .evaluate_on_selector_all(
+                "a[href]",
+                r#"
             (elements) => elements
                 .map(el => el.href)
                 .filter(href => href && href.startsWith('http'))
         "#,
-            None::<()>
-        ).await;
+                None::<()>,
+            )
+            .await;
 
         if let Ok(urls_value) = links {
             if let Some(urls) = urls_value.as_array() {
@@ -424,7 +456,8 @@ impl AutoExplorer {
                     if let Some(url) = url_value.as_str() {
                         // 检查是否应该添加
                         if self.should_explore_url(url) {
-                            self.url_queue.push_back((url.to_string(), current_depth + 1));
+                            self.url_queue
+                                .push_back((url.to_string(), current_depth + 1));
                         }
                     }
                 }
@@ -483,15 +516,11 @@ impl AutoExplorer {
     /// 生成探索报告
     fn generate_report(&self, target_url: &str) -> ExplorationReport {
         let end_time = Utc::now();
-        
+
         // 计算覆盖率
-        let total_elements: usize = self.pages.iter()
-            .map(|p| p.elements_found.len())
-            .sum();
-        
-        let explored_elements: usize = self.pages.iter()
-            .map(|p| p.explored_elements.len())
-            .sum();
+        let total_elements: usize = self.pages.iter().map(|p| p.elements_found.len()).sum();
+
+        let explored_elements: usize = self.pages.iter().map(|p| p.explored_elements.len()).sum();
 
         let coverage_percentage = if total_elements > 0 {
             (explored_elements as f64 / total_elements as f64) * 100.0
@@ -557,15 +586,17 @@ impl AutoExplorer {
             }
         }
 
-        patterns.iter()
+        patterns
+            .iter()
             .map(|(action_type, interactions)| {
                 let pattern_type = self.infer_pattern_type(action_type, interactions);
-                
+
                 BehaviorPattern {
                     pattern_id: format!("pattern_{}", action_type),
                     pattern_type,
                     trigger: interactions[0].action.clone(),
-                    typical_targets: interactions.iter()
+                    typical_targets: interactions
+                        .iter()
                         .map(|i| i.target.selector.clone())
                         .collect::<HashSet<_>>()
                         .into_iter()
@@ -579,8 +610,13 @@ impl AutoExplorer {
     }
 
     /// 推断模式类型
-    fn infer_pattern_type(&self, action_type: &str, interactions: &[&InteractionRecord]) -> PatternType {
-        let navigation_count = interactions.iter()
+    fn infer_pattern_type(
+        &self,
+        action_type: &str,
+        interactions: &[&InteractionRecord],
+    ) -> PatternType {
+        let navigation_count = interactions
+            .iter()
             .filter(|i| i.result.navigation_occurred)
             .count();
 

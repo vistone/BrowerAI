@@ -7,15 +7,15 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub mod analyzer;
+pub mod color_extractor;
 pub mod component_detector;
 pub mod layout_analyzer;
-pub mod color_extractor;
 pub mod style_inferencer;
 
 pub use analyzer::VisualAnalyzer;
+pub use color_extractor::ColorExtractor;
 pub use component_detector::ComponentDetector;
 pub use layout_analyzer::LayoutAnalyzer;
-pub use color_extractor::ColorExtractor;
 pub use style_inferencer::StyleInferencer;
 
 /// 视觉分析结果
@@ -92,18 +92,18 @@ impl BoundingBox {
     pub fn center(&self) -> (u32, u32) {
         (self.x + self.width / 2, self.y + self.height / 2)
     }
-    
+
     pub fn area(&self) -> u32 {
         self.width * self.height
     }
-    
+
     pub fn intersects(&self, other: &BoundingBox) -> bool {
         self.x < other.x + other.width
             && self.x + self.width > other.x
             && self.y < other.y + other.height
             && self.y + self.height > other.y
     }
-    
+
     pub fn contains(&self, other: &BoundingBox) -> bool {
         self.x <= other.x
             && self.x + self.width >= other.x + other.width
@@ -141,23 +141,29 @@ impl Color {
             format!("#{:02x}{:02x}{:02x}{:02x}", self.r, self.g, self.b, self.a)
         }
     }
-    
+
     pub fn to_rgb(&self) -> String {
         format!("rgb({}, {}, {})", self.r, self.g, self.b)
     }
-    
+
     pub fn to_rgba(&self) -> String {
-        format!("rgba({}, {}, {}, {})", self.r, self.g, self.b, self.a as f32 / 255.0)
+        format!(
+            "rgba({}, {}, {}, {})",
+            self.r,
+            self.g,
+            self.b,
+            self.a as f32 / 255.0
+        )
     }
-    
+
     pub fn luminance(&self) -> f32 {
         let r = self.r as f32 / 255.0;
         let g = self.g as f32 / 255.0;
         let b = self.b as f32 / 255.0;
-        
+
         0.299 * r + 0.587 * g + 0.114 * b
     }
-    
+
     pub fn is_dark(&self) -> bool {
         self.luminance() < 0.5
     }
@@ -328,19 +334,19 @@ impl VisualLearningEngine {
     pub async fn analyze_screenshot(&self, image_path: &str) -> Result<VisualAnalysis> {
         // 加载图片
         let image = image::open(image_path)?;
-        
+
         // 检测组件
         let components = self.component_detector.detect_components(&image)?;
-        
+
         // 分析布局
         let layout = self.layout_analyzer.analyze_layout(&image, &components)?;
-        
+
         // 提取颜色
         let color_scheme = self.color_extractor.extract_colors(&image)?;
-        
+
         // 推断样式
         let (typography, spacing) = self.style_inferencer.infer_styles(&image, &components)?;
-        
+
         Ok(VisualAnalysis {
             screenshot_path: image_path.to_string(),
             viewport: ViewportInfo {
@@ -360,7 +366,7 @@ impl VisualLearningEngine {
     pub async fn analyze_url(&self, url: &str) -> Result<VisualAnalysis> {
         // 使用 Playwright 截图
         let screenshot_path = self.capture_screenshot(url).await?;
-        
+
         // 分析截图
         self.analyze_screenshot(&screenshot_path).await
     }
@@ -368,38 +374,46 @@ impl VisualLearningEngine {
     /// 捕获页面截图
     async fn capture_screenshot(&self, url: &str) -> Result<String> {
         use playwright::Playwright;
-        
+
         let playwright = Playwright::initialize().await?;
-        let browser = playwright.chromium().launcher().headless(true).launch().await?;
-        let context = browser.context_builder()
+        let browser = playwright
+            .chromium()
+            .launcher()
+            .headless(true)
+            .launch()
+            .await?;
+        let context = browser
+            .context_builder()
             .viewport(Some(playwright::api::Viewport {
                 width: 1280,
                 height: 720,
             }))
             .build()
             .await?;
-        
+
         let page = context.new_page().await?;
         page.goto_builder(url).goto().await?;
-        
+
         // 等待页面加载完成
         tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
-        
-        let screenshot_path = format!("screenshot_{}.png", 
+
+        let screenshot_path = format!(
+            "screenshot_{}.png",
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap_or_default()
-                .as_secs());
-        
+                .as_secs()
+        );
+
         browser.close().await?;
-        
+
         Ok(screenshot_path)
     }
 
     /// 生成设计系统
     pub fn generate_design_system(&self, analyses: &[VisualAnalysis]) -> DesignSystem {
         let mut design_system = DesignSystem::default();
-        
+
         // 合并颜色方案
         let mut color_frequencies: HashMap<String, (Color, usize)> = HashMap::new();
         for analysis in analyses {
@@ -409,41 +423,42 @@ impl VisualLearningEngine {
                 entry.1 += *freq as usize;
             }
         }
-        
+
         // 选择最常见的颜色
         let mut sorted_colors: Vec<_> = color_frequencies.values().collect();
         sorted_colors.sort_by(|a, b| b.1.cmp(&a.1));
-        
+
         if !sorted_colors.is_empty() {
             design_system.primary_color = Some(sorted_colors[0].0.clone());
         }
         if sorted_colors.len() >= 2 {
             design_system.secondary_color = Some(sorted_colors[1].0.clone());
         }
-        
+
         // 分析间距系统
         let mut all_gaps = Vec::new();
         for analysis in analyses {
             all_gaps.extend(&analysis.spacing.common_gaps);
         }
-        
+
         // 找出最常见的间距值
         let mut gap_counts: HashMap<u32, usize> = HashMap::new();
         for gap in all_gaps {
             *gap_counts.entry(gap).or_insert(0) += 1;
         }
-        
+
         let mut sorted_gaps: Vec<_> = gap_counts.iter().collect();
         sorted_gaps.sort_by(|a, b| b.1.cmp(a.1));
-        
+
         if let Some((base, _)) = sorted_gaps.first() {
             design_system.spacing_base = Some(**base as u8);
-            design_system.spacing_scale = sorted_gaps.iter()
+            design_system.spacing_scale = sorted_gaps
+                .iter()
                 .take(5)
                 .map(|(gap, _)| **gap as u8)
                 .collect();
         }
-        
+
         design_system
     }
 }
@@ -481,71 +496,151 @@ mod tests {
 
     #[test]
     fn test_color_to_hex() {
-        let color = Color { r: 255, g: 128, b: 64, a: 255 };
+        let color = Color {
+            r: 255,
+            g: 128,
+            b: 64,
+            a: 255,
+        };
         assert_eq!(color.to_hex(), "#ff8040");
-        
-        let color_with_alpha = Color { r: 255, g: 128, b: 64, a: 128 };
+
+        let color_with_alpha = Color {
+            r: 255,
+            g: 128,
+            b: 64,
+            a: 128,
+        };
         assert_eq!(color_with_alpha.to_hex(), "#ff804080");
     }
 
     #[test]
     fn test_color_to_rgb() {
-        let color = Color { r: 255, g: 128, b: 64, a: 255 };
+        let color = Color {
+            r: 255,
+            g: 128,
+            b: 64,
+            a: 255,
+        };
         assert_eq!(color.to_rgb(), "rgb(255, 128, 64)");
     }
 
     #[test]
     fn test_color_to_rgba() {
-        let color = Color { r: 255, g: 128, b: 64, a: 128 };
+        let color = Color {
+            r: 255,
+            g: 128,
+            b: 64,
+            a: 128,
+        };
         assert_eq!(color.to_rgba(), "rgba(255, 128, 64, 0.5019608)");
     }
 
     #[test]
     fn test_color_luminance() {
-        let white = Color { r: 255, g: 255, b: 255, a: 255 };
-        let black = Color { r: 0, g: 0, b: 0, a: 255 };
-        
+        let white = Color {
+            r: 255,
+            g: 255,
+            b: 255,
+            a: 255,
+        };
+        let black = Color {
+            r: 0,
+            g: 0,
+            b: 0,
+            a: 255,
+        };
+
         assert!(white.luminance() > 0.9);
         assert!(black.luminance() < 0.1);
     }
 
     #[test]
     fn test_color_is_dark() {
-        let dark = Color { r: 30, g: 30, b: 30, a: 255 };
-        let light = Color { r: 200, g: 200, b: 200, a: 255 };
-        
+        let dark = Color {
+            r: 30,
+            g: 30,
+            b: 30,
+            a: 255,
+        };
+        let light = Color {
+            r: 200,
+            g: 200,
+            b: 200,
+            a: 255,
+        };
+
         assert!(dark.is_dark());
         assert!(!light.is_dark());
     }
 
     #[test]
     fn test_bounding_box_center() {
-        let bbox = BoundingBox { x: 100, y: 100, width: 200, height: 100 };
+        let bbox = BoundingBox {
+            x: 100,
+            y: 100,
+            width: 200,
+            height: 100,
+        };
         assert_eq!(bbox.center(), (200, 150));
     }
 
     #[test]
     fn test_bounding_box_area() {
-        let bbox = BoundingBox { x: 0, y: 0, width: 100, height: 50 };
+        let bbox = BoundingBox {
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 50,
+        };
         assert_eq!(bbox.area(), 5000);
     }
 
     #[test]
     fn test_bounding_box_intersects() {
-        let bbox1 = BoundingBox { x: 0, y: 0, width: 100, height: 100 };
-        let bbox2 = BoundingBox { x: 50, y: 50, width: 100, height: 100 };
-        let bbox3 = BoundingBox { x: 200, y: 200, width: 100, height: 100 };
-        
+        let bbox1 = BoundingBox {
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 100,
+        };
+        let bbox2 = BoundingBox {
+            x: 50,
+            y: 50,
+            width: 100,
+            height: 100,
+        };
+        let bbox3 = BoundingBox {
+            x: 200,
+            y: 200,
+            width: 100,
+            height: 100,
+        };
+
         assert!(bbox1.intersects(&bbox2));
         assert!(!bbox1.intersects(&bbox3));
     }
 
     #[test]
     fn test_bounding_box_contains() {
-        let parent = BoundingBox { x: 0, y: 0, width: 200, height: 200 };
-        let child = BoundingBox { x: 50, y: 50, width: 100, height: 100 };
-        let outside = BoundingBox { x: 300, y: 300, width: 50, height: 50 };
-        
+        let parent = BoundingBox {
+            x: 0,
+            y: 0,
+            width: 200,
+            height: 200,
+        };
+        let child = BoundingBox {
+            x: 50,
+            y: 50,
+            width: 100,
+            height: 100,
+        };
+        let outside = BoundingBox {
+            x: 300,
+            y: 300,
+            width: 50,
+            height: 50,
+        };
+
         assert!(parent.contains(&child));
         assert!(!parent.contains(&outside));
     }
@@ -603,10 +698,20 @@ mod tests {
         let component = VisualComponent {
             id: "btn-1".to_string(),
             component_type: ComponentType::Button,
-            bounding_box: BoundingBox { x: 10, y: 20, width: 100, height: 40 },
+            bounding_box: BoundingBox {
+                x: 10,
+                y: 20,
+                width: 100,
+                height: 40,
+            },
             confidence: 0.95,
             visual_style: VisualStyle {
-                background_color: Some(Color { r: 0, g: 120, b: 255, a: 255 }),
+                background_color: Some(Color {
+                    r: 0,
+                    g: 120,
+                    b: 255,
+                    a: 255,
+                }),
                 text_color: None,
                 border_color: None,
                 border_width: 0,

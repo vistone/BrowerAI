@@ -25,9 +25,9 @@ pub mod website_analyzer;
 pub mod website_learning_engine;
 
 pub use functional_transform::{
-    FunctionalTransformPipeline, WebsiteStyle, TransformResult, GeneratedWebsite,
-    ReasoningEngine, StyleGenerator, FunctionalityVerifier,
-    CoreFunction, FunctionIntent, VariantProposal, FunctionBridge,
+    CoreFunction, FunctionBridge, FunctionIntent, FunctionalTransformPipeline,
+    FunctionalityVerifier, GeneratedWebsite, ReasoningEngine, StyleGenerator, TransformResult,
+    VariantProposal, WebsiteStyle,
 };
 
 pub use llm_integration::{

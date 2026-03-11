@@ -287,7 +287,10 @@ impl URL {
 
         let host_part = &after_protocol[..host_end];
         let (hostname, port) = if let Some(idx) = host_part.find(':') {
-            (host_part[..idx].to_string(), host_part[idx + 1..].to_string())
+            (
+                host_part[..idx].to_string(),
+                host_part[idx + 1..].to_string(),
+            )
         } else {
             (host_part.to_string(), String::new())
         };
@@ -389,10 +392,7 @@ impl URLSearchParams {
 
     /// Get a parameter
     pub fn get(&self, key: &str) -> Option<&String> {
-        self.params
-            .iter()
-            .find(|(k, _)| k == key)
-            .map(|(_, v)| v)
+        self.params.iter().find(|(k, _)| k == key).map(|(_, v)| v)
     }
 
     /// Get all values for a key
@@ -423,7 +423,8 @@ impl URLSearchParams {
 
 impl std::fmt::Display for URLSearchParams {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let query_string = self.params
+        let query_string = self
+            .params
             .iter()
             .map(|(k, v)| {
                 if v.is_empty() {

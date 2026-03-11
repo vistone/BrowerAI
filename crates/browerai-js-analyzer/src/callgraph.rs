@@ -36,11 +36,11 @@ impl CallGraph {
     pub fn add_function(&mut self, func: FunctionNode) -> NodeIndex {
         let name = func.name.clone();
         let idx = self.graph.add_node(func);
-        
+
         if !name.is_empty() {
             self.function_map.insert(name, idx);
         }
-        
+
         idx
     }
 
@@ -65,7 +65,9 @@ impl CallGraph {
 
     /// 获取调用者
     pub fn callers(&self, func_idx: NodeIndex) -> Vec<NodeIndex> {
-        self.graph.neighbors_directed(func_idx, petgraph::Direction::Incoming).collect()
+        self.graph
+            .neighbors_directed(func_idx, petgraph::Direction::Incoming)
+            .collect()
     }
 
     /// 获取被调用者
@@ -81,7 +83,7 @@ impl CallGraph {
                 return true;
             }
         }
-        
+
         // 检查是否存在循环（间接递归）
         use petgraph::algo::is_cyclic_directed;
         is_cyclic_directed(&self.graph)
@@ -90,7 +92,7 @@ impl CallGraph {
     /// 获取递归函数
     pub fn get_recursive_functions(&self) -> Vec<&FunctionNode> {
         let mut recursive = Vec::new();
-        
+
         for node in self.graph.node_indices() {
             // 直接递归
             if self.graph.contains_edge(node, node) {
@@ -99,7 +101,7 @@ impl CallGraph {
                 }
                 continue;
             }
-            
+
             // 间接递归 - 检查是否有路径回到自身
             use petgraph::algo::has_path_connecting;
             if has_path_connecting(&self.graph, node, node, None) {
@@ -108,7 +110,7 @@ impl CallGraph {
                 }
             }
         }
-        
+
         recursive
     }
 
@@ -128,11 +130,11 @@ impl CallGraph {
     /// 获取孤立函数（没有被调用的函数）
     pub fn get_orphan_functions(&self) -> Vec<&FunctionNode> {
         let mut orphans = Vec::new();
-        
+
         for node in self.graph.node_indices() {
             let has_callers = self.callers(node).is_empty();
             let has_callees = self.callees(node).is_empty();
-            
+
             // 没有被调用且没有调用其他函数（除了可能是入口函数）
             if has_callers && has_callees {
                 if let Some(func) = self.graph.node_weight(node) {
@@ -140,14 +142,14 @@ impl CallGraph {
                 }
             }
         }
-        
+
         orphans
     }
 
     /// 获取入口函数（没有被其他函数调用的函数）
     pub fn get_entry_functions(&self) -> Vec<&FunctionNode> {
         let mut entries = Vec::new();
-        
+
         for node in self.graph.node_indices() {
             if self.callers(node).is_empty() {
                 if let Some(func) = self.graph.node_weight(node) {
@@ -155,7 +157,7 @@ impl CallGraph {
                 }
             }
         }
-        
+
         entries
     }
 
@@ -253,55 +255,55 @@ pub struct CallGraphBuilder {
 impl CallGraphBuilder {
     /// 创建新的调用图构建器
     pub fn new() -> Self {
-        Self {
-            next_func_id: 0,
-        }
+        Self { next_func_id: 0 }
     }
 
     /// 从AST构建调用图
     pub fn build(&mut self, ast: &JsAst) -> Result<CallGraph> {
         let mut callgraph = CallGraph::new();
-        
+
         // 添加所有函数节点
         for func in &ast.function_decls {
             let id = FunctionId(self.next_func_id);
             self.next_func_id += 1;
-            
+
             let name = func.name.clone().unwrap_or_default();
             let mut node = FunctionNode::new(id, name);
             node.param_count = func.params.len();
             node.is_async = func.is_async;
             node.is_generator = func.is_generator;
-            
+
             callgraph.add_function(node);
         }
-        
+
         // 简化实现：假设所有函数都可能相互调用
         // 实际实现需要分析函数体内的调用表达式
         let func_indices: Vec<_> = callgraph.function_map.values().copied().collect();
-        
+
         for (i, &caller) in func_indices.iter().enumerate() {
             for (j, &callee) in func_indices.iter().enumerate() {
                 if i != j {
                     // 创建调用点
                     let call_site = CallSite {
                         id: callgraph.call_sites.len(),
-                        caller: callgraph.get_function(caller)
+                        caller: callgraph
+                            .get_function(caller)
                             .map(|f| f.id)
                             .unwrap_or(FunctionId(0)),
-                        callee_name: callgraph.get_function(callee)
+                        callee_name: callgraph
+                            .get_function(callee)
                             .map(|f| f.name.clone())
                             .unwrap_or_default(),
                         arg_count: 0,
                         line: None,
                         column: None,
                     };
-                    
+
                     callgraph.add_call(caller, callee, call_site);
                 }
             }
         }
-        
+
         Ok(callgraph)
     }
 }
@@ -323,7 +325,7 @@ mod tests {
         let mut cg = CallGraph::new();
         let func = FunctionNode::new(FunctionId(0), "test");
         let _idx = cg.add_function(func);
-        
+
         assert_eq!(cg.function_count(), 1);
         assert!(cg.find_function("test").is_some());
     }
@@ -331,20 +333,24 @@ mod tests {
     #[test]
     fn test_recursive_detection() {
         let mut cg = CallGraph::new();
-        
+
         let func1 = FunctionNode::new(FunctionId(0), "foo");
         let idx1 = cg.add_function(func1);
-        
+
         // 添加自环（直接递归）
-        cg.add_call(idx1, idx1, CallSite {
-            id: 0,
-            caller: FunctionId(0),
-            callee_name: "foo".to_string(),
-            arg_count: 0,
-            line: None,
-            column: None,
-        });
-        
+        cg.add_call(
+            idx1,
+            idx1,
+            CallSite {
+                id: 0,
+                caller: FunctionId(0),
+                callee_name: "foo".to_string(),
+                arg_count: 0,
+                line: None,
+                column: None,
+            },
+        );
+
         assert!(cg.has_recursive_calls());
     }
 
@@ -352,21 +358,19 @@ mod tests {
     fn test_callgraph_builder() {
         let mut builder = CallGraphBuilder::new();
         let ast = JsAst {
-            function_decls: vec![
-                FunctionDecl {
-                    name: Some("foo".to_string()),
-                    params: vec![],
-                    is_async: false,
-                    is_generator: false,
-                    body: None,
-                },
-            ],
+            function_decls: vec![FunctionDecl {
+                name: Some("foo".to_string()),
+                params: vec![],
+                is_async: false,
+                is_generator: false,
+                body: None,
+            }],
             variable_decls: vec![],
             ..Default::default()
         };
-        
+
         let cg = builder.build(&ast).unwrap();
-        
+
         assert_eq!(cg.function_count(), 1);
     }
 }

@@ -2,7 +2,7 @@
 //!
 //! 将JS代码转换为功能意图，然后可以重新实现
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// 功能意图库
@@ -93,14 +93,14 @@ pub enum BehaviorType {
     OpenModal,
     CloseModal,
     ToggleVisibility,
-    
+
     // 表单
     ValidateInput,
     SubmitForm,
     ResetForm,
     ShowError,
     ClearError,
-    
+
     // 数据
     FetchData,
     PostData,
@@ -108,7 +108,7 @@ pub enum BehaviorType {
     FilterList,
     SortList,
     Search,
-    
+
     // UI
     AddClass,
     RemoveClass,
@@ -116,7 +116,7 @@ pub enum BehaviorType {
     SetStyle,
     Animate,
     ScrollTo,
-    
+
     // 自定义
     Custom(String),
 }
@@ -384,10 +384,10 @@ impl JsUnderstander {
     /// 提取交互意图
     fn extract_interactions(&self, js_code: &str) -> Vec<InteractionIntent> {
         let mut interactions = Vec::new();
-        
+
         // 分析事件监听器
         // addEventListener, onclick, onsubmit等
-        
+
         // 示例：识别点击事件
         if js_code.contains("addEventListener") || js_code.contains("onclick") {
             interactions.push(InteractionIntent {
@@ -410,7 +410,7 @@ impl JsUnderstander {
                 side_effects: vec![],
             });
         }
-        
+
         interactions
     }
 
@@ -427,9 +427,12 @@ impl JsUnderstander {
     /// 提取API意图
     fn extract_api_intents(&self, js_code: &str) -> Vec<ApiIntent> {
         let mut apis = Vec::new();
-        
+
         // 识别fetch, axios, XMLHttpRequest等
-        if js_code.contains("fetch") || js_code.contains("axios") || js_code.contains("XMLHttpRequest") {
+        if js_code.contains("fetch")
+            || js_code.contains("axios")
+            || js_code.contains("XMLHttpRequest")
+        {
             // 提取API调用模式
             apis.push(ApiIntent {
                 name: "fetch_data".to_string(),
@@ -461,7 +464,7 @@ impl JsUnderstander {
                 },
             });
         }
-        
+
         apis
     }
 

@@ -23,38 +23,47 @@ impl ColorExtractor {
     /// 提取图像的颜色方案
     pub fn extract_colors(&self, image: &DynamicImage) -> Result<ColorScheme> {
         let rgba = image.to_rgba8();
-        
+
         // 1. 提取所有颜色
         let all_colors = self.extract_all_colors(&rgba);
-        
+
         // 2. 聚类颜色
         let clustered = self.cluster_colors(&all_colors, self.config.color_cluster_count);
-        
+
         // 3. 识别颜色角色
         let color_scheme = self.identify_color_roles(&clustered, image)?;
-        
+
         Ok(color_scheme)
     }
 
     /// 提取所有颜色
     fn extract_all_colors(&self, rgba: &image::RgbaImage) -> Vec<(Color, u32)> {
         let mut color_counts: HashMap<(u8, u8, u8, u8), u32> = HashMap::new();
-        
+
         // 采样（提高性能）
         let step = ((rgba.width() * rgba.height()) / 10000).max(1);
-        
+
         for (idx, pixel) in rgba.pixels().enumerate() {
             if !(idx as u32).is_multiple_of(step) {
                 continue;
             }
-            
+
             let key = (pixel[0], pixel[1], pixel[2], pixel[3]);
             *color_counts.entry(key).or_insert(0) += 1;
         }
-        
-        color_counts.iter()
+
+        color_counts
+            .iter()
             .map(|((r, g, b, a), count)| {
-                (Color { r: *r, g: *g, b: *b, a: *a }, *count)
+                (
+                    Color {
+                        r: *r,
+                        g: *g,
+                        b: *b,
+                        a: *a,
+                    },
+                    *count,
+                )
             })
             .collect()
     }
@@ -63,13 +72,15 @@ impl ColorExtractor {
     fn cluster_colors(&self, colors: &[(Color, u32)], k: usize) -> Vec<(Color, f32)> {
         if colors.len() <= k {
             let total: u32 = colors.iter().map(|(_, count)| *count).sum();
-            return colors.iter()
+            return colors
+                .iter()
                 .map(|(c, count)| (c.clone(), *count as f32 / total as f32))
                 .collect();
         }
 
         // 初始化聚类中心
-        let mut centroids: Vec<[f32; 3]> = colors.iter()
+        let mut centroids: Vec<[f32; 3]> = colors
+            .iter()
             .take(k)
             .map(|(c, _)| [c.r as f32, c.g as f32, c.b as f32])
             .collect();
@@ -84,7 +95,7 @@ impl ColorExtractor {
             for (i, (color, _)) in colors.iter().enumerate() {
                 let point = [color.r as f32, color.g as f32, color.b as f32];
                 let nearest = self.find_nearest_centroid(&point, &centroids);
-                
+
                 if assignments[i] != nearest {
                     assignments[i] = nearest;
                     changed = true;
@@ -102,7 +113,7 @@ impl ColorExtractor {
             for (i, (color, weight)) in colors.iter().enumerate() {
                 let cluster = assignments[i];
                 let w = *weight as f32;
-                
+
                 new_centroids[cluster][0] += color.r as f32 * w;
                 new_centroids[cluster][1] += color.g as f32 * w;
                 new_centroids[cluster][2] += color.b as f32 * w;
@@ -127,7 +138,9 @@ impl ColorExtractor {
         }
 
         // 转换为结果
-        centroids.iter().enumerate()
+        centroids
+            .iter()
+            .enumerate()
             .map(|(i, c)| {
                 let color = Color {
                     r: c[0] as u8,
@@ -157,7 +170,11 @@ impl ColorExtractor {
     }
 
     /// 识别颜色角色
-    fn identify_color_roles(&self, colors: &[(Color, f32)], _image: &DynamicImage) -> Result<ColorScheme> {
+    fn identify_color_roles(
+        &self,
+        colors: &[(Color, f32)],
+        _image: &DynamicImage,
+    ) -> Result<ColorScheme> {
         let mut scheme = ColorScheme {
             all_colors: colors.to_vec(),
             ..Default::default()
@@ -181,13 +198,15 @@ impl ColorExtractor {
         }
 
         // 主色调（通常是饱和度较高的颜色）
-        scheme.primary = sorted.iter()
+        scheme.primary = sorted
+            .iter()
             .find(|(c, _)| self.is_accent_color(c))
             .map(|(c, _)| c.clone())
             .or_else(|| sorted.get(1).map(|(c, _)| c.clone()));
 
         // 次要色
-        scheme.secondary = sorted.iter()
+        scheme.secondary = sorted
+            .iter()
             .skip(1)
             .find(|(c, _)| self.is_accent_color(c))
             .map(|(c, _)| c.clone())
@@ -230,10 +249,16 @@ impl ColorExtractor {
     }
 
     /// 查找对比色
-    fn find_contrasting_color(&self, base: &Color, candidates: &[(Color, f32)], min_contrast: f32) -> Color {
+    fn find_contrasting_color(
+        &self,
+        base: &Color,
+        candidates: &[(Color, f32)],
+        min_contrast: f32,
+    ) -> Color {
         let base_lum = base.luminance();
-        
-        candidates.iter()
+
+        candidates
+            .iter()
             .find(|(c, _)| {
                 let contrast = if base_lum > c.luminance() {
                     (base_lum + 0.05) / (c.luminance() + 0.05)
@@ -246,9 +271,19 @@ impl ColorExtractor {
             .unwrap_or_else(|| {
                 // 如果没有找到，生成一个
                 if base.is_dark() {
-                    Color { r: 255, g: 255, b: 255, a: 255 }
+                    Color {
+                        r: 255,
+                        g: 255,
+                        b: 255,
+                        a: 255,
+                    }
                 } else {
-                    Color { r: 0, g: 0, b: 0, a: 255 }
+                    Color {
+                        r: 0,
+                        g: 0,
+                        b: 0,
+                        a: 255,
+                    }
                 }
             })
     }
@@ -273,26 +308,49 @@ impl ColorExtractor {
         match semantic_type {
             "error" => {
                 // 查找红色系
-                colors.iter()
+                colors
+                    .iter()
                     .find(|(c, _)| c.r > 150 && c.g < 100 && c.b < 100)
                     .map(|(c, _)| c.clone())
-                    .unwrap_or(Color { r: 220, g: 53, b: 69, a: 255 })
+                    .unwrap_or(Color {
+                        r: 220,
+                        g: 53,
+                        b: 69,
+                        a: 255,
+                    })
             }
             "warning" => {
                 // 查找黄色/橙色系
-                colors.iter()
+                colors
+                    .iter()
                     .find(|(c, _)| c.r > 150 && c.g > 100 && c.b < 100)
                     .map(|(c, _)| c.clone())
-                    .unwrap_or(Color { r: 255, g: 193, b: 7, a: 255 })
+                    .unwrap_or(Color {
+                        r: 255,
+                        g: 193,
+                        b: 7,
+                        a: 255,
+                    })
             }
             "success" => {
                 // 查找绿色系
-                colors.iter()
+                colors
+                    .iter()
                     .find(|(c, _)| c.r < 100 && c.g > 150 && c.b < 100)
                     .map(|(c, _)| c.clone())
-                    .unwrap_or(Color { r: 40, g: 167, b: 69, a: 255 })
+                    .unwrap_or(Color {
+                        r: 40,
+                        g: 167,
+                        b: 69,
+                        a: 255,
+                    })
             }
-            _ => Color { r: 128, g: 128, b: 128, a: 255 },
+            _ => Color {
+                r: 128,
+                g: 128,
+                b: 128,
+                a: 255,
+            },
         }
     }
 
@@ -335,4 +393,3 @@ impl ColorExtractor {
         css
     }
 }
-

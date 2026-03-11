@@ -24,37 +24,27 @@ pub mod style_transform;
 
 // 重新导出主要类型
 pub use common::{
-    WebsiteResources, StyleSystem, FunctionMapping, 
-    LayoutPattern, ColorScheme, TypographySystem
+    ColorScheme, FunctionMapping, LayoutPattern, StyleSystem, TypographySystem, WebsiteResources,
 };
 pub use component_extractor::{
-    ComponentLibrary, ComponentExtractor, ButtonComponent, 
-    FormComponent, NavComponent, CardComponent, LayoutComponent
+    ButtonComponent, CardComponent, ComponentExtractor, ComponentLibrary, FormComponent,
+    LayoutComponent, NavComponent,
 };
 pub use css_parser::{CssParser, ParsedCss};
 pub use function_generator::{
-    FunctionGenerator, GeneratedFunctions, TargetFramework, generate_js_file
+    generate_js_file, FunctionGenerator, GeneratedFunctions, TargetFramework,
 };
 pub use generator::{
-    WebsiteGenerator, GeneratedWebsite, GenerationConfig, 
-    WebsiteType, ComponentTree, ComponentNode
+    ComponentNode, ComponentTree, GeneratedWebsite, GenerationConfig, WebsiteGenerator, WebsiteType,
 };
-pub use smart_generator::{
-    SmartGenerator, SmartGeneratedWebsite, PageStructure, PageSection
-};
-pub use js_parser::{JsParser, ParsedJs, Function, Variable, EventHandler, ApiCall};
+pub use js_parser::{ApiCall, EventHandler, Function, JsParser, ParsedJs, Variable};
 pub use js_understander::{
-    JsUnderstander, FunctionIntents, InteractionIntent, 
-    BehaviorType, TriggerType
+    BehaviorType, FunctionIntents, InteractionIntent, JsUnderstander, TriggerType,
 };
-pub use sandbox1_standard::{
-    StandardSandbox, RenderedPage, DomNode, JsFunction
-};
-pub use sandbox2_learning::{
-    LearningSandbox, LearnedWebsite, WebsiteIntent, 
-    FunctionExtraction
-};
-pub use style_transform::{StyleTransformer, TransformConfig, TransformType, generate_css};
+pub use sandbox1_standard::{DomNode, JsFunction, RenderedPage, StandardSandbox};
+pub use sandbox2_learning::{FunctionExtraction, LearnedWebsite, LearningSandbox, WebsiteIntent};
+pub use smart_generator::{PageSection, PageStructure, SmartGeneratedWebsite, SmartGenerator};
+pub use style_transform::{generate_css, StyleTransformer, TransformConfig, TransformType};
 
 use anyhow::Result;
 
@@ -76,7 +66,7 @@ impl DualSandboxEngine {
     }
 
     /// 处理网站 - 真正的AI学习流程
-    /// 
+    ///
     /// 流程:
     /// 1. 沙盒1: 标准渲染 - 获取完整网站资源
     /// 2. 沙盒2: AI 学习 - 理解意图、提取样式、分析功能
@@ -101,15 +91,23 @@ impl DualSandboxEngine {
         log::info!("\n🧠 [沙盒2] AI 学习 - 理解网站...");
         let learned = self.learning.learn(&rendered).await?;
         log::info!("   ✓ 网站意图: {:?}", learned.intent);
-        log::info!("   ✓ 颜色方案: {} 种主色", learned.styles.colors.primary_colors.len());
-        log::info!("   ✓ 字体系统: {} 种字体", learned.styles.typography.font_families.len());
+        log::info!(
+            "   ✓ 颜色方案: {} 种主色",
+            learned.styles.colors.primary_colors.len()
+        );
+        log::info!(
+            "   ✓ 字体系统: {} 种字体",
+            learned.styles.typography.font_families.len()
+        );
         log::info!("   ✓ 功能点: {} 个", learned.functions.user_functions.len());
         log::info!("   ✓ 布局模式: {} 种", learned.layouts.patterns.len());
 
         // ===== 步骤3: 组件提取 =====
         log::info!("\n🔧 [组件提取] 识别UI组件...");
         let component_extractor = ComponentExtractor::new();
-        let all_css = rendered.css_resources.iter()
+        let all_css = rendered
+            .css_resources
+            .iter()
             .map(|c| c.content.as_str())
             .collect::<Vec<_>>()
             .join("\n");
@@ -123,7 +121,9 @@ impl DualSandboxEngine {
         // ===== 步骤4: JS理解 =====
         log::info!("\n📜 [JS理解] 解析功能意图...");
         let js_understander = JsUnderstander::new();
-        let all_js = rendered.js_resources.iter()
+        let all_js = rendered
+            .js_resources
+            .iter()
             .map(|j| j.content.as_str())
             .collect::<Vec<_>>()
             .join("\n");
@@ -136,11 +136,12 @@ impl DualSandboxEngine {
         // ===== 步骤5: 智能重组生成 =====
         log::info!("\n🎨 [智能重组生成] 分析结构并生成新网站...");
         let styles_clone = learned.styles.clone();
-        
+
         // 使用智能生成器，真正分析HTML结构并生成
-        let smart_generator = SmartGenerator::new(&rendered.html, learned.styles.clone(), intents.clone());
+        let smart_generator =
+            SmartGenerator::new(&rendered.html, learned.styles.clone(), intents.clone());
         let generated_site = smart_generator.generate(TransformType::Original);
-        
+
         log::info!("   ✓ 分析页面结构完成");
         log::info!("   ✓ 页面标题: {}", generated_site.metadata.title);
         log::info!("   ✓ 生成HTML: {} 字节", generated_site.html.len());
@@ -148,7 +149,9 @@ impl DualSandboxEngine {
         log::info!("   ✓ 生成JS: {} 字节", generated_site.js.len());
 
         // 创建变体（使用不同的主题）
-        let variants = self.generate_smart_variants(&rendered.html, &styles_clone, &intents, 3).await?;
+        let variants = self
+            .generate_smart_variants(&rendered.html, &styles_clone, &intents, 3)
+            .await?;
         log::info!("   ✓ 生成 {} 个体验变体", variants.len());
 
         log::info!("\n✅ 双沙盒处理完成! 真正的AI学习 + 重组生成");
@@ -174,10 +177,13 @@ impl DualSandboxEngine {
 
     /// 推断网站类型
     #[allow(dead_code)]
-    fn infer_website_type(&self, intent_type: &crate::sandbox2_learning::WebsiteType) -> crate::generator::WebsiteType {
-        use crate::sandbox2_learning::WebsiteType as LearnedType;
+    fn infer_website_type(
+        &self,
+        intent_type: &crate::sandbox2_learning::WebsiteType,
+    ) -> crate::generator::WebsiteType {
         use crate::generator::WebsiteType as GenType;
-        
+        use crate::sandbox2_learning::WebsiteType as LearnedType;
+
         match intent_type {
             LearnedType::LandingPage => GenType::LandingPage,
             LearnedType::Dashboard => GenType::Dashboard,
@@ -208,7 +214,7 @@ impl DualSandboxEngine {
                 5 => TransformType::Minimal,
                 _ => TransformType::Original,
             };
-            
+
             let variant_name = match transform_type {
                 TransformType::Original => "Original",
                 TransformType::DarkTheme => "DarkTheme",
@@ -218,7 +224,7 @@ impl DualSandboxEngine {
                 TransformType::Minimal => "Minimal",
                 TransformType::Vibrant => "Vibrant",
             };
-            
+
             // 使用智能生成器生成变体
             let smart_generator = SmartGenerator::new(html, styles.clone(), intents.clone());
             let generated = smart_generator.generate(transform_type);

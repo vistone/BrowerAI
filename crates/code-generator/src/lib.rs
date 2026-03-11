@@ -5,17 +5,17 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub mod template_engine;
 pub mod component_builder;
-pub mod style_generator;
-pub mod script_generator;
 pub mod project_scaffolder;
+pub mod script_generator;
+pub mod style_generator;
+pub mod template_engine;
 
-pub use template_engine::TemplateEngine;
 pub use component_builder::ComponentBuilder;
-pub use style_generator::StyleGenerator;
-pub use script_generator::ScriptGenerator;
 pub use project_scaffolder::ProjectScaffolder;
+pub use script_generator::ScriptGenerator;
+pub use style_generator::StyleGenerator;
+pub use template_engine::TemplateEngine;
 
 /// 生成配置
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -144,7 +144,10 @@ impl CodeGenerationEngine {
         let mut project = self.project_scaffolder.scaffold().await?;
 
         // 2. 生成组件
-        let components = self.component_builder.build_components(analysis, behaviors).await?;
+        let components = self
+            .component_builder
+            .build_components(analysis, behaviors)
+            .await?;
         project.files.extend(components);
 
         // 3. 生成样式
@@ -175,13 +178,19 @@ impl CodeGenerationEngine {
             project.files.extend(docs);
         }
 
-        log::info!("Project generation completed: {} files", project.files.len());
+        log::info!(
+            "Project generation completed: {} files",
+            project.files.len()
+        );
 
         Ok(project)
     }
 
     /// 生成入口文件
-    async fn generate_entry_file(&self, analysis: &visual_learner::VisualAnalysis) -> Result<GeneratedFile> {
+    async fn generate_entry_file(
+        &self,
+        analysis: &visual_learner::VisualAnalysis,
+    ) -> Result<GeneratedFile> {
         let content = match self.config.target_framework {
             Framework::React => self.generate_react_entry(analysis),
             Framework::Vue => self.generate_vue_entry(analysis),
@@ -211,14 +220,11 @@ impl CodeGenerationEngine {
         let mut components = String::new();
         for comp in &analysis.components {
             let comp_name = format!("{:?}", comp.component_type);
-            components.push_str(&format!(
-                "      <{} key=\"{}\" />\n",
-                comp_name,
-                comp.id
-            ));
+            components.push_str(&format!("      <{} key=\"{}\" />\n", comp_name, comp.id));
         }
 
-        Ok(format!(r#"{}
+        Ok(format!(
+            r#"{}
 
 export function App() {{
   return (
@@ -229,7 +235,9 @@ export function App() {{
 }}
 
 export default App;
-"#, imports, components))
+"#,
+            imports, components
+        ))
     }
 
     fn generate_vue_entry(&self, _analysis: &visual_learner::VisualAnalysis) -> Result<String> {
@@ -248,7 +256,8 @@ export default {
 <style>
 @import './styles/index.css';
 </style>
-"#.to_string())
+"#
+        .to_string())
     }
 
     fn generate_svelte_entry(&self, _analysis: &visual_learner::VisualAnalysis) -> Result<String> {
@@ -259,7 +268,8 @@ export default {
 <main class="app">
   <slot />
 </main>
-"#.to_string())
+"#
+        .to_string())
     }
 
     fn generate_vanilla_entry(&self, _analysis: &visual_learner::VisualAnalysis) -> Result<String> {
@@ -274,7 +284,8 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
-"#.to_string())
+"#
+        .to_string())
     }
 
     /// 生成配置文件
@@ -304,7 +315,8 @@ document.addEventListener('DOMContentLoaded', init);
 
     fn generate_package_json(&self) -> String {
         let dependencies = match self.config.target_framework {
-            Framework::React => r#"
+            Framework::React => {
+                r#"
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
@@ -315,11 +327,13 @@ document.addEventListener('DOMContentLoaded', init);
     "@vitejs/plugin-react": "^4.0.0",
     "typescript": "^5.0.0",
     "vite": "^5.0.0"
-  }"#,
+  }"#
+            }
             _ => "",
         };
 
-        format!(r#"{{
+        format!(
+            r#"{{
   "name": "{}",
   "version": "1.0.0",
   "type": "module",
@@ -330,7 +344,9 @@ document.addEventListener('DOMContentLoaded', init);
     "test": "vitest"
   }},{}
 }}
-"#, self.config.project_name, dependencies)
+"#,
+            self.config.project_name, dependencies
+        )
     }
 
     fn generate_tsconfig(&self) -> String {
@@ -355,7 +371,8 @@ document.addEventListener('DOMContentLoaded', init);
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
-"#.to_string()
+"#
+        .to_string()
     }
 
     fn generate_vite_config(&self) -> String {
@@ -369,7 +386,8 @@ export default defineConfig({
     sourcemap: true,
   },
 })
-"#.to_string()
+"#
+        .to_string()
     }
 
     /// 生成测试
@@ -380,7 +398,10 @@ export default defineConfig({
             if file.file_type == FileType::Component {
                 let test_content = self.generate_component_test(&file.path);
                 tests.push(GeneratedFile {
-                    path: file.path.replace("src/", "src/__tests__/").replace(".tsx", ".test.tsx"),
+                    path: file
+                        .path
+                        .replace("src/", "src/__tests__/")
+                        .replace(".tsx", ".test.tsx"),
                     content: test_content,
                     file_type: FileType::Test,
                 });
@@ -397,7 +418,8 @@ export default defineConfig({
             .unwrap_or("Component")
             .replace(".tsx", "");
 
-        format!(r#"import {{ render, screen }} from '@testing-library/react';
+        format!(
+            r#"import {{ render, screen }} from '@testing-library/react';
 import {{ {} }} from '../{}';
 
 describe('{}', () => {{
@@ -406,7 +428,12 @@ describe('{}', () => {{
     expect(document.body).toBeInTheDocument();
   }});
 }});
-"#, component_name, component_path.replace("src/", "").replace(".tsx", ""), component_name, component_name)
+"#,
+            component_name,
+            component_path.replace("src/", "").replace(".tsx", ""),
+            component_name,
+            component_name
+        )
     }
 
     /// 生成文档
@@ -436,8 +463,13 @@ describe('{}', () => {{
         Ok(docs)
     }
 
-    fn generate_readme(&self, analysis: &visual_learner::VisualAnalysis, behaviors: &[interaction_patterns::InteractionPattern]) -> String {
-        format!(r#"# {}
+    fn generate_readme(
+        &self,
+        analysis: &visual_learner::VisualAnalysis,
+        behaviors: &[interaction_patterns::InteractionPattern],
+    ) -> String {
+        format!(
+            r#"# {}
 
 Generated website based on visual analysis and behavior learning.
 
@@ -515,8 +547,14 @@ MIT
         for component in &analysis.components {
             doc.push_str(&format!("## {:?}\n\n", component.component_type));
             doc.push_str(&format!("- **ID**: {}\n", component.id));
-            doc.push_str(&format!("- **Position**: ({}, {})\n", component.bounding_box.x, component.bounding_box.y));
-            doc.push_str(&format!("- **Size**: {}x{}\n\n", component.bounding_box.width, component.bounding_box.height));
+            doc.push_str(&format!(
+                "- **Position**: ({}, {})\n",
+                component.bounding_box.x, component.bounding_box.y
+            ));
+            doc.push_str(&format!(
+                "- **Size**: {}x{}\n\n",
+                component.bounding_box.width, component.bounding_box.height
+            ));
         }
 
         doc

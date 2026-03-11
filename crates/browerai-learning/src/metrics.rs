@@ -41,10 +41,7 @@ impl MetricsDashboardExt for MetricsDashboard {
     }
 
     fn generate_simple_report(&self) -> String {
-        format!(
-            "=== Metrics Report ===\nUptime: {:?}\n",
-            self.uptime()
-        )
+        format!("=== Metrics Report ===\nUptime: {:?}\n", self.uptime())
     }
 }
 

@@ -6,9 +6,9 @@
 //! - 常量传播 (Constant Propagation)
 //! - 可用表达式 (Available Expressions)
 
+use crate::cfg::ControlFlowGraph;
 use browerai_core::Result;
 use browerai_js_parser::JsAst;
-use crate::cfg::ControlFlowGraph;
 use std::collections::HashMap;
 
 /// 数据流分析器
@@ -38,9 +38,7 @@ impl DataflowAnalyzer {
             DataflowAnalysisType::ReachingDefinitions => {
                 self.analyze_reaching_definitions(ast, cfg)
             }
-            DataflowAnalysisType::LiveVariables => {
-                self.analyze_live_variables(ast, cfg)
-            }
+            DataflowAnalysisType::LiveVariables => self.analyze_live_variables(ast, cfg),
             DataflowAnalysisType::ConstantPropagation => {
                 self.analyze_constant_propagation(ast, cfg)
             }
@@ -51,10 +49,14 @@ impl DataflowAnalyzer {
     }
 
     /// 到达定义分析
-    fn analyze_reaching_definitions(&self, ast: &JsAst, _cfg: &ControlFlowGraph) -> Result<DataflowResult> {
+    fn analyze_reaching_definitions(
+        &self,
+        ast: &JsAst,
+        _cfg: &ControlFlowGraph,
+    ) -> Result<DataflowResult> {
         // 简化实现：收集所有变量定义
         let mut definitions = HashMap::new();
-        
+
         for (i, var) in ast.variable_decls.iter().enumerate() {
             definitions.insert(
                 var.name.clone(),
@@ -63,13 +65,14 @@ impl DataflowAnalyzer {
                     variable: var.name.clone(),
                     definition_kind: DefinitionKind::Variable,
                     line: None,
-                }
+                },
             );
         }
-        
+
         Ok(DataflowResult {
             analysis_type: DataflowAnalysisType::ReachingDefinitions,
-            variable_states: definitions.into_iter()
+            variable_states: definitions
+                .into_iter()
                 .map(|(name, def)| (name, VariableState::Defined(vec![def])))
                 .collect(),
             constants: HashMap::new(),
@@ -77,17 +80,18 @@ impl DataflowAnalyzer {
     }
 
     /// 活跃变量分析
-    fn analyze_live_variables(&self, ast: &JsAst, _cfg: &ControlFlowGraph) -> Result<DataflowResult> {
+    fn analyze_live_variables(
+        &self,
+        ast: &JsAst,
+        _cfg: &ControlFlowGraph,
+    ) -> Result<DataflowResult> {
         // 简化实现：假设所有变量都是活跃的
         let mut variable_states = HashMap::new();
-        
+
         for var in &ast.variable_decls {
-            variable_states.insert(
-                var.name.clone(),
-                VariableState::Live
-            );
+            variable_states.insert(var.name.clone(), VariableState::Live);
         }
-        
+
         Ok(DataflowResult {
             analysis_type: DataflowAnalysisType::LiveVariables,
             variable_states,
@@ -96,10 +100,14 @@ impl DataflowAnalyzer {
     }
 
     /// 常量传播分析
-    fn analyze_constant_propagation(&self, ast: &JsAst, _cfg: &ControlFlowGraph) -> Result<DataflowResult> {
+    fn analyze_constant_propagation(
+        &self,
+        ast: &JsAst,
+        _cfg: &ControlFlowGraph,
+    ) -> Result<DataflowResult> {
         let mut constants = HashMap::new();
         let mut variable_states = HashMap::new();
-        
+
         // 简化实现：检测简单的常量初始化
         for var in &ast.variable_decls {
             if var.init.is_some() {
@@ -110,7 +118,7 @@ impl DataflowAnalyzer {
                 variable_states.insert(var.name.clone(), VariableState::Undefined);
             }
         }
-        
+
         Ok(DataflowResult {
             analysis_type: DataflowAnalysisType::ConstantPropagation,
             variable_states,
@@ -119,7 +127,11 @@ impl DataflowAnalyzer {
     }
 
     /// 可用表达式分析
-    fn analyze_available_expressions(&self, _ast: &JsAst, _cfg: &ControlFlowGraph) -> Result<DataflowResult> {
+    fn analyze_available_expressions(
+        &self,
+        _ast: &JsAst,
+        _cfg: &ControlFlowGraph,
+    ) -> Result<DataflowResult> {
         // 简化实现
         Ok(DataflowResult {
             analysis_type: DataflowAnalysisType::AvailableExpressions,
@@ -297,7 +309,10 @@ mod tests {
     #[test]
     fn test_dataflow_analyzer_creation() {
         let analyzer = DataflowAnalyzer::new();
-        assert!(matches!(analyzer.analysis_type, DataflowAnalysisType::ReachingDefinitions));
+        assert!(matches!(
+            analyzer.analysis_type,
+            DataflowAnalysisType::ReachingDefinitions
+        ));
     }
 
     #[test]
@@ -312,18 +327,21 @@ mod tests {
             ..Default::default()
         };
         let cfg = ControlFlowGraph::new();
-        
+
         let result = analyzer.analyze(&ast, &cfg).unwrap();
-        
+
         assert!(result.is_defined("x"));
-        assert_eq!(result.analysis_type, DataflowAnalysisType::ReachingDefinitions);
+        assert_eq!(
+            result.analysis_type,
+            DataflowAnalysisType::ReachingDefinitions
+        );
     }
 
     #[test]
     fn test_live_variables() {
-        let mut analyzer = DataflowAnalyzer::new()
-            .with_analysis_type(DataflowAnalysisType::LiveVariables);
-        
+        let mut analyzer =
+            DataflowAnalyzer::new().with_analysis_type(DataflowAnalysisType::LiveVariables);
+
         let ast = JsAst {
             variable_decls: vec![VariableDecl {
                 name: "y".to_string(),
@@ -333,17 +351,17 @@ mod tests {
             ..Default::default()
         };
         let cfg = ControlFlowGraph::new();
-        
+
         let result = analyzer.analyze(&ast, &cfg).unwrap();
-        
+
         assert!(result.is_live("y"));
     }
 
     #[test]
     fn test_constant_propagation() {
-        let mut analyzer = DataflowAnalyzer::new()
-            .with_analysis_type(DataflowAnalysisType::ConstantPropagation);
-        
+        let mut analyzer =
+            DataflowAnalyzer::new().with_analysis_type(DataflowAnalysisType::ConstantPropagation);
+
         let ast = JsAst {
             variable_decls: vec![VariableDecl {
                 name: "z".to_string(),
@@ -353,9 +371,9 @@ mod tests {
             ..Default::default()
         };
         let cfg = ControlFlowGraph::new();
-        
+
         let result = analyzer.analyze(&ast, &cfg).unwrap();
-        
+
         assert!(matches!(
             result.get_state("z"),
             Some(VariableState::Constant) | Some(VariableState::Undefined)

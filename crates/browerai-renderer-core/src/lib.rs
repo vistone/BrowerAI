@@ -27,15 +27,15 @@ use browerai_core::Result;
 use browerai_css_parser::Stylesheet;
 use browerai_dom::Document;
 
+pub mod compositing;
 pub mod layout;
 pub mod paint;
-pub mod compositing;
 pub mod resources;
 
-pub use layout::{LayoutEngine, LayoutTree, LayoutNode, BoxModel};
-pub use paint::{PaintEngine, PaintRecord, PaintCommand};
-pub use compositing::{Compositor, CompositedLayer, LayerId};
-pub use resources::{ResourceManager, ResourceType, CachedImage, CachedFont, CachedStylesheet};
+pub use compositing::{CompositedLayer, Compositor, LayerId};
+pub use layout::{BoxModel, LayoutEngine, LayoutNode, LayoutTree};
+pub use paint::{PaintCommand, PaintEngine, PaintRecord};
+pub use resources::{CachedFont, CachedImage, CachedStylesheet, ResourceManager, ResourceType};
 
 /// 渲染器
 ///
@@ -81,19 +81,24 @@ impl Renderer {
     /// 3. 生成绘制记录
     /// 4. 合成图层
     /// 5. 输出渲染结果
-    pub fn render(&mut self, document: &Document, stylesheet: &Stylesheet, viewport: &Viewport) -> Result<RenderOutput> {
+    pub fn render(
+        &mut self,
+        document: &Document,
+        stylesheet: &Stylesheet,
+        viewport: &Viewport,
+    ) -> Result<RenderOutput> {
         // 阶段1: 构建布局树
         let layout_tree = self.layout_engine.build_tree(document, stylesheet)?;
-        
+
         // 阶段2: 计算布局
         let computed_layout = self.layout_engine.compute_layout(&layout_tree, viewport)?;
-        
+
         // 阶段3: 生成绘制记录
         let paint_records = self.paint_engine.generate_paints(&computed_layout)?;
-        
+
         // 阶段4: 合成图层
         let layers = self.compositor.composite(&paint_records, viewport)?;
-        
+
         // 阶段5: 生成输出
         let output = RenderOutput {
             layers,
@@ -104,15 +109,19 @@ impl Renderer {
                 node_count: computed_layout.node_count(),
             },
         };
-        
+
         Ok(output)
     }
 
     /// 增量渲染（仅更新变化部分）
-    pub fn render_incremental(&mut self, changes: &[DomChange], viewport: &Viewport) -> Result<RenderOutput> {
+    pub fn render_incremental(
+        &mut self,
+        changes: &[DomChange],
+        viewport: &Viewport,
+    ) -> Result<RenderOutput> {
         // 简化实现：实际应该只更新受影响的区域
         log::info!("Incremental rendering {} changes", changes.len());
-        
+
         // 返回空输出作为占位
         Ok(RenderOutput {
             layers: Vec::new(),
@@ -270,21 +279,25 @@ pub struct Rect {
 impl Rect {
     /// 创建新矩形
     pub fn new(x: f32, y: f32, width: f32, height: f32) -> Self {
-        Self { x, y, width, height }
+        Self {
+            x,
+            y,
+            width,
+            height,
+        }
     }
 
     /// 检查点是否在矩形内
     pub fn contains(&self, px: f32, py: f32) -> bool {
-        px >= self.x && px <= self.x + self.width &&
-        py >= self.y && py <= self.y + self.height
+        px >= self.x && px <= self.x + self.width && py >= self.y && py <= self.y + self.height
     }
 
     /// 检查是否与另一个矩形相交
     pub fn intersects(&self, other: &Rect) -> bool {
-        !(self.x + self.width < other.x ||
-          other.x + other.width < self.x ||
-          self.y + self.height < other.y ||
-          other.y + other.height < self.y)
+        !(self.x + self.width < other.x
+            || other.x + other.width < self.x
+            || self.y + self.height < other.y
+            || other.y + other.height < self.y)
     }
 }
 
@@ -363,7 +376,7 @@ mod tests {
         let vp = Viewport::new(1920, 1080)
             .with_dpr(2.0)
             .with_scroll(100.0, 200.0);
-        
+
         assert_eq!(vp.physical_width(), 3840);
         assert_eq!(vp.scroll_x, 100.0);
     }
@@ -371,10 +384,10 @@ mod tests {
     #[test]
     fn test_rect() {
         let rect = Rect::new(0.0, 0.0, 100.0, 100.0);
-        
+
         assert!(rect.contains(50.0, 50.0));
         assert!(!rect.contains(150.0, 50.0));
-        
+
         let other = Rect::new(50.0, 50.0, 100.0, 100.0);
         assert!(rect.intersects(&other));
     }

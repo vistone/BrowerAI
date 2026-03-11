@@ -63,42 +63,34 @@ impl DragDropPattern {
                     PatternState {
                         name: "dragging".to_string(),
                         description: "Element is being dragged".to_string(),
-                        entry_actions: vec![
-                            PatternBehavior {
-                                behavior_type: BehaviorType::AddClass,
-                                target: drag_handle.to_string(),
-                                animation: None,
-                                callback: None,
-                            },
-                        ],
-                        exit_actions: vec![
-                            PatternBehavior {
-                                behavior_type: BehaviorType::RemoveClass,
-                                target: drag_handle.to_string(),
-                                animation: None,
-                                callback: None,
-                            },
-                        ],
+                        entry_actions: vec![PatternBehavior {
+                            behavior_type: BehaviorType::AddClass,
+                            target: drag_handle.to_string(),
+                            animation: None,
+                            callback: None,
+                        }],
+                        exit_actions: vec![PatternBehavior {
+                            behavior_type: BehaviorType::RemoveClass,
+                            target: drag_handle.to_string(),
+                            animation: None,
+                            callback: None,
+                        }],
                     },
                     PatternState {
                         name: "over_dropzone".to_string(),
                         description: "Dragged element is over a drop zone".to_string(),
-                        entry_actions: vec![
-                            PatternBehavior {
-                                behavior_type: BehaviorType::AddClass,
-                                target: ".drop-zone".to_string(),
-                                animation: None,
-                                callback: None,
-                            },
-                        ],
-                        exit_actions: vec![
-                            PatternBehavior {
-                                behavior_type: BehaviorType::RemoveClass,
-                                target: ".drop-zone".to_string(),
-                                animation: None,
-                                callback: None,
-                            },
-                        ],
+                        entry_actions: vec![PatternBehavior {
+                            behavior_type: BehaviorType::AddClass,
+                            target: ".drop-zone".to_string(),
+                            animation: None,
+                            callback: None,
+                        }],
+                        exit_actions: vec![PatternBehavior {
+                            behavior_type: BehaviorType::RemoveClass,
+                            target: ".drop-zone".to_string(),
+                            animation: None,
+                            callback: None,
+                        }],
                     },
                 ],
                 transitions: vec![
@@ -128,14 +120,12 @@ impl DragDropPattern {
                         to_state: "idle".to_string(),
                         trigger: "mouseup".to_string(),
                         guard: None,
-                        actions: vec![
-                            PatternBehavior {
-                                behavior_type: BehaviorType::Move,
-                                target: drag_handle.to_string(),
-                                animation: None,
-                                callback: Some("onDrop".to_string()),
-                            },
-                        ],
+                        actions: vec![PatternBehavior {
+                            behavior_type: BehaviorType::Move,
+                            target: drag_handle.to_string(),
+                            animation: None,
+                            callback: Some("onDrop".to_string()),
+                        }],
                     },
                 ],
             },
@@ -179,13 +169,21 @@ impl PatternImplementation for DragDropPattern {
         }
 
         if has_drag_start && has_drag_move && has_drag_end {
-            Some(Self::create_pattern(".draggable", vec![".drop-zone".to_string()], true))
+            Some(Self::create_pattern(
+                ".draggable",
+                vec![".drop-zone".to_string()],
+                true,
+            ))
         } else {
             None
         }
     }
 
-    fn generate_code(&self, pattern: &InteractionPattern, language: CodeLanguage) -> Result<GeneratedCode> {
+    fn generate_code(
+        &self,
+        pattern: &InteractionPattern,
+        language: CodeLanguage,
+    ) -> Result<GeneratedCode> {
         let code = match language {
             CodeLanguage::TypeScript => self.generate_typescript(pattern)?,
             CodeLanguage::JavaScript => self.generate_javascript(pattern)?,
@@ -442,7 +440,8 @@ class DragDrop {
 }
 
 export { DragDrop };
-"#.to_string())
+"#
+        .to_string())
     }
 
     fn generate_react(&self, _pattern: &InteractionPattern) -> Result<String> {
@@ -509,7 +508,8 @@ export const DragDrop: React.FC<DragDropProps> = ({
         </div>
     );
 };
-"#.to_string())
+"#
+        .to_string())
     }
 
     fn generate_css(&self) -> String {
@@ -557,7 +557,8 @@ export const DragDrop: React.FC<DragDropProps> = ({
     background-color: rgba(0, 123, 255, 0.1);
     border: 2px dashed var(--color-primary, #007bff);
 }
-"#.to_string()
+"#
+        .to_string()
     }
 
     fn generate_tests(&self) -> String {
@@ -605,7 +606,8 @@ describe('DragDrop', () => {
         expect(onDragStart).toHaveBeenCalled();
     });
 });
-"#.to_string()
+"#
+        .to_string()
     }
 
     fn generate_documentation(&self) -> String {
@@ -645,6 +647,7 @@ const dragDrop = new DragDrop({
 - `onDragMove`: Callback during drag
 - `onDragEnd`: Callback when drag ends
 - `onReorder`: Callback when order changes
-"#.to_string()
+"#
+        .to_string()
     }
 }

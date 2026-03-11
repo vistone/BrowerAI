@@ -93,7 +93,7 @@ impl Console {
 
         // 简化实现：返回命令本身
         log::info!("Executing console command: {}", command);
-        
+
         Ok(format!("Executed: {}", command))
     }
 
@@ -104,9 +104,7 @@ impl Console {
 
     /// 获取特定级别的消息
     pub fn messages_by_level(&self, level: LogLevel) -> Vec<&ConsoleMessage> {
-        self.messages.iter()
-            .filter(|m| m.level == level)
-            .collect()
+        self.messages.iter().filter(|m| m.level == level).collect()
     }
 
     /// 获取消息数量
@@ -230,14 +228,14 @@ mod tests {
     #[test]
     fn test_log_levels() {
         let mut console = Console::new();
-        
+
         console.log("Test log");
         console.info("Test info");
         console.warn("Test warn");
         console.error("Test error");
-        
+
         assert_eq!(console.message_count(), 4);
-        
+
         let errors = console.messages_by_level(LogLevel::Error);
         assert_eq!(errors.len(), 1);
     }
@@ -248,7 +246,7 @@ mod tests {
             enable_debug: true,
             ..Default::default()
         });
-        
+
         console.debug("Debug message");
         assert_eq!(console.message_count(), 1);
     }
@@ -259,7 +257,7 @@ mod tests {
             enable_debug: false,
             ..Default::default()
         });
-        
+
         console.debug("Debug message");
         assert_eq!(console.message_count(), 0);
     }
@@ -270,22 +268,22 @@ mod tests {
             max_messages: 5,
             ..Default::default()
         });
-        
+
         for i in 0..10 {
             console.log(format!("Message {}", i));
         }
-        
+
         assert_eq!(console.message_count(), 5);
     }
 
     #[test]
     fn test_command_execution() {
         let mut console = Console::new();
-        
+
         let result = console.execute("help");
         assert!(result.is_ok());
         assert!(result.unwrap().contains("help"));
-        
+
         assert_eq!(console.command_history().len(), 1);
     }
 
@@ -294,7 +292,7 @@ mod tests {
         let mut console = Console::new();
         console.log("Test");
         console.clear();
-        
+
         assert_eq!(console.message_count(), 0);
     }
 

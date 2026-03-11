@@ -137,25 +137,25 @@ impl StandardSandbox {
     /// 渲染网站 - 获取完整资源
     pub async fn render(&self, url: &str) -> Result<RenderedPage> {
         let start = std::time::Instant::now();
-        
+
         // 1. 获取主 HTML
         let html = self.fetch_html(url).await?;
-        
+
         // 2. 解析 HTML 提取资源链接
         let (css_urls, js_urls) = self.extract_resource_urls(&html, url);
-        
+
         // 3. 下载所有 CSS
         let css_resources = self.fetch_all_css(&css_urls).await?;
-        
+
         // 4. 下载所有 JS
         let js_resources = self.fetch_all_js(&js_urls).await?;
-        
+
         // 5. 构建 DOM 树
         let dom_tree = self.build_dom_tree(&html)?;
-        
+
         // 6. 计算渲染统计
         let stats = RenderStats {
-            bytes_downloaded: html.len() 
+            bytes_downloaded: html.len()
                 + css_resources.iter().map(|c| c.content.len()).sum::<usize>()
                 + js_resources.iter().map(|j| j.content.len()).sum::<usize>(),
             css_files: css_resources.len(),
@@ -176,10 +176,17 @@ impl StandardSandbox {
 
     /// 获取 HTML（带User-Agent避免反爬虫）
     async fn fetch_html(&self, url: &str) -> Result<String> {
-        let response = self.client
+        let response = self
+            .client
             .get(url)
-            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.0")
-            .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+            .header(
+                "User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.0",
+            )
+            .header(
+                "Accept",
+                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            )
             .header("Accept-Language", "en-US,en;q=0.5")
             .send()
             .await
@@ -200,9 +207,11 @@ impl StandardSandbox {
 
         // 简单的正则提取
         // 提取 <link rel="stylesheet" href="...">
-        for cap in regex::Regex::new(r#"<link[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["']"#)
-            .unwrap()
-            .captures_iter(html) {
+        for cap in
+            regex::Regex::new(r#"<link[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["']"#)
+                .unwrap()
+                .captures_iter(html)
+        {
             let url = self.decode_html_entities(&cap[1]);
             let url = self.resolve_url(&url, base_url);
             css_urls.push(url);
@@ -211,7 +220,8 @@ impl StandardSandbox {
         // 提取 <script src="...">
         for cap in regex::Regex::new(r#"<script[^>]*src=["']([^"']+)["']"#)
             .unwrap()
-            .captures_iter(html) {
+            .captures_iter(html)
+        {
             let url = self.decode_html_entities(&cap[1]);
             let url = self.resolve_url(&url, base_url);
             js_urls.push(url);
@@ -238,7 +248,12 @@ impl StandardSandbox {
         } else if url.starts_with('/') {
             // 绝对路径
             let base_url = url::Url::parse(base).unwrap();
-            format!("{}://{}{}", base_url.scheme(), base_url.host_str().unwrap(), url)
+            format!(
+                "{}://{}{}",
+                base_url.scheme(),
+                base_url.host_str().unwrap(),
+                url
+            )
         } else {
             // 相对路径
             format!("{}/{}", base.trim_end_matches('/'), url)
@@ -261,9 +276,13 @@ impl StandardSandbox {
 
     /// 获取单个 CSS（带User-Agent）
     async fn fetch_css(&self, url: &str) -> Result<CssResource> {
-        let response = self.client
+        let response = self
+            .client
             .get(url)
-            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.0")
+            .header(
+                "User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.0",
+            )
             .header("Accept", "text/css,*/*;q=0.1")
             .send()
             .await
@@ -287,14 +306,14 @@ impl StandardSandbox {
     /// 解析 CSS 规则
     fn parse_css_rules(&self, css: &str, _source: &str) -> Vec<CssRule> {
         let rules = Vec::new();
-        
+
         // 使用 cssparser 库解析
         // 简化实现 - 实际应该完整解析
         let mut input = cssparser::ParserInput::new(css);
         let _parser = cssparser::Parser::new(&mut input);
-        
+
         // TODO: 完整 CSS 解析
-        
+
         rules
     }
 
@@ -314,9 +333,13 @@ impl StandardSandbox {
 
     /// 获取单个 JS（带User-Agent）
     async fn fetch_js(&self, url: &str) -> Result<JsResource> {
-        let response = self.client
+        let response = self
+            .client
             .get(url)
-            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.0")
+            .header(
+                "User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.0",
+            )
             .header("Accept", "*/*")
             .send()
             .await
@@ -343,9 +366,7 @@ impl StandardSandbox {
 
     /// 检测 JS 混淆
     fn detect_obfuscation(&self, js: &str) -> bool {
-        let indicators = [
-            "_0x", "eval(", "Function(", "atob(", "charCodeAt(",
-        ];
+        let indicators = ["_0x", "eval(", "Function(", "atob(", "charCodeAt("];
 
         let count = indicators.iter().filter(|&i| js.contains(i)).count();
         count >= 3
@@ -362,7 +383,7 @@ impl StandardSandbox {
             functions.push(JsFunction {
                 name: cap[1].to_string(),
                 params: cap[2].split(',').map(|s| s.trim().to_string()).collect(),
-                body: String::new(), // TODO: 提取函数体
+                body: String::new(),     // TODO: 提取函数体
                 is_event_handler: false, // TODO: 检测
                 attached_elements: Vec::new(),
             });

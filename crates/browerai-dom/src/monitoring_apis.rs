@@ -559,7 +559,7 @@ mod tests {
     #[test]
     fn test_intersection_observer() {
         let mut observer = IntersectionObserver::new("test-observer".to_string());
-        
+
         let target_rect = DOMRect::new(50.0, 50.0, 100.0, 100.0);
         let viewport_rect = DOMRect::new(0.0, 0.0, 200.0, 200.0);
 
@@ -601,7 +601,7 @@ mod tests {
     #[test]
     fn test_long_animation_frame() {
         let mut frame = LongAnimationFrame::new(1000.0, 75.0);
-        
+
         assert!(frame.is_long()); // > 50ms
         assert_eq!(frame.end_time, 1075.0);
 
@@ -620,7 +620,7 @@ mod tests {
     #[test]
     fn test_navigation_timing() {
         let mut nav = NavigationTiming::new(NavigationType::Navigate);
-        
+
         nav.timestamps.response_start = nav.timestamps.navigation_start + 100.0;
         nav.timestamps.dom_content_loaded_event_end = nav.timestamps.navigation_start + 500.0;
         nav.timestamps.load_event_end = nav.timestamps.navigation_start + 1000.0;

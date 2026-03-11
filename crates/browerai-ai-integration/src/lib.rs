@@ -22,9 +22,7 @@ pub use tokenizer::CharTokenizer;
 
 // Re-exports from browerai_ai_core
 pub use browerai_ai_core::{
-    ModelManager, ModelConfig, ModelInfo, ModelType,
-    FeatureExtractor, FeatureVector, FeatureType,
-    LearningEngine, TrainingSample, LearningConfig,
-    InferenceEngine, InferenceRequest, InferenceResult,
-    AiCore,
+    AiCore, FeatureExtractor, FeatureType, FeatureVector, InferenceEngine, InferenceRequest,
+    InferenceResult, LearningConfig, LearningEngine, ModelConfig, ModelInfo, ModelManager,
+    ModelType, TrainingSample,
 };

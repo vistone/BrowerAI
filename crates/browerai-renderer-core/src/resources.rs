@@ -102,7 +102,8 @@ impl ResourceManager {
         };
 
         if self.stylesheet_cache.len() < self.config.max_stylesheet_cache_size {
-            self.stylesheet_cache.insert(url.to_string(), stylesheet.clone());
+            self.stylesheet_cache
+                .insert(url.to_string(), stylesheet.clone());
         }
 
         Ok(stylesheet)
@@ -121,9 +122,12 @@ impl ResourceManager {
         let now = Instant::now();
         let max_age = self.config.cache_max_age;
 
-        self.image_cache.retain(|_, v| now.duration_since(v.loaded_at) < max_age);
-        self.font_cache.retain(|_, v| now.duration_since(v.loaded_at) < max_age);
-        self.stylesheet_cache.retain(|_, v| now.duration_since(v.loaded_at) < max_age);
+        self.image_cache
+            .retain(|_, v| now.duration_since(v.loaded_at) < max_age);
+        self.font_cache
+            .retain(|_, v| now.duration_since(v.loaded_at) < max_age);
+        self.stylesheet_cache
+            .retain(|_, v| now.duration_since(v.loaded_at) < max_age);
     }
 
     /// 获取缓存大小
@@ -245,10 +249,10 @@ pub enum ResourceType {
 pub trait ResourceLoader: Send + Sync {
     /// 加载资源
     fn load(&self, url: &str, resource_type: ResourceType) -> Result<Vec<u8>>;
-    
+
     /// 检查是否支持
     fn supports(&self, url: &str) -> bool;
-    
+
     /// 获取加载器名称
     fn name(&self) -> &str;
 }
@@ -266,10 +270,10 @@ mod tests {
     #[test]
     fn test_load_image() {
         let mut manager = ResourceManager::new(ResourceConfig::default());
-        
+
         let image = manager.load_image("https://example.com/image.png").unwrap();
         assert_eq!(image.url, "https://example.com/image.png");
-        
+
         // 再次加载应该命中缓存
         let _ = manager.load_image("https://example.com/image.png").unwrap();
         assert_eq!(manager.stats().hits, 1);
@@ -279,7 +283,7 @@ mod tests {
     #[test]
     fn test_load_font() {
         let mut manager = ResourceManager::new(ResourceConfig::default());
-        
+
         let font = manager.load_font("Arial").unwrap();
         assert_eq!(font.name, "Arial");
     }
@@ -287,12 +291,12 @@ mod tests {
     #[test]
     fn test_cache_clear() {
         let mut manager = ResourceManager::new(ResourceConfig::default());
-        
+
         manager.load_image("https://example.com/image.png").unwrap();
         manager.load_font("Arial").unwrap();
-        
+
         assert_eq!(manager.cache_size(), 2);
-        
+
         manager.clear_cache();
         assert_eq!(manager.cache_size(), 0);
     }
@@ -300,15 +304,15 @@ mod tests {
     #[test]
     fn test_hit_rate() {
         let mut manager = ResourceManager::new(ResourceConfig::default());
-        
+
         // 2次未命中
         manager.load_image("image1.png").unwrap();
         manager.load_image("image2.png").unwrap();
-        
+
         // 2次命中
         manager.load_image("image1.png").unwrap();
         manager.load_image("image2.png").unwrap();
-        
+
         assert_eq!(manager.hit_rate(), 0.5);
     }
 }

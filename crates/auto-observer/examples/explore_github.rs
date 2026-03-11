@@ -1,7 +1,7 @@
 //! 示例：自动探索 GitHub
 
-use auto_observer::{AutoExplorer, ExplorationConfig, ExplorationReporter};
 use anyhow::Result;
+use auto_observer::{AutoExplorer, ExplorationConfig, ExplorationReporter};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -13,10 +13,10 @@ async fn main() -> Result<()> {
 
     // 配置探索参数
     let config = ExplorationConfig {
-        max_pages: 10,              // 最多探索10个页面
-        max_time_seconds: 120,      // 最多运行2分钟
-        max_depth: 2,               // 最大深度2层
-        wait_after_action_ms: 500,  // 操作后等待500ms
+        max_pages: 10,             // 最多探索10个页面
+        max_time_seconds: 120,     // 最多运行2分钟
+        max_depth: 2,              // 最大深度2层
+        wait_after_action_ms: 500, // 操作后等待500ms
         wait_for_navigation_ms: 5000,
         respect_robots_txt: true,
         allowed_domains: vec!["github.com".to_string()],
@@ -30,7 +30,9 @@ async fn main() -> Result<()> {
             height: 720,
             device_scale_factor: 1.0,
         },
-        user_agent: Some("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36".to_string()),
+        user_agent: Some(
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36".to_string(),
+        ),
     };
 
     // 创建探索器
@@ -65,12 +67,13 @@ async fn main() -> Result<()> {
             // 打印关键发现
             println!("\n🔍 关键发现:");
             println!("───────────────────────────────────────");
-            
+
             if !report.unique_behaviors.is_empty() {
                 println!("\n识别的行为模式:");
                 for (i, behavior) in report.unique_behaviors.iter().enumerate() {
-                    println!("  {}. {:?} ({}次)", 
-                        i + 1, 
+                    println!(
+                        "  {}. {:?} ({}次)",
+                        i + 1,
                         behavior.pattern_type,
                         behavior.frequency
                     );

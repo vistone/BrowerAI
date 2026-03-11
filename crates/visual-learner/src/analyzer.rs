@@ -29,7 +29,11 @@ impl VisualAnalyzer {
     }
 
     /// 比较两个视觉分析
-    pub fn compare_analysis(&self, original: &VisualAnalysis, generated: &VisualAnalysis) -> ComparisonResult {
+    pub fn compare_analysis(
+        &self,
+        original: &VisualAnalysis,
+        generated: &VisualAnalysis,
+    ) -> ComparisonResult {
         let mut differences = Vec::new();
         let mut scores = HashMap::new();
 
@@ -49,7 +53,8 @@ impl VisualAnalyzer {
         }
 
         // 比较颜色方案
-        let color_score = self.compare_color_schemes(&original.color_scheme, &generated.color_scheme);
+        let color_score =
+            self.compare_color_schemes(&original.color_scheme, &generated.color_scheme);
         scores.insert("colors".to_string(), color_score);
         if color_score < 0.8 {
             differences.push(Difference {
@@ -82,7 +87,11 @@ impl VisualAnalyzer {
     }
 
     /// 比较组件
-    fn compare_components(&self, original: &[VisualComponent], generated: &[VisualComponent]) -> f64 {
+    fn compare_components(
+        &self,
+        original: &[VisualComponent],
+        generated: &[VisualComponent],
+    ) -> f64 {
         if original.is_empty() && generated.is_empty() {
             return 1.0;
         }
@@ -95,7 +104,8 @@ impl VisualAnalyzer {
             let _weight = orig.confidence;
 
             // 查找匹配的生成组件
-            let match_score = generated.iter()
+            let match_score = generated
+                .iter()
                 .map(|gen| self.calculate_component_similarity(orig, gen))
                 .max_by(|a, b| a.partial_cmp(b).unwrap())
                 .unwrap_or(0.0);
@@ -139,7 +149,7 @@ impl VisualAnalyzer {
     fn calculate_position_similarity(&self, a: &BoundingBox, b: &BoundingBox) -> f64 {
         let dx = (a.x as f64 - b.x as f64).abs();
         let dy = (a.y as f64 - b.y as f64).abs();
-        
+
         let distance = (dx * dx + dy * dy).sqrt();
         let threshold = 50.0;
 
@@ -152,10 +162,9 @@ impl VisualAnalyzer {
 
     /// 计算尺寸相似度
     fn calculate_size_similarity(&self, a: &BoundingBox, b: &BoundingBox) -> f64 {
-        let width_ratio = (a.width as f64 / b.width as f64)
-            .min(b.width as f64 / a.width as f64);
-        let height_ratio = (a.height as f64 / b.height as f64)
-            .min(b.height as f64 / a.height as f64);
+        let width_ratio = (a.width as f64 / b.width as f64).min(b.width as f64 / a.width as f64);
+        let height_ratio =
+            (a.height as f64 / b.height as f64).min(b.height as f64 / a.height as f64);
 
         width_ratio.min(height_ratio)
     }
@@ -239,7 +248,8 @@ impl VisualAnalyzer {
         }
 
         // 区域数量
-        let section_ratio = (original.sections.len() as f64 / generated.sections.len().max(1) as f64)
+        let section_ratio = (original.sections.len() as f64
+            / generated.sections.len().max(1) as f64)
             .min(generated.sections.len() as f64 / original.sections.len().max(1) as f64);
         score += section_ratio * 0.3;
 

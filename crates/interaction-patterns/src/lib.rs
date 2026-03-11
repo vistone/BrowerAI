@@ -5,23 +5,23 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+pub mod code_generator;
+pub mod data_table;
 pub mod drag_drop;
 pub mod infinite_scroll;
-pub mod virtual_list;
-pub mod tree_view;
-pub mod rich_editor;
-pub mod data_table;
 pub mod pattern_recognizer;
-pub mod code_generator;
+pub mod rich_editor;
+pub mod tree_view;
+pub mod virtual_list;
 
+pub use code_generator::PatternCodeGenerator;
+pub use data_table::DataTablePattern;
 pub use drag_drop::DragDropPattern;
 pub use infinite_scroll::InfiniteScrollPattern;
-pub use virtual_list::VirtualListPattern;
-pub use tree_view::TreeViewPattern;
-pub use rich_editor::RichEditorPattern;
-pub use data_table::DataTablePattern;
 pub use pattern_recognizer::PatternRecognizer;
-pub use code_generator::PatternCodeGenerator;
+pub use rich_editor::RichEditorPattern;
+pub use tree_view::TreeViewPattern;
+pub use virtual_list::VirtualListPattern;
 
 /// 复杂交互模式类型
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -215,27 +215,53 @@ pub struct InteractionPatternLibrary {
 pub trait PatternImplementation: Send + Sync {
     fn pattern_type(&self) -> ComplexPatternType;
     fn recognize(&self, observations: &[auto_observer::Observation]) -> Option<InteractionPattern>;
-    fn generate_code(&self, pattern: &InteractionPattern, language: CodeLanguage) -> Result<GeneratedCode>;
+    fn generate_code(
+        &self,
+        pattern: &InteractionPattern,
+        language: CodeLanguage,
+    ) -> Result<GeneratedCode>;
     fn get_template(&self) -> &str;
 }
 
 impl InteractionPatternLibrary {
     pub fn new() -> Self {
-        let mut patterns: HashMap<ComplexPatternType, Box<dyn PatternImplementation>> = HashMap::new();
-        
+        let mut patterns: HashMap<ComplexPatternType, Box<dyn PatternImplementation>> =
+            HashMap::new();
+
         // 注册所有模式实现
-        patterns.insert(ComplexPatternType::DragAndDrop, Box::new(DragDropPattern::new()));
-        patterns.insert(ComplexPatternType::InfiniteScroll, Box::new(InfiniteScrollPattern::new()));
-        patterns.insert(ComplexPatternType::VirtualList, Box::new(VirtualListPattern::new()));
-        patterns.insert(ComplexPatternType::TreeView, Box::new(TreeViewPattern::new()));
-        patterns.insert(ComplexPatternType::RichEditor, Box::new(RichEditorPattern::new()));
-        patterns.insert(ComplexPatternType::DataTable, Box::new(DataTablePattern::new()));
-        
+        patterns.insert(
+            ComplexPatternType::DragAndDrop,
+            Box::new(DragDropPattern::new()),
+        );
+        patterns.insert(
+            ComplexPatternType::InfiniteScroll,
+            Box::new(InfiniteScrollPattern::new()),
+        );
+        patterns.insert(
+            ComplexPatternType::VirtualList,
+            Box::new(VirtualListPattern::new()),
+        );
+        patterns.insert(
+            ComplexPatternType::TreeView,
+            Box::new(TreeViewPattern::new()),
+        );
+        patterns.insert(
+            ComplexPatternType::RichEditor,
+            Box::new(RichEditorPattern::new()),
+        );
+        patterns.insert(
+            ComplexPatternType::DataTable,
+            Box::new(DataTablePattern::new()),
+        );
+
         Self { patterns }
     }
 
     /// 识别所有模式
-    pub fn recognize_patterns(&self, observations: &[auto_observer::Observation]) -> Vec<InteractionPattern> {
+    pub fn recognize_patterns(
+        &self,
+        observations: &[auto_observer::Observation],
+    ) -> Vec<InteractionPattern> {
         let mut recognized = Vec::new();
 
         for implementation in self.patterns.values() {

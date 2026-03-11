@@ -7,25 +7,28 @@ use std::collections::HashMap;
 
 pub struct TemplateEngine {
     handlebars: Handlebars<'static>,
-  _config: GenerationConfig,
+    _config: GenerationConfig,
 }
 
 impl TemplateEngine {
     pub fn new(config: &GenerationConfig) -> Self {
         let mut handlebars = Handlebars::new();
-        
+
         // 注册内置模板
         Self::register_templates(&mut handlebars);
 
         Self {
             handlebars,
-          _config: config.clone(),
+            _config: config.clone(),
         }
     }
 
     fn register_templates(handlebars: &mut Handlebars) {
         // 组件模板
-        handlebars.register_template_string("react_component", r#"
+        handlebars
+            .register_template_string(
+                "react_component",
+                r#"
 import React from 'react';
 import './{{name}}.css';
 
@@ -46,10 +49,15 @@ export const {{name}}: React.FC<{{name}}Props> = ({
     </div>
   );
 };
-"#).unwrap();
+"#,
+            )
+            .unwrap();
 
         // 样式模板
-        handlebars.register_template_string("css_module", r#"
+        handlebars
+            .register_template_string(
+                "css_module",
+                r#"
 .{{class_name}} {
 {{#each styles}}
   {{property}}: {{value}};
@@ -71,10 +79,15 @@ export const {{name}}: React.FC<{{name}}Props> = ({
 {{/each}}
 }
 {{/each}}
-"#).unwrap();
+"#,
+            )
+            .unwrap();
 
         // Vue组件模板
-        handlebars.register_template_string("vue_component", r#"
+        handlebars
+            .register_template_string(
+                "vue_component",
+                r#"
 <template>
   <div class="{{class_name}}"{{#if aria_label}} :aria-label="ariaLabel"{{/if}}>
     {{content}}
@@ -99,14 +112,24 @@ export default {
 <style scoped>
 @import './{{name}}.css';
 </style>
-"#).unwrap();
+"#,
+            )
+            .unwrap();
     }
 
-    pub fn render_component(&self, template_name: &str, data: &HashMap<String, serde_json::Value>) -> Result<String> {
+    pub fn render_component(
+        &self,
+        template_name: &str,
+        data: &HashMap<String, serde_json::Value>,
+    ) -> Result<String> {
         Ok(self.handlebars.render(template_name, data)?)
     }
 
-    pub fn render_with_data<T: serde::Serialize>(&self, template_name: &str, data: &T) -> Result<String> {
+    pub fn render_with_data<T: serde::Serialize>(
+        &self,
+        template_name: &str,
+        data: &T,
+    ) -> Result<String> {
         Ok(self.handlebars.render(template_name, data)?)
     }
 }

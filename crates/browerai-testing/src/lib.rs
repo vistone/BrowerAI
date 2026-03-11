@@ -5,10 +5,10 @@
 pub mod benchmark;
 pub mod website_test_suite;
 
+use browerai_core::traits::Parser;
 use browerai_css_parser::CssParser;
 use browerai_html_parser::HtmlParser;
 use browerai_js_parser::JsParser;
-use browerai_core::traits::Parser;
 use std::time::{Duration, Instant};
 
 pub use benchmark::{BenchmarkConfig, BenchmarkResult, BenchmarkRunner, ComparisonResult};

@@ -22,7 +22,11 @@ impl LayoutAnalyzer {
     }
 
     /// 分析布局
-    pub fn analyze_layout(&self, image: &image::DynamicImage, components: &[VisualComponent]) -> Result<LayoutInfo> {
+    pub fn analyze_layout(
+        &self,
+        image: &image::DynamicImage,
+        components: &[VisualComponent],
+    ) -> Result<LayoutInfo> {
         let width = image.width();
         let height = image.height();
 
@@ -45,15 +49,18 @@ impl LayoutAnalyzer {
     }
 
     /// 检测布局类型
-    fn detect_layout_type(&self, components: &[VisualComponent], width: u32, _height: u32) -> LayoutType {
+    fn detect_layout_type(
+        &self,
+        components: &[VisualComponent],
+        width: u32,
+        _height: u32,
+    ) -> LayoutType {
         if components.len() < 3 {
             return LayoutType::SingleColumn;
         }
 
         // 分析组件的X坐标分布
-        let mut x_positions: Vec<u32> = components.iter()
-            .map(|c| c.bounding_box.x)
-            .collect();
+        let mut x_positions: Vec<u32> = components.iter().map(|c| c.bounding_box.x).collect();
         x_positions.sort();
 
         // 计算X坐标的聚类
@@ -122,14 +129,20 @@ impl LayoutAnalyzer {
 
         // 检查组件是否在同一行或列上
         let y_variance = self.calculate_variance(
-            &components.iter().map(|c| c.bounding_box.y).collect::<Vec<_>>()
+            &components
+                .iter()
+                .map(|c| c.bounding_box.y)
+                .collect::<Vec<_>>(),
         );
 
         y_variance < 50.0
     }
 
     /// 按行分组
-    fn group_by_rows<'a>(&self, components: &'a [VisualComponent]) -> Vec<Vec<&'a VisualComponent>> {
+    fn group_by_rows<'a>(
+        &self,
+        components: &'a [VisualComponent],
+    ) -> Vec<Vec<&'a VisualComponent>> {
         let mut rows: Vec<Vec<&VisualComponent>> = Vec::new();
         let threshold = 30;
 
@@ -155,7 +168,10 @@ impl LayoutAnalyzer {
     }
 
     /// 按列分组
-    fn group_by_columns<'a>(&self, components: &'a [VisualComponent]) -> Vec<Vec<&'a VisualComponent>> {
+    fn group_by_columns<'a>(
+        &self,
+        components: &'a [VisualComponent],
+    ) -> Vec<Vec<&'a VisualComponent>> {
         let mut cols: Vec<Vec<&VisualComponent>> = Vec::new();
         let threshold = 30;
 
@@ -187,22 +203,30 @@ impl LayoutAnalyzer {
         }
 
         let mean = values.iter().sum::<u32>() as f32 / values.len() as f32;
-        let variance = values.iter()
+        let variance = values
+            .iter()
             .map(|&v| {
                 let diff = v as f32 - mean;
                 diff * diff
             })
-            .sum::<f32>() / values.len() as f32;
+            .sum::<f32>()
+            / values.len() as f32;
 
         variance
     }
 
     /// 识别布局区域
-    fn identify_sections(&self, components: &[VisualComponent], _width: u32, height: u32) -> Vec<LayoutSection> {
+    fn identify_sections(
+        &self,
+        components: &[VisualComponent],
+        _width: u32,
+        height: u32,
+    ) -> Vec<LayoutSection> {
         let mut sections = Vec::new();
 
         // 识别头部区域（顶部 0-15%）
-        let header_components: Vec<_> = components.iter()
+        let header_components: Vec<_> = components
+            .iter()
             .filter(|c| {
                 let center_y = c.bounding_box.y + c.bounding_box.height / 2;
                 center_y < height / 7
@@ -220,7 +244,8 @@ impl LayoutAnalyzer {
         }
 
         // 识别导航区域
-        let nav_components: Vec<_> = components.iter()
+        let nav_components: Vec<_> = components
+            .iter()
             .filter(|c| c.component_type == ComponentType::Navigation)
             .collect();
 
@@ -235,7 +260,8 @@ impl LayoutAnalyzer {
         }
 
         // 识别主要内容区域（中间 15-85%）
-        let content_components: Vec<_> = components.iter()
+        let content_components: Vec<_> = components
+            .iter()
             .filter(|c| {
                 let center_y = c.bounding_box.y + c.bounding_box.height / 2;
                 center_y >= height / 7 && center_y <= height * 6 / 7
@@ -253,7 +279,8 @@ impl LayoutAnalyzer {
         }
 
         // 识别底部区域（底部 85-100%）
-        let footer_components: Vec<_> = components.iter()
+        let footer_components: Vec<_> = components
+            .iter()
             .filter(|c| {
                 let center_y = c.bounding_box.y + c.bounding_box.height / 2;
                 center_y > height * 6 / 7
@@ -275,13 +302,23 @@ impl LayoutAnalyzer {
 
     /// 计算边界框
     fn calculate_bounding_box(&self, components: &[&VisualComponent]) -> BoundingBox {
-        let min_x = components.iter().map(|c| c.bounding_box.x).min().unwrap_or(0);
-        let min_y = components.iter().map(|c| c.bounding_box.y).min().unwrap_or(0);
-        let max_x = components.iter()
+        let min_x = components
+            .iter()
+            .map(|c| c.bounding_box.x)
+            .min()
+            .unwrap_or(0);
+        let min_y = components
+            .iter()
+            .map(|c| c.bounding_box.y)
+            .min()
+            .unwrap_or(0);
+        let max_x = components
+            .iter()
             .map(|c| c.bounding_box.x + c.bounding_box.width)
             .max()
             .unwrap_or(0);
-        let max_y = components.iter()
+        let max_y = components
+            .iter()
             .map(|c| c.bounding_box.y + c.bounding_box.height)
             .max()
             .unwrap_or(0);
@@ -331,7 +368,7 @@ impl LayoutAnalyzer {
 
         for i in 1..sorted_by_x.len() {
             let gap = sorted_by_x[i].bounding_box.x
-                - (sorted_by_x[i-1].bounding_box.x + sorted_by_x[i-1].bounding_box.width);
+                - (sorted_by_x[i - 1].bounding_box.x + sorted_by_x[i - 1].bounding_box.width);
             if gap > 0 {
                 gaps.push(gap);
             }
@@ -343,7 +380,7 @@ impl LayoutAnalyzer {
 
         for i in 1..sorted_by_y.len() {
             let gap = sorted_by_y[i].bounding_box.y
-                - (sorted_by_y[i-1].bounding_box.y + sorted_by_y[i-1].bounding_box.height);
+                - (sorted_by_y[i - 1].bounding_box.y + sorted_by_y[i - 1].bounding_box.height);
             if gap > 0 {
                 gaps.push(gap);
             }
@@ -362,12 +399,15 @@ impl LayoutAnalyzer {
 
         // 容器布局
         css.push_str(".container {\n");
-        
+
         match layout.layout_type {
             LayoutType::Grid => {
                 if let Some(cols) = layout.grid_columns {
                     css.push_str("  display: grid;\n");
-                    css.push_str(&format!("  grid-template-columns: repeat({}, 1fr);\n", cols));
+                    css.push_str(&format!(
+                        "  grid-template-columns: repeat({}, 1fr);\n",
+                        cols
+                    ));
                     css.push_str(&format!("  gap: {}px;\n", layout.gap));
                 }
             }

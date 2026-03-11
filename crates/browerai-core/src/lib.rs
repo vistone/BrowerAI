@@ -13,28 +13,31 @@
 #![warn(missing_docs)]
 #![warn(rust_2018_idioms)]
 
-pub mod error;
-pub mod traits;
-pub mod types;
 pub mod config;
+pub mod error;
 pub mod metrics;
 pub mod source_loc;
+pub mod traits;
+pub mod types;
 
 // 重新导出最常用的类型
-pub use error::{BrowserError, Result, ErrorKind};
-pub use traits::{Parser, Renderer, AiModel, Deobfuscator, Learner};
-pub use types::{CodeType, BrowserConfig, FeatureFlags};
 pub use config::{AiConfig, CacheConfig, NetworkConfig};
+pub use error::{BrowserError, ErrorKind, Result};
 pub use metrics::{Metric, MetricType, MetricsDashboard};
-pub use source_loc::{SourceLocation, SourceSpan, SourceInfo};
+pub use source_loc::{SourceInfo, SourceLocation, SourceSpan};
+pub use traits::{AiModel, Deobfuscator, Learner, Parser, Renderer};
+pub use types::{BrowserConfig, CodeType, FeatureFlags};
 
 /// 版本信息
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// 构建信息
 pub const BUILD_INFO: &str = concat!(
-    "BrowerAI Core v", env!("CARGO_PKG_VERSION"),
-    " (", env!("CARGO_PKG_REPOSITORY"), ")"
+    "BrowerAI Core v",
+    env!("CARGO_PKG_VERSION"),
+    " (",
+    env!("CARGO_PKG_REPOSITORY"),
+    ")"
 );
 
 #[cfg(test)]

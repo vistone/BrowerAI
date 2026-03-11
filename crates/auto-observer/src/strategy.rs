@@ -9,10 +9,10 @@ use std::collections::HashSet;
 pub trait ExplorationStrategy: Send + Sync {
     /// 获取下一个要探索的元素
     async fn next_element(&mut self, elements: &[ElementInfo]) -> Option<ElementInfo>;
-    
+
     /// 记录交互结果
     fn record_interaction(&mut self, interaction: &InteractionRecord);
-    
+
     /// 获取策略名称
     fn name(&self) -> &str;
 }
@@ -26,20 +26,20 @@ pub struct PriorityStrategy {
 impl PriorityStrategy {
     pub fn new() -> Self {
         let mut weights = HashMap::new();
-        
+
         // 定义元素类型权重
         weights.insert("button".to_string(), 100);
         weights.insert("a".to_string(), 90);
         weights.insert("input".to_string(), 80);
         weights.insert("select".to_string(), 70);
         weights.insert("textarea".to_string(), 60);
-        
+
         // 定义角色权重
         weights.insert("role:button".to_string(), 95);
         weights.insert("role:link".to_string(), 85);
         weights.insert("role:tab".to_string(), 75);
         weights.insert("role:menuitem".to_string(), 65);
-        
+
         Self {
             explored_selectors: HashSet::new(),
             priority_weights: weights,
@@ -51,16 +51,16 @@ impl PriorityStrategy {
         let mut score = 0;
 
         // 基础类型分数
-        score += self.priority_weights.get(&element.tag)
+        score += self
+            .priority_weights
+            .get(&element.tag)
             .copied()
             .unwrap_or(50);
 
         // 角色分数
         if let Some(role) = element.attributes.get("role") {
             let role_key = format!("role:{}", role);
-            score += self.priority_weights.get(&role_key)
-                .copied()
-                .unwrap_or(10);
+            score += self.priority_weights.get(&role_key).copied().unwrap_or(10);
         }
 
         // 位置分数（页面顶部更重要）
@@ -70,7 +70,7 @@ impl PriorityStrategy {
             } else if bbox.y < 300.0 {
                 score += 10;
             }
-            
+
             // 可见区域优先
             if bbox.y < 600.0 {
                 score += 15;
@@ -80,7 +80,7 @@ impl PriorityStrategy {
         // 文本内容分析
         if let Some(ref text) = element.text_content {
             let lower = text.to_lowercase();
-            
+
             // 重要操作关键词
             if lower.contains("submit") || lower.contains("save") || lower.contains("confirm") {
                 score += 25;
@@ -89,7 +89,7 @@ impl PriorityStrategy {
             } else if lower.contains("get started") || lower.contains("try") {
                 score += 15;
             }
-            
+
             // 避免危险操作
             if lower.contains("delete") || lower.contains("remove") {
                 score -= 30;
@@ -114,7 +114,8 @@ impl Default for PriorityStrategy {
 #[async_trait::async_trait]
 impl ExplorationStrategy for PriorityStrategy {
     async fn next_element(&mut self, elements: &[ElementInfo]) -> Option<ElementInfo> {
-        let mut candidates: Vec<(i32, &ElementInfo)> = elements.iter()
+        let mut candidates: Vec<(i32, &ElementInfo)> = elements
+            .iter()
             .filter(|e| !self.explored_selectors.contains(&e.selector))
             .map(|e| (self.calculate_score(e), e))
             .collect();
@@ -164,12 +165,13 @@ use rand::seq::SliceRandom;
 #[async_trait::async_trait]
 impl ExplorationStrategy for RandomStrategy {
     async fn next_element(&mut self, elements: &[ElementInfo]) -> Option<ElementInfo> {
-        let candidates: Vec<&ElementInfo> = elements.iter()
+        let candidates: Vec<&ElementInfo> = elements
+            .iter()
             .filter(|e| !self.explored_selectors.contains(&e.selector))
             .collect();
 
         let chosen = candidates.choose(&mut rand::thread_rng());
-        
+
         chosen.map(|e| {
             self.explored_selectors.insert(e.selector.clone());
             (*e).clone()
@@ -226,7 +228,7 @@ impl ExplorationStrategy for BreadthFirstStrategy {
     async fn next_element(&mut self, elements: &[ElementInfo]) -> Option<ElementInfo> {
         // 按区域分组
         let mut by_region: HashMap<String, Vec<&ElementInfo>> = HashMap::new();
-        
+
         for element in elements {
             if !self.explored_selectors.contains(&element.selector) {
                 let region = self.get_region(element);
@@ -235,11 +237,13 @@ impl ExplorationStrategy for BreadthFirstStrategy {
         }
 
         // 选择探索最少的区域
-        let target_region = by_region.keys()
+        let target_region = by_region
+            .keys()
             .min_by_key(|r| self.region_count.get(*r).unwrap_or(&0))?
             .clone();
 
-        by_region.get(&target_region)
+        by_region
+            .get(&target_region)
             .and_then(|elements| elements.first())
             .map(|e| {
                 self.explored_selectors.insert(e.selector.clone());
@@ -248,8 +252,7 @@ impl ExplorationStrategy for BreadthFirstStrategy {
             })
     }
 
-    fn record_interaction(&mut self, _interaction: &InteractionRecord) {
-    }
+    fn record_interaction(&mut self, _interaction: &InteractionRecord) {}
 
     fn name(&self) -> &str {
         "BreadthFirstStrategy"
@@ -279,7 +282,9 @@ impl SmartStrategy {
 
     /// 切换到最佳策略
     fn switch_to_best_strategy(&mut self) {
-        let best = self.success_rates.iter()
+        let best = self
+            .success_rates
+            .iter()
             .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
             .map(|(name, _)| name.clone());
 
@@ -315,7 +320,7 @@ impl ExplorationStrategy for SmartStrategy {
 
     fn record_interaction(&mut self, interaction: &InteractionRecord) {
         let strategy_name = self.strategies[self.current_strategy].name().to_string();
-        
+
         // 更新成功率
         let entry = self.success_rates.entry(strategy_name).or_insert(1.0);
         let success = if interaction.result.success { 1.0 } else { 0.0 };
@@ -349,12 +354,13 @@ impl FormStrategy {
 
     /// 查找表单元素
     fn find_form_elements<'a>(&self, elements: &'a [ElementInfo]) -> Vec<&'a ElementInfo> {
-        elements.iter()
+        elements
+            .iter()
             .filter(|e| {
-                e.tag == "input" || 
-                e.tag == "select" || 
-                e.tag == "textarea" ||
-                e.attributes.get("type") == Some(&"submit".to_string())
+                e.tag == "input"
+                    || e.tag == "select"
+                    || e.tag == "textarea"
+                    || e.attributes.get("type") == Some(&"submit".to_string())
             })
             .collect()
     }
@@ -370,7 +376,7 @@ impl Default for FormStrategy {
 impl ExplorationStrategy for FormStrategy {
     async fn next_element(&mut self, elements: &[ElementInfo]) -> Option<ElementInfo> {
         let form_elements = self.find_form_elements(elements);
-        
+
         // 优先找到未填充的输入字段
         for element in &form_elements {
             if self.explored_forms.contains(&element.selector) {

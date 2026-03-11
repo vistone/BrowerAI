@@ -151,7 +151,7 @@ impl BrowserError {
 impl fmt::Display for BrowserError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "[{}] {}", self.kind, self.message)?;
-        
+
         if let Some(ref source) = self.source {
             write!(f, " (source: {}", source)?;
             if let (Some(line), Some(column)) = (self.line, self.column) {
@@ -159,7 +159,7 @@ impl fmt::Display for BrowserError {
             }
             write!(f, ")")?;
         }
-        
+
         Ok(())
     }
 }
@@ -176,8 +176,7 @@ impl From<std::io::Error> for BrowserError {
 // 从 serde_json 错误转换
 impl From<serde_json::Error> for BrowserError {
     fn from(err: serde_json::Error) -> Self {
-        BrowserError::parse(format!("JSON error: {}", err))
-            .with_location(err.line(), err.column())
+        BrowserError::parse(format!("JSON error: {}", err)).with_location(err.line(), err.column())
     }
 }
 
@@ -282,7 +281,11 @@ pub mod ai {
 
     impl fmt::Display for ModelLoadError {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            write!(f, "Failed to load model from {:?}: {}", self.model_path, self.reason)
+            write!(
+                f,
+                "Failed to load model from {:?}: {}",
+                self.model_path, self.reason
+            )
         }
     }
 
@@ -339,7 +342,11 @@ pub mod network {
 
     impl fmt::Display for TimeoutError {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            write!(f, "Request to {} timed out after {}s", self.url, self.timeout_secs)
+            write!(
+                f,
+                "Request to {} timed out after {}s",
+                self.url, self.timeout_secs
+            )
         }
     }
 
@@ -359,9 +366,8 @@ mod tests {
 
     #[test]
     fn test_error_with_location() {
-        let err = BrowserError::parse("Syntax error")
-            .with_location(10, 5);
-        
+        let err = BrowserError::parse("Syntax error").with_location(10, 5);
+
         assert_eq!(err.line, Some(10));
         assert_eq!(err.column, Some(5));
     }
@@ -371,7 +377,7 @@ mod tests {
         let err = BrowserError::parse("Test error")
             .with_source("test.html")
             .with_location(1, 10);
-        
+
         let display = format!("{}", err);
         assert!(display.contains("Parse"));
         assert!(display.contains("Test error"));
@@ -382,7 +388,7 @@ mod tests {
     fn test_io_error_conversion() {
         let io_err = std::io::Error::new(std::io::ErrorKind::NotFound, "file not found");
         let browser_err: BrowserError = io_err.into();
-        
+
         assert_eq!(browser_err.kind, ErrorKind::Io);
     }
 }

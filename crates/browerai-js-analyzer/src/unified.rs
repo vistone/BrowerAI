@@ -6,12 +6,8 @@
 //! - 性能瓶颈识别
 //! - 优化建议生成
 
+use crate::{cfg::ControlFlowGraph, dataflow::DataflowResult, AnalysisInput};
 use browerai_core::Result;
-use crate::{
-    AnalysisInput,
-    cfg::ControlFlowGraph,
-    dataflow::DataflowResult,
-};
 
 /// 统一分析器
 #[derive(Debug, Clone, Default)]
@@ -29,19 +25,19 @@ impl UnifiedAnalysis {
         let cyclomatic_complexity = self.calculate_cyclomatic_complexity(input.cfg);
         let cognitive_complexity = self.calculate_cognitive_complexity(input);
         let maintainability_index = self.calculate_maintainability_index(input);
-        
+
         // 识别问题
         let issues = self.identify_issues(input);
-        
+
         // 生成优化建议
         let optimizations = self.generate_optimizations(input);
-        
+
         // 评估安全风险
         let security_risks = self.assess_security_risks(input);
-        
+
         // 性能分析
         let performance = self.analyze_performance(input);
-        
+
         Ok(AnalysisSummary {
             metrics: CodeMetrics {
                 function_count: input.ast.function_decls.len(),
@@ -65,29 +61,29 @@ impl UnifiedAnalysis {
         let edges = cfg.edge_count() as u32;
         let nodes = cfg.node_count() as u32;
         let components = 1; // 简化：假设只有一个连通分量
-        
+
         edges.saturating_sub(nodes).saturating_add(2 * components)
     }
 
     /// 计算认知复杂度 (Cognitive Complexity)
     fn calculate_cognitive_complexity(&self, input: &AnalysisInput) -> u32 {
         let mut complexity = 0;
-        
+
         // 嵌套深度贡献
         complexity += input.scope_tree.max_depth() as u32 * 2;
-        
+
         // 循环贡献
         complexity += input.loops.len() as u32 * 3;
-        
+
         // 递归贡献
         if input.callgraph.has_recursive_calls() {
             complexity += 5;
         }
-        
+
         // 全局变量使用
         let global_vars = input.scope_tree.global_variables().len() as u32;
         complexity += global_vars;
-        
+
         complexity
     }
 
@@ -95,22 +91,23 @@ impl UnifiedAnalysis {
     fn calculate_maintainability_index(&self, input: &AnalysisInput) -> f64 {
         // 简化版MI计算
         // MI = 171 - 5.2 * ln(Halstead Volume) - 0.23 * CC - 16.2 * ln(Lines of Code)
-        
+
         let cc = self.calculate_cyclomatic_complexity(input.cfg) as f64;
         let loc = input.ast.statement_count() as f64 + 1.0;
-        
+
         // 简化的Halstead Volume估计
-        let halstead_volume = (input.ast.function_decls.len() + input.ast.variable_decls.len()) as f64 * 10.0;
-        
+        let halstead_volume =
+            (input.ast.function_decls.len() + input.ast.variable_decls.len()) as f64 * 10.0;
+
         let mi = 171.0 - 5.2 * halstead_volume.ln() - 0.23 * cc - 16.2 * loc.ln();
-        
+
         mi.clamp(0.0, 100.0)
     }
 
     /// 识别代码问题
     fn identify_issues(&self, input: &AnalysisInput) -> Vec<CodeIssue> {
         let mut issues = Vec::new();
-        
+
         // 检查过深的嵌套
         let max_depth = input.scope_tree.max_depth();
         if max_depth > 5 {
@@ -213,10 +210,12 @@ impl UnifiedAnalysis {
         let mut risks = Vec::new();
 
         // 检查eval使用（简化检测）
-        let has_eval = input.scope_tree.global_variables()
+        let has_eval = input
+            .scope_tree
+            .global_variables()
             .iter()
             .any(|v| v == "eval");
-        
+
         if has_eval {
             risks.push(SecurityRisk {
                 level: RiskLevel::High,
@@ -252,7 +251,9 @@ impl UnifiedAnalysis {
     /// 估计时间复杂度
     fn estimate_time_complexity(&self, input: &AnalysisInput) -> String {
         let loop_count = input.loops.len();
-        let max_nesting = input.loops.iter()
+        let max_nesting = input
+            .loops
+            .iter()
             .map(|l| l.nesting_depth)
             .max()
             .unwrap_or(0);
@@ -270,7 +271,7 @@ impl UnifiedAnalysis {
     /// 估计空间复杂度
     fn estimate_space_complexity(&self, input: &AnalysisInput) -> String {
         let var_count = input.ast.variable_decls.len();
-        
+
         if var_count < 10 {
             "O(1)".to_string()
         } else if var_count < 100 {
@@ -290,15 +291,14 @@ impl UnifiedAnalysis {
         }
 
         // 深层嵌套循环
-        let deep_loops: Vec<_> = input.loops.iter()
+        let deep_loops: Vec<_> = input
+            .loops
+            .iter()
             .filter(|l| l.nesting_depth >= 2)
             .collect();
-        
+
         if !deep_loops.is_empty() {
-            bottlenecks.push(format!(
-                "{} deeply nested loops detected",
-                deep_loops.len()
-            ));
+            bottlenecks.push(format!("{} deeply nested loops detected", deep_loops.len()));
         }
 
         bottlenecks
@@ -491,14 +491,16 @@ mod tests {
     #[test]
     fn test_unified_analysis_creation() {
         let analyzer = UnifiedAnalysis::new();
-        assert!(analyzer.summarize(&AnalysisInput {
-            ast: &JsAst::default(),
-            scope_tree: &ScopeTree::default(),
-            cfg: &ControlFlowGraph::new(),
-            callgraph: &CallGraph::new(),
-            dataflow: &DataflowResult::default(),
-            loops: &[],
-        }).is_ok());
+        assert!(analyzer
+            .summarize(&AnalysisInput {
+                ast: &JsAst::default(),
+                scope_tree: &ScopeTree::default(),
+                cfg: &ControlFlowGraph::new(),
+                callgraph: &CallGraph::new(),
+                dataflow: &DataflowResult::default(),
+                loops: &[],
+            })
+            .is_ok());
     }
 
     #[test]
@@ -511,7 +513,7 @@ mod tests {
             cognitive_complexity: 15,
             maintainability_index: 75.0,
         };
-        
+
         assert_eq!(metrics.maintainability_level(), MaintainabilityLevel::Good);
     }
 

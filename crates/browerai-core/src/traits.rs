@@ -22,7 +22,7 @@ use std::collections::HashMap;
 ///
 /// struct HtmlDocument;
 /// struct HtmlParser;
-/// 
+///
 /// impl Parser for HtmlParser {
 ///     type Input = str;
 ///     type Output = HtmlDocument;
@@ -361,8 +361,14 @@ pub trait Learner: Send + Sync {
     fn supports_incremental(&self) -> bool;
 
     /// 增量学习（如果支持）
-    fn learn_incremental(&self, _previous: &Self::Result, _new_task: &Self::Task) -> Result<Self::Result> {
-        Err(crate::error::BrowserError::learning("Incremental learning not supported"))
+    fn learn_incremental(
+        &self,
+        _previous: &Self::Result,
+        _new_task: &Self::Task,
+    ) -> Result<Self::Result> {
+        Err(crate::error::BrowserError::learning(
+            "Incremental learning not supported",
+        ))
     }
 }
 
@@ -514,7 +520,7 @@ mod tests {
         let quality = LearningQuality::new(0.85)
             .with_coverage(0.9)
             .with_accuracy(0.8);
-        
+
         assert!(quality.is_acceptable());
         assert!(!quality.is_excellent());
     }
@@ -527,7 +533,7 @@ mod tests {
             size: 1024,
             entries: 5,
         };
-        
+
         assert_eq!(stats.hit_rate(), 0.9);
     }
 }

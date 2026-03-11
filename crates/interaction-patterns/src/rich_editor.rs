@@ -22,11 +22,18 @@ impl PatternImplementation for RichEditorPattern {
         ComplexPatternType::RichEditor
     }
 
-    fn recognize(&self, _observations: &[auto_observer::Observation]) -> Option<InteractionPattern> {
+    fn recognize(
+        &self,
+        _observations: &[auto_observer::Observation],
+    ) -> Option<InteractionPattern> {
         None // TODO
     }
 
-    fn generate_code(&self, _pattern: &InteractionPattern, _language: CodeLanguage) -> Result<GeneratedCode> {
+    fn generate_code(
+        &self,
+        _pattern: &InteractionPattern,
+        _language: CodeLanguage,
+    ) -> Result<GeneratedCode> {
         anyhow::bail!("Not implemented")
     }
 

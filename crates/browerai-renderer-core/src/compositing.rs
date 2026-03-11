@@ -6,9 +6,9 @@
 //! - 脏区域追踪
 //! - 增量更新
 
-use browerai_core::Result;
 use crate::paint::PaintRecord;
 use crate::Viewport;
+use browerai_core::Result;
 use std::collections::HashMap;
 
 /// 合成器
@@ -33,10 +33,14 @@ impl Compositor {
     }
 
     /// 合成图层
-    pub fn composite(&mut self, paint_records: &[PaintRecord], viewport: &Viewport) -> Result<Vec<CompositedLayer>> {
+    pub fn composite(
+        &mut self,
+        paint_records: &[PaintRecord],
+        viewport: &Viewport,
+    ) -> Result<Vec<CompositedLayer>> {
         // 简化实现：将绘制记录分组为图层
         let mut layers = Vec::new();
-        
+
         // 创建背景图层
         let background_layer = CompositedLayer {
             id: self.allocate_layer_id(),
@@ -45,14 +49,14 @@ impl Compositor {
             opacity: 1.0,
             blend_mode: BlendMode::Normal,
         };
-        
+
         layers.push(background_layer);
-        
+
         // 存储图层
         for layer in &layers {
             self.layers.insert(layer.id, layer.clone());
         }
-        
+
         Ok(layers)
     }
 
@@ -279,11 +283,11 @@ mod tests {
         let layer = CompositedLayer::new(LayerId(1), crate::Rect::new(0.0, 0.0, 100.0, 100.0))
             .with_opacity(0.5)
             .with_blend_mode(BlendMode::Multiply);
-        
+
         assert_eq!(layer.id.0, 1);
         assert_eq!(layer.opacity, 0.5);
         assert_eq!(layer.blend_mode, BlendMode::Multiply);
-        
+
         assert!(layer.contains_point(50.0, 50.0));
         assert!(!layer.contains_point(150.0, 50.0));
     }
@@ -291,15 +295,15 @@ mod tests {
     #[test]
     fn test_dirty_region_tracker() {
         let mut tracker = DirtyRegionTracker::new();
-        
+
         assert!(!tracker.has_dirty_regions());
-        
+
         tracker.add_region(crate::Rect::new(0.0, 0.0, 100.0, 100.0));
         tracker.add_region(crate::Rect::new(50.0, 50.0, 100.0, 100.0));
-        
+
         assert!(tracker.has_dirty_regions());
         assert_eq!(tracker.regions().len(), 2);
-        
+
         let bbox = tracker.bounding_box().unwrap();
         assert_eq!(bbox.x, 0.0);
         assert_eq!(bbox.y, 0.0);
@@ -310,15 +314,15 @@ mod tests {
     #[test]
     fn test_layer_operations() {
         let mut compositor = Compositor::new(CompositorConfig::default());
-        
+
         let layer = CompositedLayer::new(LayerId(1), crate::Rect::new(0.0, 0.0, 100.0, 100.0));
         compositor.layers.insert(LayerId(1), layer);
-        
+
         assert_eq!(compositor.layer_count(), 1);
-        
+
         let retrieved = compositor.get_layer(LayerId(1));
         assert!(retrieved.is_some());
-        
+
         compositor.remove_layer(LayerId(1));
         assert_eq!(compositor.layer_count(), 0);
     }
