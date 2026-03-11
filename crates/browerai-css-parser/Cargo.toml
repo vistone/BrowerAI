@@ -20,7 +20,7 @@ selectors = "0.25"
 css-color = "0.2"
 
 # Error handling
-thiserror = "1.0"
+thiserror = "2.0"
 
 # Logging
 log = "0.4"

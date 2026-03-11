@@ -20,7 +20,7 @@ markup5ever_rcdom = "0.3"
 tendril = "0.4"
 
 # Error handling
-thiserror = "1.0"
+thiserror = "2.0"
 
 # Logging
 log = "0.4"

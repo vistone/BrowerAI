@@ -18,7 +18,7 @@ fixedbitset = "0.4"       # Bit sets for dataflow analysis
 indexmap = "2.0"          # Ordered map for scope analysis
 
 # Error handling
-thiserror = "1.0"
+thiserror = "2.0"
 
 # Logging
 log = "0.4"
