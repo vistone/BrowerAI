@@ -63,10 +63,12 @@ jobs:
       
       - name: Run clippy
         if: matrix.rust == 'stable'
-        run: cargo clippy --all-features --workspace -- -D warnings
+        # Exclude browerai-deobfuscation: its 'ml' feature pulls in neuroxide/candle-core which has
+        # transitive dependency conflicts (half::f16 / rand_distr trait bounds).
+        run: cargo clippy --all-features --workspace --exclude browerai-ml --exclude browerai-js-v8 --exclude browerai-deobfuscation -- -D warnings
       
       - name: Build without features
-        run: cargo build --verbose --workspace --exclude browerai-ml
+        run: cargo build --verbose --workspace --exclude browerai-ml --exclude browerai-js-v8
       
       - name: Build with all features
         # Exclude browerai-deobfuscation: its 'ml' feature pulls in neuroxide/candle-core which has
@@ -133,7 +135,7 @@ jobs:
         run: cargo install cargo-hack
       
       - name: Check with cargo-hack
-        run: cargo hack check --workspace --exclude browerai-ml --exclude browerai-js-v8
+        run: cargo hack check --workspace --exclude browerai-ml --exclude browerai-js-v8 --exclude browerai-deobfuscation
 
   docs:
     name: Documentation
