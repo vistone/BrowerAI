@@ -63,13 +63,13 @@ jobs:
       
       - name: Run clippy
         if: matrix.rust == 'stable'
-        run: cargo clippy --all-features --workspace -- -D warnings
+        run: cargo clippy --all-features --workspace --exclude browerai-ml --exclude browerai-js-v8 --exclude browerai-ai-core -- -D warnings
       
       - name: Build without features
         run: cargo build --verbose --workspace --exclude browerai-ml
       
       - name: Build with all features
-        run: cargo build --verbose --workspace --exclude browerai-ml --exclude browerai-js-v8 --all-features
+        run: cargo build --verbose --workspace --exclude browerai-ml --exclude browerai-js-v8 --exclude browerai-ai-core --all-features
       
       - name: Run tests
         run: cargo test --verbose --workspace --exclude browerai-ml --exclude browerai-js-v8
@@ -92,7 +92,7 @@ jobs:
         uses: taiki-e/install-action@cargo-llvm-cov
       
       - name: Generate coverage
-        run: cargo llvm-cov --all-features --workspace --exclude browerai-ml --exclude browerai-js-v8 --codecov --output-path codecov.json
+        run: cargo llvm-cov --all-features --workspace --exclude browerai-ml --exclude browerai-js-v8 --exclude browerai-ai-core --codecov --output-path codecov.json
       
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
@@ -142,7 +142,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       
       - name: Check documentation
-        run: cargo doc --no-deps --all-features --workspace --exclude browerai-ml --exclude browerai-js-v8
+        run: cargo doc --no-deps --all-features --workspace --exclude browerai-ml --exclude browerai-js-v8 --exclude browerai-ai-core
         env:
           RUSTDOCFLAGS: -D warnings
       

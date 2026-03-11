@@ -34,9 +34,9 @@ jobs:
       - name: Install cargo-criterion
         run: cargo install cargo-criterion --locked
 
-      - name: Run benchmarks (criterion → bencher format)
+      - name: Run benchmarks (criterion JSON format)
         run: |
-          cargo criterion --message-format bencher --workspace --exclude browerai-ml --exclude browerai-js-v8 | tee output.txt
+          cargo criterion --message-format json --workspace --exclude browerai-ml --exclude browerai-js-v8 | tee output.txt
 
       - name: Fail if benchmark output is empty
         run: |
@@ -49,7 +49,7 @@ jobs:
         uses: benchmark-action/github-action-benchmark@v1
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
-          tool: 'cargo'
+          tool: 'criterion'
           output-file-path: output.txt
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
@@ -61,7 +61,7 @@ jobs:
         uses: benchmark-action/github-action-benchmark@v1
         if: github.event_name == 'pull_request'
         with:
-          tool: 'cargo'
+          tool: 'criterion'
           output-file-path: output.txt
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: false
