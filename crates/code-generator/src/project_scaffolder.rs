@@ -178,7 +178,8 @@ impl ProjectScaffolder {
     }
 
     fn generate_index_html(&self) -> String {
-        format!(r#"<!DOCTYPE html>
+        format!(
+            r#"<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -192,7 +193,9 @@ impl ProjectScaffolder {
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-"#, self.config.project_name)
+"#,
+            self.config.project_name
+        )
     }
 
     fn generate_gitignore(&self) -> String {
@@ -229,7 +232,8 @@ lerna-debug.log*
 
 # Testing
 coverage
-"#.to_string()
+"#
+        .to_string()
     }
 
     fn generate_eslint_config(&self) -> String {
@@ -251,7 +255,8 @@ coverage
     ]
   }
 }
-"#.to_string()
+"#
+        .to_string()
     }
 
     fn generate_prettier_config(&self) -> String {
@@ -262,6 +267,7 @@ coverage
   "trailingComma": "es5",
   "printWidth": 100
 }
-"#.to_string()
+"#
+        .to_string()
     }
 }

@@ -30,7 +30,8 @@ impl PerformanceTester {
         let duration = start_time.elapsed().as_millis() as u64;
 
         // 计算总体分数
-        let avg_ratio: f64 = comparisons.iter().map(|c| c.ratio).sum::<f64>() / comparisons.len() as f64;
+        let avg_ratio: f64 =
+            comparisons.iter().map(|c| c.ratio).sum::<f64>() / comparisons.len() as f64;
         let score = if avg_ratio <= 1.0 {
             // 生成版本更快或相同
             1.0
@@ -85,12 +86,18 @@ impl PerformanceTester {
 
     async fn measure_performance(&self, url: &str) -> Result<PerformanceMetrics> {
         let playwright = Playwright::initialize().await?;
-        let browser = playwright.chromium().launcher().headless(true).launch().await?;
+        let browser = playwright
+            .chromium()
+            .launcher()
+            .headless(true)
+            .launch()
+            .await?;
         let context = browser.context_builder().build().await?;
         let page = context.new_page().await?;
 
         // 启用性能监控
-        page.evaluate::<(), ()>(r#"
+        page.evaluate::<(), ()>(
+            r#"
             window.performanceMetrics = {};
             const observer = new PerformanceObserver((list) => {
                 for (const entry of list.getEntries()) {
@@ -98,7 +105,10 @@ impl PerformanceTester {
                 }
             });
             observer.observe({ entryTypes: ['navigation', 'paint', 'measure'] });
-        "#, ()).await?;
+        "#,
+            (),
+        )
+        .await?;
 
         let start = std::time::Instant::now();
         page.goto_builder(url).goto().await?;
@@ -121,10 +131,22 @@ impl PerformanceTester {
 
         Ok(PerformanceMetrics {
             load_time,
-            dom_content_loaded: metrics.get("domContentLoaded").and_then(|v: &serde_json::Value| v.as_f64()).unwrap_or(0.0),
-            first_paint: metrics.get("firstPaint").and_then(|v: &serde_json::Value| v.as_f64()).unwrap_or(0.0),
-            first_contentful_paint: metrics.get("firstContentfulPaint").and_then(|v: &serde_json::Value| v.as_f64()).unwrap_or(0.0),
-            memory_usage: metrics.get("memory").and_then(|v: &serde_json::Value| v.as_f64()).unwrap_or(0.0),
+            dom_content_loaded: metrics
+                .get("domContentLoaded")
+                .and_then(|v: &serde_json::Value| v.as_f64())
+                .unwrap_or(0.0),
+            first_paint: metrics
+                .get("firstPaint")
+                .and_then(|v: &serde_json::Value| v.as_f64())
+                .unwrap_or(0.0),
+            first_contentful_paint: metrics
+                .get("firstContentfulPaint")
+                .and_then(|v: &serde_json::Value| v.as_f64())
+                .unwrap_or(0.0),
+            memory_usage: metrics
+                .get("memory")
+                .and_then(|v: &serde_json::Value| v.as_f64())
+                .unwrap_or(0.0),
         })
     }
 
@@ -135,10 +157,22 @@ impl PerformanceTester {
     ) -> Vec<PerformanceResult> {
         vec![
             self.compare_metric("load_time", original.load_time, generated.load_time),
-            self.compare_metric("dom_content_loaded", original.dom_content_loaded, generated.dom_content_loaded),
+            self.compare_metric(
+                "dom_content_loaded",
+                original.dom_content_loaded,
+                generated.dom_content_loaded,
+            ),
             self.compare_metric("first_paint", original.first_paint, generated.first_paint),
-            self.compare_metric("first_contentful_paint", original.first_contentful_paint, generated.first_contentful_paint),
-            self.compare_metric("memory_usage", original.memory_usage, generated.memory_usage),
+            self.compare_metric(
+                "first_contentful_paint",
+                original.first_contentful_paint,
+                generated.first_contentful_paint,
+            ),
+            self.compare_metric(
+                "memory_usage",
+                original.memory_usage,
+                generated.memory_usage,
+            ),
         ]
     }
 

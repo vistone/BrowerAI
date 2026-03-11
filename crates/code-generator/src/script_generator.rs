@@ -4,17 +4,20 @@ use crate::*;
 use anyhow::Result;
 
 pub struct ScriptGenerator {
-  _config: GenerationConfig,
+    _config: GenerationConfig,
 }
 
 impl ScriptGenerator {
     pub fn new(config: &GenerationConfig) -> Self {
         Self {
-        _config: config.clone(),
+            _config: config.clone(),
         }
     }
 
-    pub async fn generate_scripts(&self, behaviors: &[interaction_patterns::InteractionPattern]) -> Result<Vec<GeneratedFile>> {
+    pub async fn generate_scripts(
+        &self,
+        behaviors: &[interaction_patterns::InteractionPattern],
+    ) -> Result<Vec<GeneratedFile>> {
         let mut scripts = Vec::new();
 
         // 生成hooks
@@ -32,7 +35,10 @@ impl ScriptGenerator {
         Ok(scripts)
     }
 
-    async fn generate_hooks(&self, behaviors: &[interaction_patterns::InteractionPattern]) -> Result<Vec<GeneratedFile>> {
+    async fn generate_hooks(
+        &self,
+        behaviors: &[interaction_patterns::InteractionPattern],
+    ) -> Result<Vec<GeneratedFile>> {
         let mut hooks = Vec::new();
 
         for behavior in behaviors {
@@ -50,22 +56,33 @@ impl ScriptGenerator {
         Ok(hooks)
     }
 
-    async fn generate_hook_for_behavior(&self, behavior: &interaction_patterns::InteractionPattern) -> Result<Option<GeneratedFile>> {
+    async fn generate_hook_for_behavior(
+        &self,
+        behavior: &interaction_patterns::InteractionPattern,
+    ) -> Result<Option<GeneratedFile>> {
         let content = match behavior.pattern_type {
-            interaction_patterns::ComplexPatternType::DragAndDrop => Some(self.generate_use_drag_drop()),
-            interaction_patterns::ComplexPatternType::InfiniteScroll => Some(self.generate_use_infinite_scroll()),
-            interaction_patterns::ComplexPatternType::VirtualList => Some(self.generate_use_virtual_list()),
+            interaction_patterns::ComplexPatternType::DragAndDrop => {
+                Some(self.generate_use_drag_drop())
+            }
+            interaction_patterns::ComplexPatternType::InfiniteScroll => {
+                Some(self.generate_use_infinite_scroll())
+            }
+            interaction_patterns::ComplexPatternType::VirtualList => {
+                Some(self.generate_use_virtual_list())
+            }
             _ => None,
         };
 
-        content.map(|c| {
-            let hook_name = format!("use_{:?}", behavior.pattern_type).to_lowercase();
-            Ok(GeneratedFile {
-                path: format!("src/hooks/{}.ts", hook_name),
-                content: c,
-                file_type: FileType::Script,
+        content
+            .map(|c| {
+                let hook_name = format!("use_{:?}", behavior.pattern_type).to_lowercase();
+                Ok(GeneratedFile {
+                    path: format!("src/hooks/{}.ts", hook_name),
+                    content: c,
+                    file_type: FileType::Script,
+                })
             })
-        }).transpose()
+            .transpose()
     }
 
     fn generate_use_drag_drop(&self) -> String {
@@ -126,7 +143,8 @@ export function useDragDrop(options: UseDragDropOptions = {}) {
     handleDragEnd
   };
 }
-"#.to_string()
+"#
+        .to_string()
     }
 
     fn generate_use_infinite_scroll(&self) -> String {
@@ -199,7 +217,8 @@ export function useInfiniteScroll<T>({
 }
 
 export { sentinelRef };
-"#.to_string()
+"#
+        .to_string()
     }
 
     fn generate_use_virtual_list(&self) -> String {
@@ -267,7 +286,8 @@ export function useVirtualList<T>(
     scrollToIndex
   };
 }
-"#.to_string()
+"#
+        .to_string()
     }
 
     fn generate_use_intersection_observer(&self) -> anyhow::Result<GeneratedFile> {
@@ -311,7 +331,8 @@ export function useIntersectionObserver<T extends HTMLElement>({
 
   return { ref, isIntersecting };
 }
-"#.to_string(),
+"#
+            .to_string(),
             file_type: FileType::Script,
         })
     }
@@ -346,7 +367,8 @@ export function useDebounceCallback<T extends (...args: any[]) => any>(
     timeoutId = setTimeout(() => callback(...args), delay);
   };
 }
-"#.to_string(),
+"#
+            .to_string(),
             file_type: FileType::Script,
         })
     }
@@ -378,7 +400,8 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
 
   return [storedValue, setValue];
 }
-"#.to_string(),
+"#
+            .to_string(),
             file_type: FileType::Script,
         })
     }
@@ -505,14 +528,18 @@ export interface Position {
 }
 
 export interface Rect extends Position, Size {}
-"#.to_string(),
+"#
+            .to_string(),
             file_type: FileType::Script,
         });
 
         Ok(utils)
     }
 
-    async fn generate_behavior_scripts(&self, behaviors: &[interaction_patterns::InteractionPattern]) -> Result<Vec<GeneratedFile>> {
+    async fn generate_behavior_scripts(
+        &self,
+        behaviors: &[interaction_patterns::InteractionPattern],
+    ) -> Result<Vec<GeneratedFile>> {
         let mut scripts = Vec::new();
 
         for behavior in behaviors {
@@ -525,10 +552,13 @@ export interface Rect extends Position, Size {}
         Ok(scripts)
     }
 
-    async fn generate_behavior_script(&self, behavior: &interaction_patterns::InteractionPattern) -> Result<Option<GeneratedFile>> {
+    async fn generate_behavior_script(
+        &self,
+        behavior: &interaction_patterns::InteractionPattern,
+    ) -> Result<Option<GeneratedFile>> {
         // 使用 interaction-patterns 库生成代码
         let generator = interaction_patterns::PatternCodeGenerator::new();
-        
+
         let code = match generator.generate(behavior, interaction_patterns::CodeLanguage::React) {
             Ok(code) => code,
             Err(_) => return Ok(None),
@@ -538,6 +568,7 @@ export interface Rect extends Position, Size {}
             path: format!("src/behaviors/{:?}.tsx", behavior.pattern_type).to_lowercase(),
             content: code.code,
             file_type: FileType::Script,
-        })).transpose()
+        }))
+        .transpose()
     }
 }

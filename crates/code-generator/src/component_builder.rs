@@ -40,7 +40,7 @@ impl ComponentBuilder {
         behaviors: &[interaction_patterns::InteractionPattern],
     ) -> Result<GeneratedFile> {
         let component_name = format!("{:?}", visual_comp.component_type);
-        
+
         let content = match self.config.target_framework {
             Framework::React => self.build_react_component(visual_comp, behaviors),
             Framework::Vue => self.build_vue_component(visual_comp, behaviors),
@@ -58,10 +58,7 @@ impl ComponentBuilder {
         };
 
         Ok(GeneratedFile {
-            path: format!("src/components/{}.{}"
-                , component_name
-                , extension
-            ),
+            path: format!("src/components/{}.{}", component_name, extension),
             content,
             file_type: FileType::Component,
         })
@@ -76,7 +73,8 @@ impl ComponentBuilder {
         let class_name = component_name.to_lowercase();
 
         // 查找相关的行为
-        let related_behaviors: Vec<_> = behaviors.iter()
+        let related_behaviors: Vec<_> = behaviors
+            .iter()
             .filter(|b| self.is_behavior_related(b, comp))
             .collect();
 
@@ -86,16 +84,20 @@ impl ComponentBuilder {
 
         // 根据行为添加hooks和事件处理
         for behavior in related_behaviors {
-          if behavior.pattern_type == interaction_patterns::ComplexPatternType::DragAndDrop {
-            imports.push("import { useDragDrop } from '../hooks/useDragDrop';".to_string());
-            hooks.push(format!("  const {{ {}, isDragging }} = useDragDrop();", component_name.to_lowercase()));
+            if behavior.pattern_type == interaction_patterns::ComplexPatternType::DragAndDrop {
+                imports.push("import { useDragDrop } from '../hooks/useDragDrop';".to_string());
+                hooks.push(format!(
+                    "  const {{ {}, isDragging }} = useDragDrop();",
+                    component_name.to_lowercase()
+                ));
             }
         }
 
         // 生成样式类名
         let style_classes = self.generate_style_classes(comp);
 
-        Ok(format!(r#"{}
+        Ok(format!(
+            r#"{}
 import './{}.css';
 
 export interface {}Props {{
@@ -145,7 +147,8 @@ export default {};
         let component_name = format!("{:?}", comp.component_type);
         let class_name = component_name.to_lowercase();
 
-        Ok(format!(r#"<template>
+        Ok(format!(
+            r#"<template>
   <div 
     class="{}"
     :style="{{ width: '{}px', height: '{}px' }}"
@@ -188,7 +191,8 @@ export default {{
         let component_name = format!("{:?}", comp.component_type);
         let class_name = component_name.to_lowercase();
 
-        Ok(format!(r#"<script>
+        Ok(format!(
+            r#"<script>
   import {{ createEventDispatcher }} from 'svelte';
   
   export let className = '';
@@ -212,10 +216,7 @@ export default {{
   @import './{}.css';
 </style>
 "#,
-            class_name,
-            comp.bounding_box.width,
-            comp.bounding_box.height,
-            class_name
+            class_name, comp.bounding_box.width, comp.bounding_box.height, class_name
         ))
     }
 
@@ -227,7 +228,8 @@ export default {{
         let component_name = format!("{:?}", comp.component_type);
         let class_name = component_name.to_lowercase();
 
-        Ok(format!(r#"export class {} {{
+        Ok(format!(
+            r#"export class {} {{
   constructor(element, options = {{}}) {{
     this.element = element;
     this.options = options;
@@ -271,7 +273,10 @@ export default {};
         // 根据组件类型和行为类型判断是否相关
         match (&component.component_type, &behavior.pattern_type) {
             (visual_learner::ComponentType::Button, _) => true,
-            (visual_learner::ComponentType::Input, interaction_patterns::ComplexPatternType::DragAndDrop) => false,
+            (
+                visual_learner::ComponentType::Input,
+                interaction_patterns::ComplexPatternType::DragAndDrop,
+            ) => false,
             _ => true,
         }
     }
@@ -286,7 +291,10 @@ export default {};
         classes.join(" ")
     }
 
-    async fn build_layout_component(&self, analysis: &visual_learner::VisualAnalysis) -> Result<GeneratedFile> {
+    async fn build_layout_component(
+        &self,
+        analysis: &visual_learner::VisualAnalysis,
+    ) -> Result<GeneratedFile> {
         let content = match self.config.target_framework {
             Framework::React => self.build_react_layout(analysis),
             _ => anyhow::bail!("Framework not supported for layout"),
@@ -319,7 +327,8 @@ export default {};
             ));
         }
 
-        Ok(format!(r#"import React from 'react';
+        Ok(format!(
+            r#"import React from 'react';
 import './Layout.css';
 
 export const Layout: React.FC = ({{ children }}) => {{

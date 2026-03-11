@@ -55,7 +55,8 @@ impl JsAst {
 
     /// 获取最大嵌套深度
     pub fn max_nesting_depth(&self) -> usize {
-        self.statements.iter()
+        self.statements
+            .iter()
             .map(|s| s.nesting_depth())
             .max()
             .unwrap_or(0)
@@ -64,7 +65,7 @@ impl JsAst {
     /// 获取所有标识符（函数名、变量名、参数名等）
     pub fn all_identifiers(&self) -> Vec<String> {
         let mut ids = Vec::new();
-        
+
         for func in &self.function_decls {
             if let Some(ref name) = func.name {
                 ids.push(name.clone());
@@ -74,17 +75,17 @@ impl JsAst {
                 ids.push(param.clone());
             }
         }
-        
+
         for var in &self.variable_decls {
             ids.push(var.name.clone());
         }
-        
+
         for class in &self.class_decls {
             if let Some(ref name) = class.name {
                 ids.push(name.clone());
             }
         }
-        
+
         ids
     }
 
@@ -93,7 +94,7 @@ impl JsAst {
     pub fn to_json(&self) -> String {
         serde_json::to_string_pretty(self).unwrap_or_default()
     }
-    
+
     /// 序列化为 JSON (简化版本，不需要 serde)
     #[cfg(not(feature = "serde"))]
     pub fn to_json(&self) -> String {
@@ -170,19 +171,28 @@ impl AstNode {
     /// 获取嵌套深度
     pub fn nesting_depth(&self) -> usize {
         match self {
-            AstNode::Block(stmts) => {
-                1 + stmts.iter().map(|s| s.nesting_depth()).max().unwrap_or(0)
-            }
-            AstNode::If { then_branch, else_branch, .. } => {
+            AstNode::Block(stmts) => 1 + stmts.iter().map(|s| s.nesting_depth()).max().unwrap_or(0),
+            AstNode::If {
+                then_branch,
+                else_branch,
+                ..
+            } => {
                 let then_depth = then_branch.nesting_depth();
                 let else_depth = else_branch.as_ref().map(|e| e.nesting_depth()).unwrap_or(0);
                 1 + then_depth.max(else_depth)
             }
             AstNode::While { body, .. } => 1 + body.nesting_depth(),
             AstNode::For { body, .. } => 1 + body.nesting_depth(),
-            AstNode::Try { try_block, finally_block, .. } => {
+            AstNode::Try {
+                try_block,
+                finally_block,
+                ..
+            } => {
                 let try_depth = try_block.nesting_depth();
-                let finally_depth = finally_block.as_ref().map(|f| f.nesting_depth()).unwrap_or(0);
+                let finally_depth = finally_block
+                    .as_ref()
+                    .map(|f| f.nesting_depth())
+                    .unwrap_or(0);
                 1 + try_depth.max(finally_depth)
             }
             _ => 1,
@@ -531,19 +541,15 @@ mod tests {
             is_generator: false,
             body: None,
         });
-        
+
         assert_eq!(ast.function_decls.len(), 1);
         assert_eq!(ast.all_identifiers(), vec!["test", "a"]);
     }
 
     #[test]
     fn test_nesting_depth() {
-        let block = AstNode::Block(vec![
-            AstNode::Block(vec![
-                AstNode::Return(None),
-            ]),
-        ]);
-        
+        let block = AstNode::Block(vec![AstNode::Block(vec![AstNode::Return(None)])]);
+
         assert_eq!(block.nesting_depth(), 3);
     }
 
@@ -551,7 +557,7 @@ mod tests {
     fn test_ast_kind() {
         let script = JsAst::new();
         assert_eq!(script.kind, AstKind::Script);
-        
+
         let module = JsAst::module();
         assert_eq!(module.kind, AstKind::Module);
     }

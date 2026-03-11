@@ -30,7 +30,7 @@ impl ControlFlowGraph {
         let mut graph = DiGraph::new();
         let entry = graph.add_node(BasicBlock::entry());
         let exit = graph.add_node(BasicBlock::exit());
-        
+
         Self {
             graph,
             entry,
@@ -86,7 +86,9 @@ impl ControlFlowGraph {
 
     /// 获取前驱节点
     pub fn predecessors(&self, index: NodeIndex) -> Vec<NodeIndex> {
-        self.graph.neighbors_directed(index, petgraph::Direction::Incoming).collect()
+        self.graph
+            .neighbors_directed(index, petgraph::Direction::Incoming)
+            .collect()
     }
 
     /// 检查是否为空
@@ -107,7 +109,7 @@ impl ControlFlowGraph {
     /// 可达性分析 - 检查从入口是否可以到达某个节点
     pub fn is_reachable(&self, target: NodeIndex) -> bool {
         use petgraph::visit::Bfs;
-        
+
         let mut bfs = Bfs::new(&self.graph, self.entry);
         while let Some(node) = bfs.next(&self.graph) {
             if node == target {
@@ -120,19 +122,20 @@ impl ControlFlowGraph {
     /// 查找死代码（不可达的节点）
     pub fn find_dead_code(&self) -> Vec<NodeIndex> {
         let mut dead = Vec::new();
-        
+
         for node in self.graph.node_indices() {
             if node != self.entry && !self.is_reachable(node) {
                 dead.push(node);
             }
         }
-        
+
         dead
     }
 
     /// 获取所有基本块
     pub fn blocks(&self) -> impl Iterator<Item = (NodeIndex, &BasicBlock)> {
-        self.graph.node_indices()
+        self.graph
+            .node_indices()
             .map(move |idx| (idx, self.graph.node_weight(idx).unwrap()))
     }
 }
@@ -249,14 +252,14 @@ impl CfgBuilder {
     /// 从AST构建CFG
     pub fn build(&mut self, ast: &JsAst) -> Result<ControlFlowGraph> {
         let mut cfg = ControlFlowGraph::new();
-        
+
         // 创建主函数块
         let main_block = self.create_block("main");
         let main_idx = cfg.add_block(main_block);
-        
+
         // 连接入口到主块
         cfg.add_entry_edge(main_idx, BranchKind::Unconditional);
-        
+
         // 为主块添加语句
         if let Some(block) = cfg.get_block_mut(main_idx) {
             for func in &ast.function_decls {
@@ -268,10 +271,10 @@ impl CfgBuilder {
                 block.add_statement(format!("var {}", var.name));
             }
         }
-        
+
         // 连接主块到出口
         cfg.add_edge(main_idx, cfg.exit(), BranchKind::Unconditional);
-        
+
         Ok(cfg)
     }
 
@@ -279,7 +282,7 @@ impl CfgBuilder {
     fn create_block(&mut self, label: impl Into<String>) -> BasicBlock {
         let id = self.next_block_id;
         self.next_block_id += 1;
-        
+
         BasicBlock {
             id,
             label: Some(label.into()),
@@ -297,7 +300,7 @@ mod tests {
     #[test]
     fn test_cfg_creation() {
         let cfg = ControlFlowGraph::new();
-        
+
         assert_eq!(cfg.node_count(), 2); // entry + exit
         assert!(cfg.is_empty());
     }
@@ -307,7 +310,7 @@ mod tests {
         let mut cfg = ControlFlowGraph::new();
         let block = BasicBlock::new(2);
         let idx = cfg.add_block(block);
-        
+
         assert_eq!(cfg.node_count(), 3);
         assert!(cfg.get_block(idx).is_some());
     }
@@ -317,10 +320,10 @@ mod tests {
         let mut cfg = ControlFlowGraph::new();
         let block = BasicBlock::new(2);
         let idx = cfg.add_block(block);
-        
+
         // 未连接时不可达
         assert!(!cfg.is_reachable(idx));
-        
+
         // 连接后可达
         cfg.add_entry_edge(idx, BranchKind::Unconditional);
         assert!(cfg.is_reachable(idx));
@@ -334,9 +337,9 @@ mod tests {
             variable_decls: vec![],
             ..Default::default()
         };
-        
+
         let cfg = builder.build(&ast).unwrap();
-        
+
         assert!(cfg.node_count() >= 2);
     }
 }

@@ -61,34 +61,28 @@ impl InfiniteScrollPattern {
                     PatternState {
                         name: "loading".to_string(),
                         description: "Loading more data".to_string(),
-                        entry_actions: vec![
-                            PatternBehavior {
-                                behavior_type: BehaviorType::AddClass,
-                                target: ".loading-indicator".to_string(),
-                                animation: None,
-                                callback: None,
-                            },
-                        ],
-                        exit_actions: vec![
-                            PatternBehavior {
-                                behavior_type: BehaviorType::RemoveClass,
-                                target: ".loading-indicator".to_string(),
-                                animation: None,
-                                callback: None,
-                            },
-                        ],
+                        entry_actions: vec![PatternBehavior {
+                            behavior_type: BehaviorType::AddClass,
+                            target: ".loading-indicator".to_string(),
+                            animation: None,
+                            callback: None,
+                        }],
+                        exit_actions: vec![PatternBehavior {
+                            behavior_type: BehaviorType::RemoveClass,
+                            target: ".loading-indicator".to_string(),
+                            animation: None,
+                            callback: None,
+                        }],
                     },
                     PatternState {
                         name: "completed".to_string(),
                         description: "No more data to load".to_string(),
-                        entry_actions: vec![
-                            PatternBehavior {
-                                behavior_type: BehaviorType::Show,
-                                target: ".end-message".to_string(),
-                                animation: None,
-                                callback: None,
-                            },
-                        ],
+                        entry_actions: vec![PatternBehavior {
+                            behavior_type: BehaviorType::Show,
+                            target: ".end-message".to_string(),
+                            animation: None,
+                            callback: None,
+                        }],
                         exit_actions: vec![],
                     },
                 ],
@@ -105,18 +99,16 @@ impl InfiniteScrollPattern {
                         to_state: "idle".to_string(),
                         trigger: "dataLoaded".to_string(),
                         guard: Some("hasMoreData".to_string()),
-                        actions: vec![
-                            PatternBehavior {
-                                behavior_type: BehaviorType::InsertElement,
-                                target: container.to_string(),
-                                animation: Some(AnimationConfig {
-                                    duration_ms: 300,
-                                    easing: "ease-out".to_string(),
-                                    properties: vec!["opacity".to_string()],
-                                }),
-                                callback: None,
-                            },
-                        ],
+                        actions: vec![PatternBehavior {
+                            behavior_type: BehaviorType::InsertElement,
+                            target: container.to_string(),
+                            animation: Some(AnimationConfig {
+                                duration_ms: 300,
+                                easing: "ease-out".to_string(),
+                                properties: vec!["opacity".to_string()],
+                            }),
+                            callback: None,
+                        }],
                     },
                     StateTransition {
                         from_state: "loading".to_string(),
@@ -170,7 +162,11 @@ impl PatternImplementation for InfiniteScrollPattern {
         }
     }
 
-    fn generate_code(&self, _pattern: &InteractionPattern, language: CodeLanguage) -> Result<GeneratedCode> {
+    fn generate_code(
+        &self,
+        _pattern: &InteractionPattern,
+        language: CodeLanguage,
+    ) -> Result<GeneratedCode> {
         let code = match language {
             CodeLanguage::TypeScript => self.generate_typescript(),
             CodeLanguage::React => self.generate_react(),
@@ -311,7 +307,8 @@ class InfiniteScroll {
 }
 
 export { InfiniteScroll, InfiniteScrollOptions };
-"#.to_string())
+"#
+        .to_string())
     }
 
     fn generate_react(&self) -> Result<String> {
@@ -452,7 +449,8 @@ export function InfiniteScroll<T>({
     color: #999;
     font-size: 14px;
 }
-"#.to_string()
+"#
+        .to_string()
     }
 
     fn generate_documentation(&self) -> String {
@@ -485,6 +483,7 @@ const infiniteScroll = new InfiniteScroll({
     threshold: 100
 });
 ```
-"#.to_string()
+"#
+        .to_string()
     }
 }

@@ -102,7 +102,7 @@ impl ModelApiClient {
     /// 检查 API 服务器是否可用
     pub async fn health_check(&self) -> Result<bool> {
         let url = format!("{}/api/v1/health", self.config.base_url);
-        
+
         match self.client.get(&url).send().await {
             Ok(response) => Ok(response.status().is_success()),
             Err(_) => Ok(false),
@@ -110,7 +110,7 @@ impl ModelApiClient {
     }
 
     /// 从网站内容生成样式
-    /// 
+    ///
     /// 流程：
     /// 1. 提取 48 维特征
     /// 2. 编码到 256 维潜在空间
@@ -125,13 +125,13 @@ impl ModelApiClient {
     ) -> Result<GeneratedStyle> {
         // 步骤 1: 提取特征
         let features = self.extract_features(url, html, css, scripts).await?;
-        
+
         // 步骤 2 & 3: 编码并生成代码
         let generated = self.generate_code(url, &features, design_style).await?;
-        
+
         // 从生成的 CSS 中提取颜色
         let (primary, background, text) = self.extract_colors_from_css(&generated.css);
-        
+
         Ok(GeneratedStyle {
             css: generated.css,
             html_structure: generated.html,
@@ -173,8 +173,16 @@ impl ModelApiClient {
         let script_count = (html.matches("<script").count() as f32 / 50.0).min(1.0);
 
         features.extend_from_slice(&[
-            html_len, tag_count, div_count, link_count, form_count,
-            input_count, button_count, list_count, img_count, script_count,
+            html_len,
+            tag_count,
+            div_count,
+            link_count,
+            form_count,
+            input_count,
+            button_count,
+            list_count,
+            img_count,
+            script_count,
         ]);
 
         // [10-17] CSS 指标
@@ -188,25 +196,50 @@ impl ModelApiClient {
         let import_count = (css.matches("@import").count() as f32 / 20.0).min(1.0);
 
         features.extend_from_slice(&[
-            css_len, rule_count, class_count, id_count, selector_count,
-            media_count, animation_count, import_count,
+            css_len,
+            rule_count,
+            class_count,
+            id_count,
+            selector_count,
+            media_count,
+            animation_count,
+            import_count,
         ]);
 
         // [18-27] JavaScript 指标
         let js_len = (scripts.len() as f32 / 1000000.0).min(1.0);
-        let func_count = ((scripts.matches("function").count() + scripts.matches("=>") .count()) as f32 / 500.0).min(1.0);
-        let var_count = ((scripts.matches("var ").count() + scripts.matches("let ").count() + scripts.matches("const ").count()) as f32 / 1000.0).min(1.0);
+        let func_count =
+            ((scripts.matches("function").count() + scripts.matches("=>").count()) as f32 / 500.0)
+                .min(1.0);
+        let var_count = ((scripts.matches("var ").count()
+            + scripts.matches("let ").count()
+            + scripts.matches("const ").count()) as f32
+            / 1000.0)
+            .min(1.0);
         let if_count = (scripts.matches("if ").count() as f32 / 500.0).min(1.0);
-        let loop_count = ((scripts.matches("for ").count() + scripts.matches("while ").count()) as f32 / 200.0).min(1.0);
+        let loop_count =
+            ((scripts.matches("for ").count() + scripts.matches("while ").count()) as f32 / 200.0)
+                .min(1.0);
         let try_count = (scripts.matches("try ").count() as f32 / 100.0).min(1.0);
         let class_count = (scripts.matches("class ").count() as f32 / 100.0).min(1.0);
         let async_count = (scripts.matches("async").count() as f32 / 50.0).min(1.0);
-        let import_count = ((scripts.matches("import ").count() + scripts.matches("require(").count()) as f32 / 100.0).min(1.0);
+        let import_count = ((scripts.matches("import ").count()
+            + scripts.matches("require(").count()) as f32
+            / 100.0)
+            .min(1.0);
         let call_count = (scripts.matches('(').count() as f32 / 5000.0).min(1.0);
 
         features.extend_from_slice(&[
-            js_len, func_count, var_count, if_count, loop_count,
-            try_count, class_count, async_count, import_count, call_count,
+            js_len,
+            func_count,
+            var_count,
+            if_count,
+            loop_count,
+            try_count,
+            class_count,
+            async_count,
+            import_count,
+            call_count,
         ]);
 
         // [28-35] 页面结构指标（简化）
@@ -217,25 +250,41 @@ impl ModelApiClient {
         let has_main = if html.contains("<main") { 1.0 } else { 0.0 };
         let has_section = if html.contains("<section") { 1.0 } else { 0.0 };
         let has_article = if html.contains("<article") { 1.0 } else { 0.0 };
-        let depth_estimate = (html.matches('<').count() as f32 / html.matches('>').count() as f32).min(1.0);
+        let depth_estimate =
+            (html.matches('<').count() as f32 / html.matches('>').count() as f32).min(1.0);
 
         features.extend_from_slice(&[
-            has_nav, has_header, has_footer, has_aside,
-            has_main, has_section, has_article, depth_estimate,
+            has_nav,
+            has_header,
+            has_footer,
+            has_aside,
+            has_main,
+            has_section,
+            has_article,
+            depth_estimate,
         ]);
 
         // [36-42] 设计风格指标（简化）
         let color_count = css.matches('#').count() as f32 / 50.0;
         let has_gradient = if css.contains("gradient") { 1.0 } else { 0.0 };
         let has_shadow = if css.contains("shadow") { 1.0 } else { 0.0 };
-        let has_animation = if css.contains("animation") || css.contains("@keyframes") { 1.0 } else { 0.0 };
+        let has_animation = if css.contains("animation") || css.contains("@keyframes") {
+            1.0
+        } else {
+            0.0
+        };
         let has_flex = if css.contains("flex") { 1.0 } else { 0.0 };
         let has_grid = if css.contains("grid") { 1.0 } else { 0.0 };
         let font_count = css.matches("font-family").count() as f32 / 10.0;
 
         features.extend_from_slice(&[
-            color_count.min(1.0), has_gradient, has_shadow, has_animation,
-            has_flex, has_grid, font_count.min(1.0),
+            color_count.min(1.0),
+            has_gradient,
+            has_shadow,
+            has_animation,
+            has_flex,
+            has_grid,
+            font_count.min(1.0),
         ]);
 
         // [43-47] 复杂度指标（简化）
@@ -246,7 +295,11 @@ impl ModelApiClient {
         let complexity_score = features.iter().sum::<f32>() / features.len() as f32;
 
         features.extend_from_slice(&[
-            html_ratio, css_ratio, js_ratio, complexity_score, 0.5, // 最后一个占位
+            html_ratio,
+            css_ratio,
+            js_ratio,
+            complexity_score,
+            0.5, // 最后一个占位
         ]);
 
         // 确保正好 48 维
@@ -266,8 +319,10 @@ impl ModelApiClient {
         design_style: &str,
     ) -> Result<CodeGenerationResponse> {
         let api_url = format!("{}/api/v1/generate", self.config.base_url);
-        
-        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap();
+
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap();
         let request = CodeGenerationRequest {
             url: url.to_string(),
             session_id: format!("session_{}", now.as_secs()),
@@ -309,7 +364,7 @@ impl ModelApiClient {
         if let Some(pos) = css.find("background:") {
             let start = pos + "background:".len();
             if let Some(end) = css[start..].find(';') {
-                let color = css[start..start+end].trim();
+                let color = css[start..start + end].trim();
                 if color.starts_with('#') || color.starts_with("rgb") {
                     background = color.to_string();
                 }
@@ -320,7 +375,7 @@ impl ModelApiClient {
         if let Some(pos) = css.find("color:") {
             let start = pos + "color:".len();
             if let Some(end) = css[start..].find(';') {
-                let color = css[start..start+end].trim();
+                let color = css[start..start + end].trim();
                 if color.starts_with('#') || color.starts_with("rgb") {
                     text = color.to_string();
                 }
@@ -387,13 +442,13 @@ mod tests {
     fn test_feature_extraction() {
         let config = ModelApiConfig::default();
         let client = ModelApiClient::new(config).unwrap();
-        
+
         let html = "<html><body><div>Test</div></body></html>";
         let css = "body { color: #333; }";
         let scripts = "console.log('test');";
 
         let features = client.extract_features_local(html, css, scripts);
-        
+
         assert_eq!(features.len(), 48);
         assert!(features.iter().all(|&f| f >= 0.0 && f <= 1.0));
     }

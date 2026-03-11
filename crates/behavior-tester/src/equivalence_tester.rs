@@ -54,7 +54,12 @@ impl EquivalenceTester {
         scenario: &TestScenario,
     ) -> Result<ScenarioExecutionResult> {
         let playwright = Playwright::initialize().await?;
-        let browser = playwright.chromium().launcher().headless(true).launch().await?;
+        let browser = playwright
+            .chromium()
+            .launcher()
+            .headless(true)
+            .launch()
+            .await?;
         let context = browser.context_builder().build().await?;
         let page = context.new_page().await?;
 
@@ -185,7 +190,12 @@ impl EquivalenceTester {
         }
 
         // 比较事件类型
-        for (i, (orig, gen)) in original.events.iter().zip(generated.events.iter()).enumerate() {
+        for (i, (orig, gen)) in original
+            .events
+            .iter()
+            .zip(generated.events.iter())
+            .enumerate()
+        {
             if orig.event_type != gen.event_type {
                 passed = false;
                 assertions_failed += 1;

@@ -1,5 +1,5 @@
-use browerai_css_parser::CssParser;
 use browerai_core::traits::Parser;
+use browerai_css_parser::CssParser;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 fn benchmark_simple_css(c: &mut Criterion) {
@@ -49,9 +49,5 @@ fn benchmark_complex_css(c: &mut Criterion) {
     });
 }
 
-criterion_group!(
-    benches,
-    benchmark_simple_css,
-    benchmark_complex_css
-);
+criterion_group!(benches, benchmark_simple_css, benchmark_complex_css);
 criterion_main!(benches);

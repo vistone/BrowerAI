@@ -41,7 +41,7 @@ impl DomInspector {
         // 简化实现：Document API可能需要适配
         let node_count = 0;
         let max_depth = 0;
-        
+
         Ok(InspectionResult {
             node_count,
             max_depth,
@@ -192,10 +192,10 @@ mod tests {
     #[test]
     fn test_node_selection() {
         let mut inspector = DomInspector::new();
-        
+
         inspector.select_node("node-1");
         assert_eq!(inspector.selected_node(), Some("node-1"));
-        
+
         inspector.clear_selection();
         assert!(inspector.selected_node().is_none());
     }
@@ -205,7 +205,7 @@ mod tests {
         let info = NodeInfo::new("test-id", "div")
             .with_attribute("class", "container")
             .with_style("color", "red");
-        
+
         assert_eq!(info.id, "test-id");
         assert_eq!(info.tag_name, "div");
         assert!(info.attributes.contains_key("class"));

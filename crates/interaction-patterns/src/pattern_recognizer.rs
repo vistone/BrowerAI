@@ -2,7 +2,7 @@
 //! 从观察数据中识别交互模式
 
 use crate::*;
-use auto_observer::{Observation, InteractionRecord};
+use auto_observer::{InteractionRecord, Observation};
 
 /// 模式识别器
 pub struct PatternRecognizer {
@@ -17,14 +17,21 @@ impl PatternRecognizer {
     }
 
     /// 从观察记录中识别模式
-    pub fn recognize_from_observations(&self, observations: &[Observation]) -> Vec<InteractionPattern> {
+    pub fn recognize_from_observations(
+        &self,
+        observations: &[Observation],
+    ) -> Vec<InteractionPattern> {
         self.library.recognize_patterns(observations)
     }
 
     /// 从交互记录中识别模式
-    pub fn recognize_from_interactions(&self, interactions: &[InteractionRecord]) -> Vec<InteractionPattern> {
+    pub fn recognize_from_interactions(
+        &self,
+        interactions: &[InteractionRecord],
+    ) -> Vec<InteractionPattern> {
         // 将交互记录转换为观察记录
-        let observations: Vec<Observation> = interactions.iter()
+        let observations: Vec<Observation> = interactions
+            .iter()
             .map(|i| self.interaction_to_observation(i))
             .collect();
 
@@ -62,9 +69,12 @@ impl PatternRecognizer {
                 }
                 "scroll" => {
                     features.scroll_count += 1;
-                    features.scroll_positions.push(obs.details.get("scrollY")
-                        .and_then(|v| v.as_u64())
-                        .unwrap_or(0) as f64);
+                    features.scroll_positions.push(
+                        obs.details
+                            .get("scrollY")
+                            .and_then(|v| v.as_u64())
+                            .unwrap_or(0) as f64,
+                    );
                 }
                 "mutation" => {
                     features.mutation_count += 1;
@@ -95,7 +105,13 @@ impl PatternRecognizer {
 
         for i in 1..positions.len() {
             let diff = positions[i] - positions[i - 1];
-            let direction = if diff > 0.0 { 1 } else if diff < 0.0 { -1 } else { 0 };
+            let direction = if diff > 0.0 {
+                1
+            } else if diff < 0.0 {
+                -1
+            } else {
+                0
+            };
 
             if direction != 0 && direction != last_direction && last_direction != 0 {
                 direction_changes += 1;

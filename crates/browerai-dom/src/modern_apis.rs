@@ -40,7 +40,7 @@ impl TemporalAPI {
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
-        
+
         // Simple ISO 8601 format (can be enhanced with chrono later)
         format!("2026-02-17T{}:00.000Z", timestamp % 86400)
     }
@@ -296,10 +296,7 @@ impl WebStorage {
 
     /// Get current storage size in bytes
     pub fn current_size(&self) -> usize {
-        self.data
-            .iter()
-            .map(|(k, v)| k.len() + v.len())
-            .sum()
+        self.data.iter().map(|(k, v)| k.len() + v.len()).sum()
     }
 }
 
@@ -463,11 +460,15 @@ mod tests {
     fn test_web_storage() {
         let mut storage = WebStorage::new("local");
 
-        storage.set_item("key1".to_string(), "value1".to_string()).unwrap();
+        storage
+            .set_item("key1".to_string(), "value1".to_string())
+            .unwrap();
         assert_eq!(storage.get_item("key1"), Some("value1".to_string()));
         assert_eq!(storage.length(), 1);
 
-        storage.set_item("key2".to_string(), "value2".to_string()).unwrap();
+        storage
+            .set_item("key2".to_string(), "value2".to_string())
+            .unwrap();
         assert_eq!(storage.length(), 2);
 
         assert_eq!(storage.remove_item("key1"), Some("value1".to_string()));

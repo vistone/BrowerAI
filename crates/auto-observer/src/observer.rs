@@ -332,7 +332,8 @@ impl BehaviorObserver {
     
     console.log('[BehaviorObserver] 初始化完成');
 })();
-"#.to_string()
+"#
+        .to_string()
     }
 
     /// 获取观察脚本
@@ -345,9 +346,15 @@ impl BehaviorObserver {
         let mut analysis = ObservationAnalysis::default();
 
         for obs in observations {
-            let event_type = obs.get("type").and_then(|v| v.as_str()).unwrap_or("unknown");
-            
-            *analysis.event_counts.entry(event_type.to_string()).or_insert(0) += 1;
+            let event_type = obs
+                .get("type")
+                .and_then(|v| v.as_str())
+                .unwrap_or("unknown");
+
+            *analysis
+                .event_counts
+                .entry(event_type.to_string())
+                .or_insert(0) += 1;
 
             // 分析点击行为
             if event_type == "click" {
@@ -361,7 +368,11 @@ impl BehaviorObserver {
 
             // 分析导航
             if event_type == "navigation" || event_type == "history-pushstate" {
-                if let Some(to) = obs.get("details").and_then(|d| d.get("to")).and_then(|v| v.as_str()) {
+                if let Some(to) = obs
+                    .get("details")
+                    .and_then(|d| d.get("to"))
+                    .and_then(|v| v.as_str())
+                {
                     analysis.navigation_targets.push(to.to_string());
                 }
             }
@@ -382,12 +393,14 @@ impl BehaviorObserver {
 
     fn analyze_click(&self, obs: &serde_json::Value) -> ClickPattern {
         ClickPattern {
-            target_selector: obs.get("target")
+            target_selector: obs
+                .get("target")
                 .and_then(|t| t.get("selector"))
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string()),
             timestamp: obs.get("timestamp").and_then(|v| v.as_u64()).unwrap_or(0),
-            coordinates: obs.get("details")
+            coordinates: obs
+                .get("details")
                 .and_then(|d| Some((d.get("clientX")?, d.get("clientY")?)))
                 .and_then(|(x, y)| Some((x.as_f64()?, y.as_f64()?))),
         }
@@ -395,11 +408,13 @@ impl BehaviorObserver {
 
     fn analyze_input(&self, obs: &serde_json::Value) -> InputPattern {
         InputPattern {
-            target_selector: obs.get("target")
+            target_selector: obs
+                .get("target")
                 .and_then(|t| t.get("selector"))
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string()),
-            input_type: obs.get("details")
+            input_type: obs
+                .get("details")
                 .and_then(|d| d.get("inputType"))
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string()),
@@ -409,12 +424,14 @@ impl BehaviorObserver {
 
     fn extract_endpoint(&self, obs: &serde_json::Value) -> ApiEndpoint {
         ApiEndpoint {
-            url: obs.get("details")
+            url: obs
+                .get("details")
                 .and_then(|d| d.get("url"))
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string())
                 .unwrap_or_default(),
-            method: obs.get("details")
+            method: obs
+                .get("details")
                 .and_then(|d| d.get("method"))
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string())
@@ -424,17 +441,20 @@ impl BehaviorObserver {
 
     fn analyze_mutation(&self, obs: &serde_json::Value) -> DomMutation {
         DomMutation {
-            mutation_type: obs.get("details")
+            mutation_type: obs
+                .get("details")
                 .and_then(|d| d.get("type"))
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string())
                 .unwrap_or_default(),
-            target: obs.get("details")
+            target: obs
+                .get("details")
                 .and_then(|d| d.get("target"))
                 .and_then(|t| t.get("selector"))
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string()),
-            added_nodes: obs.get("details")
+            added_nodes: obs
+                .get("details")
                 .and_then(|d| d.get("addedCount"))
                 .and_then(|v| v.as_u64())
                 .unwrap_or(0) as usize,

@@ -39,13 +39,13 @@ impl InferenceEngine {
     pub fn infer(&self, request: InferenceRequest) -> Result<InferenceResult> {
         // 验证输入
         self.validate_input(&request)?;
-        
+
         // 执行推理
         let output = self.backend.run_inference(&request)?;
-        
+
         // 后处理
         let processed = self.post_process(output, &request.output_format)?;
-        
+
         Ok(InferenceResult {
             output: processed,
             model_id: request.model_id,
@@ -56,9 +56,7 @@ impl InferenceEngine {
 
     /// 批量推理
     pub fn batch_infer(&self, requests: Vec<InferenceRequest>) -> Result<Vec<InferenceResult>> {
-        requests.into_iter()
-            .map(|req| self.infer(req))
-            .collect()
+        requests.into_iter().map(|req| self.infer(req)).collect()
     }
 
     /// 验证输入
@@ -66,11 +64,11 @@ impl InferenceEngine {
         if request.model_id.is_empty() {
             return Err(BrowserError::ai("Model ID is required"));
         }
-        
+
         if request.input.is_empty() {
             return Err(BrowserError::ai("Input is required"));
         }
-        
+
         Ok(())
     }
 
@@ -80,26 +78,23 @@ impl InferenceEngine {
             OutputFormat::Raw => Ok(InferenceOutput::Raw(output)),
             OutputFormat::Classification => {
                 // 找到最大值的索引
-                let max_idx = output.iter()
+                let max_idx = output
+                    .iter()
                     .enumerate()
                     .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
                     .map(|(idx, _)| idx)
                     .unwrap_or(0);
-                
+
                 let confidence = output.get(max_idx).copied();
-                
+
                 Ok(InferenceOutput::Classification {
                     class_id: max_idx,
                     confidence,
                     probabilities: output,
                 })
             }
-            OutputFormat::Regression => {
-                Ok(InferenceOutput::Regression(output))
-            }
-            OutputFormat::Embedding => {
-                Ok(InferenceOutput::Embedding(output))
-            }
+            OutputFormat::Regression => Ok(InferenceOutput::Regression(output)),
+            OutputFormat::Embedding => Ok(InferenceOutput::Embedding(output)),
         }
     }
 
@@ -144,7 +139,10 @@ impl InferenceBackend {
                 // 实际实现需要加载ONNX会话
                 Err(BrowserError::ai("ONNX backend not yet implemented"))
             }
-            _ => Err(BrowserError::ai(format!("Unsupported backend: {:?}", backend_type))),
+            _ => Err(BrowserError::ai(format!(
+                "Unsupported backend: {:?}",
+                backend_type
+            ))),
         }
     }
 
@@ -270,7 +268,11 @@ impl InferenceOutput {
     /// 获取分类结果
     pub fn as_classification(&self) -> Option<(usize, Option<f32>)> {
         match self {
-            Self::Classification { class_id, confidence, .. } => Some((*class_id, *confidence)),
+            Self::Classification {
+                class_id,
+                confidence,
+                ..
+            } => Some((*class_id, *confidence)),
             _ => None,
         }
     }
@@ -352,7 +354,7 @@ mod tests {
             .with_input(vec![1.0, 2.0, 3.0])
             .with_shape(vec![1, 3])
             .with_output_format(OutputFormat::Classification);
-        
+
         assert_eq!(request.model_id, "test-model");
         assert_eq!(request.input.len(), 3);
     }
@@ -360,12 +362,11 @@ mod tests {
     #[test]
     fn test_placeholder_inference() {
         let engine = InferenceEngine::new().unwrap();
-        let request = InferenceRequest::new("test-model")
-            .with_input(vec![1.0, 2.0, 3.0]);
-        
+        let request = InferenceRequest::new("test-model").with_input(vec![1.0, 2.0, 3.0]);
+
         let result = engine.infer(request);
         assert!(result.is_ok());
-        
+
         let output = result.unwrap().output;
         if let InferenceOutput::Raw(v) = output {
             assert_eq!(v.len(), 10)
@@ -378,9 +379,9 @@ mod tests {
         let request = InferenceRequest::new("test-model")
             .with_input(vec![1.0])
             .with_output_format(OutputFormat::Classification);
-        
+
         let result = engine.infer(request).unwrap();
-        
+
         if let Some((class_id, _)) = result.output.as_classification() {
             // 分类结果应该在有效范围内
             assert!(class_id < 10);
@@ -394,7 +395,7 @@ mod tests {
             InferenceRequest::new("model-1").with_input(vec![1.0]),
             InferenceRequest::new("model-1").with_input(vec![2.0]),
         ];
-        
+
         let results = engine.batch_infer(requests);
         assert!(results.is_ok());
         assert_eq!(results.unwrap().len(), 2);

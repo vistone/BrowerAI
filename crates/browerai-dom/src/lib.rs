@@ -30,7 +30,7 @@ pub use monitoring_apis::{
 pub use sandbox::{ExecutionContext, JsSandbox, ResourceLimits, SandboxError, SandboxValue};
 pub use web_apis::{
     AbortController, AbortSignal, ClipboardAPI, ConsoleAPI, ConsoleEntry, LogLevel, TimerAPI,
-    TimerType, URL, URLSearchParams,
+    TimerType, URLSearchParams, URL,
 };
 
 /// Represents a DOM element with attributes and children
@@ -362,8 +362,8 @@ impl DomElement {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use browerai_html_parser::HtmlParser;
     use browerai_core::traits::Parser;
+    use browerai_html_parser::HtmlParser;
 
     #[test]
     fn test_create_document() {

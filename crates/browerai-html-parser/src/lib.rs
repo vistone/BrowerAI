@@ -21,10 +21,7 @@ use browerai_core::{
     traits::{AiModel, Parser},
     BrowserError, Result,
 };
-use html5ever::{
-    parse_document,
-    tendril::TendrilSink,
-};
+use html5ever::{parse_document, tendril::TendrilSink};
 use markup5ever_rcdom::{Handle, NodeData, RcDom};
 
 pub mod dom;
@@ -75,7 +72,7 @@ impl HtmlParser {
     /// - `Err(BrowserError)`: 解析失败
     pub fn parse_string(&self, html: impl AsRef<str>) -> Result<Document> {
         let html = html.as_ref();
-        
+
         // 基础解析
         let dom = parse_document(RcDom::default(), Default::default())
             .from_utf8()
@@ -106,7 +103,7 @@ impl HtmlParser {
     /// 将 RcDom 转换为内部 Document
     fn convert_dom(&self, dom: &RcDom) -> Document {
         let mut document = Document::new();
-        
+
         // 处理 document 的所有子节点（通常是 <html> 元素）
         for child in dom.document.children.borrow().iter() {
             self.convert_node(child, &mut document.root);
@@ -126,14 +123,11 @@ impl HtmlParser {
             }
             NodeData::Element { name, attrs, .. } => {
                 let mut element_node = Node::element(&*name.local);
-                
+
                 // 获取元素引用以设置属性
                 if let NodeType::Element(ref mut element) = element_node.node_type {
                     for attr in attrs.borrow().iter() {
-                        element.set_attribute(
-                            &*attr.name.local,
-                            &*attr.value,
-                        );
+                        element.set_attribute(&*attr.name.local, &*attr.value);
                     }
                 }
 
@@ -262,7 +256,7 @@ mod tests {
         let parser = HtmlParser::new();
         let html = "<html><body><h1>Hello</h1></body></html>";
         let document = parser.parse(html).unwrap();
-        
+
         assert!(!document.root.children().is_empty());
     }
 
@@ -278,9 +272,12 @@ mod tests {
         "#;
         let document = parser.parse(html).unwrap();
         let script_elements = parser.extract_elements(&document, "script");
-        
+
         // 验证至少找到了script元素
-        assert!(!script_elements.is_empty(), "Should find at least one script element");
+        assert!(
+            !script_elements.is_empty(),
+            "Should find at least one script element"
+        );
     }
 
     #[test]
@@ -298,16 +295,16 @@ mod tests {
             </html>
         "#;
         let document = parser.parse(html).unwrap();
-        
+
         // 验证能找到各种资源元素
         let links = parser.extract_elements(&document, "link");
         let scripts = parser.extract_elements(&document, "script");
         let images = parser.extract_elements(&document, "img");
-        
+
         assert!(!links.is_empty(), "Should find link elements");
         assert!(!scripts.is_empty(), "Should find script elements");
         assert!(!images.is_empty(), "Should find img elements");
-        
+
         // 验证能提取href/src属性
         let resources = parser.extract_resources(&document);
         assert!(!resources.is_empty(), "Should extract some resources");
@@ -316,9 +313,9 @@ mod tests {
     #[test]
     fn test_parse_malformed_html() {
         let parser = HtmlParser::new().ignore_errors(true);
-        let html = "<div><span>Unclosed";  // 故意不完整的 HTML
+        let html = "<div><span>Unclosed"; // 故意不完整的 HTML
         let result = parser.parse(html);
-        
+
         // html5ever 会自动修复错误
         assert!(result.is_ok());
     }

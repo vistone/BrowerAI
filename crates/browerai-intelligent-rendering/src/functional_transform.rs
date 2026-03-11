@@ -24,15 +24,15 @@ pub struct FunctionalTransformPipeline {
     // 阶段 1: JS深度分析与反混淆
     js_analyzer: Option<Box<dyn JsAnalyzer>>,
     deobfuscator: Option<Box<dyn Deobfuscator>>,
-    
+
     // 阶段 2: 功能语义提取
     semantic_extractor: SemanticExtractor,
     function_identifier: FunctionIdentifier,
-    
+
     // 阶段 3: 智能推理与样式生成
     reasoning_engine: ReasoningEngine,
     style_generator: StyleGenerator,
-    
+
     // 阶段 4: 功能完整性验证
     functionality_verifier: FunctionalityVerifier,
 }
@@ -262,7 +262,10 @@ impl ReasoningEngine {
     }
 
     /// 4步智能推理
-    pub fn intelligent_reasoning(&self, functions: &[IdentifiedFunction]) -> Result<ReasoningResult> {
+    pub fn intelligent_reasoning(
+        &self,
+        functions: &[IdentifiedFunction],
+    ) -> Result<ReasoningResult> {
         // 1. 识别核心功能
         let core_functions = self.identify_core_functions(functions)?;
 
@@ -283,7 +286,10 @@ impl ReasoningEngine {
         })
     }
 
-    fn identify_core_functions(&self, functions: &[IdentifiedFunction]) -> Result<Vec<CoreFunction>> {
+    fn identify_core_functions(
+        &self,
+        functions: &[IdentifiedFunction],
+    ) -> Result<Vec<CoreFunction>> {
         Ok(functions
             .iter()
             .filter(|f| f.required || f.preservation_priority >= 8)
@@ -307,7 +313,10 @@ impl ReasoningEngine {
             .collect())
     }
 
-    fn generate_variant_proposals(&self, _intents: &[FunctionIntent]) -> Result<Vec<VariantProposal>> {
+    fn generate_variant_proposals(
+        &self,
+        _intents: &[FunctionIntent],
+    ) -> Result<Vec<VariantProposal>> {
         Ok(vec![
             VariantProposal {
                 name: "Modern".to_string(),
@@ -330,14 +339,20 @@ impl ReasoningEngine {
         ])
     }
 
-    fn create_function_bridges(&self, functions: &[CoreFunction], _variants: &[VariantProposal]) -> Result<Vec<FunctionBridge>> {
+    fn create_function_bridges(
+        &self,
+        functions: &[CoreFunction],
+        _variants: &[VariantProposal],
+    ) -> Result<Vec<FunctionBridge>> {
         Ok(functions
             .iter()
             .map(|f| FunctionBridge {
                 original_function: f.name.clone(),
                 new_element_id: format!("new-{}", f.name.to_lowercase().replace(" ", "-")),
-                binding_code: format!("document.getElementById('new-{}').addEventListener('click', originalHandler);", 
-                    f.name.to_lowercase().replace(" ", "-")),
+                binding_code: format!(
+                    "document.getElementById('new-{}').addEventListener('click', originalHandler);",
+                    f.name.to_lowercase().replace(" ", "-")
+                ),
             })
             .collect())
     }
@@ -392,7 +407,11 @@ impl StyleGenerator {
     }
 
     /// 生成指定风格的网站
-    pub fn generate(&self, style: &WebsiteStyle, reasoning: &ReasoningResult) -> Result<GeneratedWebsite> {
+    pub fn generate(
+        &self,
+        style: &WebsiteStyle,
+        reasoning: &ReasoningResult,
+    ) -> Result<GeneratedWebsite> {
         match style {
             WebsiteStyle::Modern => self.generate_modern(reasoning),
             WebsiteStyle::Government => self.generate_government(reasoning),
@@ -442,7 +461,9 @@ impl StyleGenerator {
     fn create_modern_html(&self, functions: &[CoreFunction]) -> Result<String> {
         let mut html = String::from("<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n");
         html.push_str("  <meta charset=\"UTF-8\">\n");
-        html.push_str("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
+        html.push_str(
+            "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n",
+        );
         html.push_str("  <title>Modern Experience</title>\n");
         html.push_str("</head>\n<body>\n");
         html.push_str("  <div class=\"modern-container\">\n");
@@ -452,8 +473,14 @@ impl StyleGenerator {
                 "    <div class=\"feature-card\" id=\"new-{}\">\n",
                 func.name.to_lowercase().replace(" ", "-")
             ));
-            html.push_str(&format!("      <h2 class=\"card-title\">{}</h2>\n", func.name));
-            html.push_str(&format!("      <p class=\"card-desc\">功能: {:?}</p>\n", func.function_type));
+            html.push_str(&format!(
+                "      <h2 class=\"card-title\">{}</h2>\n",
+                func.name
+            ));
+            html.push_str(&format!(
+                "      <p class=\"card-desc\">功能: {:?}</p>\n",
+                func.function_type
+            ));
             html.push_str("      <button class=\"modern-button\">执行</button>\n");
             html.push_str("    </div>\n");
         }
@@ -512,13 +539,16 @@ impl StyleGenerator {
     background: #f0f0f0;
     transform: scale(1.05);
 }
-"#.to_string())
+"#
+        .to_string())
     }
 
     fn create_government_html(&self, functions: &[CoreFunction]) -> Result<String> {
         let mut html = String::from("<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n");
         html.push_str("  <meta charset=\"UTF-8\">\n");
-        html.push_str("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
+        html.push_str(
+            "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n",
+        );
         html.push_str("  <title>政府合规版本</title>\n");
         html.push_str("</head>\n<body>\n");
         html.push_str("  <div class=\"gov-container\">\n");
@@ -538,8 +568,13 @@ impl StyleGenerator {
                 func.name.to_lowercase().replace(" ", "-"),
                 func.name
             ));
-            html.push_str(&format!("        <p class=\"gov-desc\">功能类型: {:?}</p>\n", func.function_type));
-            html.push_str("        <button class=\"gov-button\" aria-label=\"执行功能\">执行操作</button>\n");
+            html.push_str(&format!(
+                "        <p class=\"gov-desc\">功能类型: {:?}</p>\n",
+                func.function_type
+            ));
+            html.push_str(
+                "        <button class=\"gov-button\" aria-label=\"执行功能\">执行操作</button>\n",
+            );
             html.push_str("      </section>\n");
         }
 
@@ -624,13 +659,16 @@ body {
     color: #000000;
     background: #ffffff;
 }
-"#.to_string())
+"#
+        .to_string())
     }
 
     fn create_minimalist_html(&self, functions: &[CoreFunction]) -> Result<String> {
         let mut html = String::from("<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n");
         html.push_str("  <meta charset=\"UTF-8\">\n");
-        html.push_str("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
+        html.push_str(
+            "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n",
+        );
         html.push_str("  <title>Minimalist Experience</title>\n");
         html.push_str("</head>\n<body>\n");
         html.push_str("  <div class=\"minimal-container\">\n");
@@ -640,7 +678,10 @@ body {
                 "    <div class=\"minimal-item\" id=\"new-{}\">\n",
                 func.name.to_lowercase().replace(" ", "-")
             ));
-            html.push_str(&format!("      <span class=\"minimal-label\">{}</span>\n", func.name));
+            html.push_str(&format!(
+                "      <span class=\"minimal-label\">{}</span>\n",
+                func.name
+            ));
             html.push_str("      <button class=\"minimal-action\">→</button>\n");
             html.push_str("    </div>\n");
         }
@@ -694,7 +735,8 @@ body {
     margin: 0;
     background: #fafafa;
 }
-"#.to_string())
+"#
+        .to_string())
     }
 
     fn create_function_bridge_js(&self, bridges: &[FunctionBridge]) -> Result<String> {
@@ -731,14 +773,22 @@ impl FunctionalityVerifier {
     }
 
     /// 验证功能保留率
-    pub fn verify_features(&self, original: &[CoreFunction], generated: &GeneratedWebsite) -> Result<bool> {
+    pub fn verify_features(
+        &self,
+        original: &[CoreFunction],
+        generated: &GeneratedWebsite,
+    ) -> Result<bool> {
         let preserved_count = self.count_preserved_functions(original, &generated.html)?;
         let preservation_ratio = preserved_count as f32 / original.len() as f32;
 
         Ok(preservation_ratio >= self.threshold)
     }
 
-    fn count_preserved_functions(&self, original: &[CoreFunction], generated_html: &str) -> Result<usize> {
+    fn count_preserved_functions(
+        &self,
+        original: &[CoreFunction],
+        generated_html: &str,
+    ) -> Result<usize> {
         let mut count = 0;
         for func in original {
             let expected_id = format!("new-{}", func.name.to_lowercase().replace(" ", "-"));
@@ -750,7 +800,11 @@ impl FunctionalityVerifier {
     }
 
     /// 计算功能保留率
-    pub fn calculate_preservation_ratio(&self, original: &[CoreFunction], generated: &GeneratedWebsite) -> Result<f32> {
+    pub fn calculate_preservation_ratio(
+        &self,
+        original: &[CoreFunction],
+        generated: &GeneratedWebsite,
+    ) -> Result<f32> {
         let preserved = self.count_preserved_functions(original, &generated.html)?;
         Ok(preserved as f32 / original.len().max(1) as f32)
     }
@@ -771,7 +825,12 @@ impl FunctionalTransformPipeline {
     }
 
     /// 执行完整的转换流程
-    pub fn transform(&self, html: &str, js: &str, target_style: WebsiteStyle) -> Result<TransformResult> {
+    pub fn transform(
+        &self,
+        html: &str,
+        js: &str,
+        target_style: WebsiteStyle,
+    ) -> Result<TransformResult> {
         // 阶段 1: 分析（可选）
         let _js_analysis = if let Some(analyzer) = &self.js_analyzer {
             Some(analyzer.analyze(js)?)
@@ -790,7 +849,9 @@ impl FunctionalTransformPipeline {
         let generated = self.style_generator.generate(&target_style, &reasoning)?;
 
         // 阶段 5: 功能验证
-        let preservation_ratio = self.functionality_verifier.calculate_preservation_ratio(&reasoning.core_functions, &generated)?;
+        let preservation_ratio = self
+            .functionality_verifier
+            .calculate_preservation_ratio(&reasoning.core_functions, &generated)?;
         let verified = preservation_ratio >= 0.8;
 
         Ok(TransformResult {

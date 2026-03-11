@@ -38,10 +38,7 @@ impl Stylesheet {
 
     /// 获取所有选择器
     pub fn all_selectors(&self) -> Vec<String> {
-        self.rules
-            .iter()
-            .map(|r| r.selector.to_string())
-            .collect()
+        self.rules.iter().map(|r| r.selector.to_string()).collect()
     }
 
     /// 合并另一个样式表
@@ -54,7 +51,7 @@ impl Stylesheet {
     /// 序列化为 CSS 字符串
     pub fn to_css(&self) -> String {
         let mut result = String::new();
-        
+
         // 变量
         if !self.variables.is_empty() {
             result.push_str(":root {\n");
@@ -63,13 +60,13 @@ impl Stylesheet {
             }
             result.push_str("}\n\n");
         }
-        
+
         // 规则
         for rule in &self.rules {
             result.push_str(&rule.to_css());
             result.push('\n');
         }
-        
+
         result
     }
 }
@@ -112,11 +109,11 @@ impl Rule {
     /// 序列化为 CSS
     pub fn to_css(&self) -> String {
         let mut result = format!("{} {{\n", self.selector);
-        
+
         for decl in &self.declarations {
             result.push_str(&format!("  {};\n", decl.to_css()));
         }
-        
+
         result.push('}');
         result
     }
@@ -144,17 +141,14 @@ impl Selector {
     pub fn from_string(s: impl Into<String>) -> Self {
         let raw = s.into();
         let selector_type = Self::parse_type(&raw);
-        
-        Self {
-            raw,
-            selector_type,
-        }
+
+        Self { raw, selector_type }
     }
 
     /// 解析选择器类型
     fn parse_type(raw: &str) -> SelectorType {
         let raw = raw.trim();
-        
+
         if raw == "*" {
             SelectorType::Universal
         } else if let Some(stripped) = raw.strip_prefix('#') {
@@ -176,7 +170,9 @@ impl Selector {
         match &self.selector_type {
             SelectorType::Universal => (0, 0, 0),
             SelectorType::Element(_) => (0, 0, 1),
-            SelectorType::Class(_) | SelectorType::Attribute(_) | SelectorType::Pseudo(_) => (0, 1, 0),
+            SelectorType::Class(_) | SelectorType::Attribute(_) | SelectorType::Pseudo(_) => {
+                (0, 1, 0)
+            }
             SelectorType::Id(_) => (1, 0, 0),
         }
     }
@@ -255,10 +251,18 @@ impl Value {
                     ListSeparator::Comma => ", ",
                     ListSeparator::Space => " ",
                 };
-                values.iter().map(|v| v.to_css()).collect::<Vec<_>>().join(sep_str)
+                values
+                    .iter()
+                    .map(|v| v.to_css())
+                    .collect::<Vec<_>>()
+                    .join(sep_str)
             }
             Value::Function(name, args) => {
-                let args_str = args.iter().map(|v| v.to_css()).collect::<Vec<_>>().join(", ");
+                let args_str = args
+                    .iter()
+                    .map(|v| v.to_css())
+                    .collect::<Vec<_>>()
+                    .join(", ");
                 format!("{}({})", name, args_str)
             }
         }
@@ -368,7 +372,7 @@ impl Color {
     /// 从十六进制解析
     pub fn from_hex(hex: &str) -> Option<Self> {
         let hex = hex.trim_start_matches('#');
-        
+
         match hex.len() {
             3 => {
                 let r = u8::from_str_radix(&hex[0..1].repeat(2), 16).ok()?;
@@ -407,7 +411,7 @@ mod tests {
         rule.selector = Selector::from_string("body");
         rule.add_declaration("color", "red");
         stylesheet.add_rule(rule);
-        
+
         let css = stylesheet.to_css();
         assert!(css.contains("body"));
         assert!(css.contains("color: red"));
@@ -419,7 +423,7 @@ mod tests {
         let element = Selector::from_string("div");
         let class = Selector::from_string(".class");
         let id = Selector::from_string("#id");
-        
+
         assert_eq!(universal.specificity(), (0, 0, 0));
         assert_eq!(element.specificity(), (0, 0, 1));
         assert_eq!(class.specificity(), (0, 1, 0));
@@ -432,7 +436,7 @@ mod tests {
         assert_eq!(color.r, 255);
         assert_eq!(color.g, 0);
         assert_eq!(color.b, 0);
-        
+
         let short = Color::from_hex("#f00").unwrap();
         assert_eq!(short.r, 255);
         assert_eq!(short.g, 0);
@@ -443,7 +447,7 @@ mod tests {
     fn test_color_to_css() {
         let color = Color::rgb(255, 0, 0);
         assert_eq!(color.to_css(), "#ff0000");
-        
+
         let rgba = Color::rgba(255, 0, 0, 0.5);
         assert_eq!(rgba.to_css(), "rgba(255, 0, 0, 0.5)");
     }

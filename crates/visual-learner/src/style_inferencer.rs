@@ -18,7 +18,11 @@ impl StyleInferencer {
     }
 
     /// 推断样式系统
-    pub fn infer_styles(&self, image: &DynamicImage, components: &[VisualComponent]) -> Result<(TypographySystem, SpacingSystem)> {
+    pub fn infer_styles(
+        &self,
+        image: &DynamicImage,
+        components: &[VisualComponent],
+    ) -> Result<(TypographySystem, SpacingSystem)> {
         let typography = self.infer_typography(image, components)?;
         let spacing = self.infer_spacing(image, components)?;
 
@@ -26,7 +30,11 @@ impl StyleInferencer {
     }
 
     /// 推断排版系统
-    fn infer_typography(&self, _image: &DynamicImage, components: &[VisualComponent]) -> Result<TypographySystem> {
+    fn infer_typography(
+        &self,
+        _image: &DynamicImage,
+        components: &[VisualComponent],
+    ) -> Result<TypographySystem> {
         let mut font_sizes = Vec::new();
         let mut font_weights = Vec::new();
 
@@ -70,7 +78,11 @@ impl StyleInferencer {
     }
 
     /// 推断间距系统
-    fn infer_spacing(&self, _image: &DynamicImage, components: &[VisualComponent]) -> Result<SpacingSystem> {
+    fn infer_spacing(
+        &self,
+        _image: &DynamicImage,
+        components: &[VisualComponent],
+    ) -> Result<SpacingSystem> {
         let mut gaps = Vec::new();
         let mut paddings = Vec::new();
         let mut margins = Vec::new();
@@ -99,7 +111,9 @@ impl StyleInferencer {
         let common_margins = self.find_common_values(&margins, 5);
 
         // 推断基础单位
-        let base_unit = common_gaps.first().copied()
+        let base_unit = common_gaps
+            .first()
+            .copied()
             .or(common_paddings.first().copied())
             .or(common_margins.first().copied())
             .unwrap_or(8) as u8;
@@ -190,10 +204,7 @@ impl StyleInferencer {
         let mut sorted: Vec<_> = counts.iter().collect();
         sorted.sort_by(|a, b| b.1.cmp(a.1));
 
-        sorted.iter()
-            .take(count)
-            .map(|(&value, _)| value)
-            .collect()
+        sorted.iter().take(count).map(|(&value, _)| value).collect()
     }
 
     /// 生成CSS样式
@@ -201,7 +212,10 @@ impl StyleInferencer {
         let mut css = String::new();
 
         // 基础样式
-        css.push_str(&format!(".{} {{\n", format!("{:?}", component.component_type).to_lowercase()));
+        css.push_str(&format!(
+            ".{} {{\n",
+            format!("{:?}", component.component_type).to_lowercase()
+        ));
 
         // 尺寸
         css.push_str(&format!("  width: {}px;\n", component.bounding_box.width));
@@ -219,7 +233,10 @@ impl StyleInferencer {
 
         // 边框
         if component.visual_style.border_width > 0 {
-            css.push_str(&format!("  border-width: {}px;\n", component.visual_style.border_width));
+            css.push_str(&format!(
+                "  border-width: {}px;\n",
+                component.visual_style.border_width
+            ));
             css.push_str("  border-style: solid;\n");
             if let Some(ref color) = component.visual_style.border_color {
                 css.push_str(&format!("  border-color: {};\n", color.to_hex()));
@@ -228,7 +245,10 @@ impl StyleInferencer {
 
         // 圆角
         if component.visual_style.border_radius > 0 {
-            css.push_str(&format!("  border-radius: {}px;\n", component.visual_style.border_radius));
+            css.push_str(&format!(
+                "  border-radius: {}px;\n",
+                component.visual_style.border_radius
+            ));
         }
 
         // 阴影
@@ -296,7 +316,10 @@ impl StyleInferencer {
             css.push_str(&format!("  color: {};\n", color.to_hex()));
         }
         if !analysis.typography.font_families.is_empty() {
-            css.push_str(&format!("  font-family: {};\n", analysis.typography.font_families.join(", ")));
+            css.push_str(&format!(
+                "  font-family: {};\n",
+                analysis.typography.font_families.join(", ")
+            ));
         }
         css.push_str("}\n\n");
 
@@ -351,7 +374,10 @@ impl StyleInferencer {
         }
 
         // 间距变量
-        css.push_str(&format!("  --spacing-unit: {}px;\n", analysis.spacing.base_unit));
+        css.push_str(&format!(
+            "  --spacing-unit: {}px;\n",
+            analysis.spacing.base_unit
+        ));
         for (i, &value) in analysis.spacing.scale.iter().enumerate() {
             css.push_str(&format!("  --spacing-{}: {}px;\n", i + 1, value));
         }
@@ -371,4 +397,3 @@ impl StyleInferencer {
         css
     }
 }
-

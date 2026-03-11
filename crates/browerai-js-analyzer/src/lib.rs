@@ -21,22 +21,22 @@
 #![warn(missing_docs)]
 
 use browerai_core::Result;
-use browerai_js_parser::{JsParser, JsAst};
+use browerai_js_parser::{JsAst, JsParser};
 
+pub mod callgraph;
+pub mod cfg;
+pub mod dataflow;
+pub mod loop_analysis;
 pub mod scope;
 pub mod swc;
-pub mod dataflow;
-pub mod cfg;
-pub mod callgraph;
-pub mod loop_analysis;
 pub mod unified;
 
-pub use scope::{ScopeAnalyzer, ScopeTree, ScopeKind};
-pub use cfg::{ControlFlowGraph, BasicBlock, BranchKind};
 pub use callgraph::{CallGraph, CallSite, FunctionId};
+pub use cfg::{BasicBlock, BranchKind, ControlFlowGraph};
 pub use dataflow::{DataflowAnalyzer, VariableState};
 pub use loop_analysis::{LoopAnalyzer, LoopInfo, LoopKind};
-pub use unified::{UnifiedAnalysis, AnalysisSummary};
+pub use scope::{ScopeAnalyzer, ScopeKind, ScopeTree};
+pub use unified::{AnalysisSummary, UnifiedAnalysis};
 
 /// JavaScript 分析器 - 7阶段管道
 pub struct JsAnalyzer {
@@ -74,22 +74,22 @@ impl JsAnalyzer {
     pub fn analyze(&mut self, code: &str) -> Result<AnalysisResult> {
         // Stage 1: 解析
         let ast = self.parser.parse_string(code)?;
-        
+
         // Stage 2: 作用域分析
         let scope_tree = self.scope_analyzer.analyze(&ast)?;
-        
+
         // Stage 3: CFG构建
         let cfg = self.cfg_builder.build(&ast)?;
-        
+
         // Stage 4: 调用图构建
         let callgraph = self.callgraph_builder.build(&ast)?;
-        
+
         // Stage 5: 数据流分析
         let dataflow = self.dataflow_analyzer.analyze(&ast, &cfg)?;
-        
+
         // Stage 6: 循环分析
         let loops = self.loop_analyzer.analyze(&ast, &cfg)?;
-        
+
         // Stage 7: 统一分析
         let summary = self.unified_analyzer.summarize(&AnalysisInput {
             ast: &ast,
@@ -99,7 +99,7 @@ impl JsAnalyzer {
             dataflow: &dataflow,
             loops: &loops,
         })?;
-        
+
         Ok(AnalysisResult {
             ast,
             scope_tree,
@@ -115,7 +115,7 @@ impl JsAnalyzer {
     pub fn analyze_quick(&mut self, code: &str) -> Result<QuickAnalysisResult> {
         let ast = self.parser.parse_string(code)?;
         let scope_tree = self.scope_analyzer.analyze(&ast)?;
-        
+
         Ok(QuickAnalysisResult {
             function_count: ast.function_decls.len(),
             variable_count: ast.variable_decls.len(),
@@ -211,9 +211,9 @@ mod tests {
             }
             let result = add(1, 2);
         "#;
-        
+
         let result = analyzer.analyze(js).unwrap();
-        
+
         assert_eq!(result.ast.function_decls.len(), 1);
         assert!(!result.scope_tree.is_empty());
         assert!(!result.cfg.is_empty());
@@ -223,9 +223,9 @@ mod tests {
     fn test_analyze_quick() {
         let mut analyzer = JsAnalyzer::new();
         let js = "function test() { let x = 1; }";
-        
+
         let result = analyzer.analyze_quick(js).unwrap();
-        
+
         assert_eq!(result.function_count, 1);
     }
 
@@ -242,9 +242,9 @@ mod tests {
                 console.log(factorial(i));
             }
         "#;
-        
+
         let result = analyzer.analyze(js).unwrap();
-        
+
         assert_eq!(result.summary.metrics.function_count, 1);
     }
 }

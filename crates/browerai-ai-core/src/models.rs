@@ -44,32 +44,36 @@ impl ModelManager {
     /// 注册模型
     pub fn register(&mut self, config: ModelConfig) -> Result<()> {
         let model_id = config.id.clone();
-        
+
         let handle = ModelHandle {
             config,
             status: ModelStatus::Registered,
         };
-        
+
         self.models.insert(model_id, handle);
         Ok(())
     }
 
     /// 加载模型
     pub fn load(&mut self, model_id: &str) -> Result<()> {
-        let handle = self.models.get_mut(model_id)
+        let handle = self
+            .models
+            .get_mut(model_id)
             .ok_or_else(|| BrowserError::ai(format!("Model not found: {}", model_id)))?;
-        
+
         // 实际实现需要加载模型文件到内存
         handle.status = ModelStatus::Loaded;
-        
+
         Ok(())
     }
 
     /// 卸载模型
     pub fn unload(&mut self, model_id: &str) -> Result<()> {
-        let handle = self.models.get_mut(model_id)
+        let handle = self
+            .models
+            .get_mut(model_id)
             .ok_or_else(|| BrowserError::ai(format!("Model not found: {}", model_id)))?;
-        
+
         handle.status = ModelStatus::Registered;
         Ok(())
     }
@@ -87,7 +91,8 @@ impl ModelManager {
 
     /// 列出所有模型
     pub fn list_models(&self) -> Vec<ModelInfo> {
-        self.models.values()
+        self.models
+            .values()
             .map(|h| ModelInfo {
                 id: h.config.id.clone(),
                 name: h.config.name.clone(),
@@ -100,7 +105,8 @@ impl ModelManager {
 
     /// 列出已加载的模型
     pub fn list_loaded_models(&self) -> Vec<ModelInfo> {
-        self.models.values()
+        self.models
+            .values()
             .filter(|h| matches!(h.status, ModelStatus::Loaded))
             .map(|h| ModelInfo {
                 id: h.config.id.clone(),
@@ -119,14 +125,16 @@ impl ModelManager {
 
     /// 检查模型是否已加载
     pub fn is_loaded(&self, model_id: &str) -> bool {
-        self.models.get(model_id)
+        self.models
+            .get(model_id)
             .map(|h| matches!(h.status, ModelStatus::Loaded))
             .unwrap_or(false)
     }
 
     /// 获取已加载模型数量
     pub fn loaded_model_count(&self) -> usize {
-        self.models.values()
+        self.models
+            .values()
             .filter(|h| matches!(h.status, ModelStatus::Loaded))
             .count()
     }
@@ -144,13 +152,13 @@ impl ModelManager {
     /// 扫描模型目录
     pub fn scan_models(&mut self, path: &Path) -> Result<Vec<String>> {
         let discovered = Vec::new();
-        
+
         // 简化实现：扫描目录中的.onnx文件
         if path.exists() {
             // 实际实现需要遍历目录
             log::info!("Scanning models in: {:?}", path);
         }
-        
+
         Ok(discovered)
     }
 
@@ -335,7 +343,7 @@ mod tests {
     fn test_model_registration() {
         let mut manager = ModelManager::new();
         let config = ModelConfig::new("test-model", "Test Model", ModelType::Onnx);
-        
+
         assert!(manager.register(config).is_ok());
         assert!(manager.has_model("test-model"));
     }
@@ -344,15 +352,15 @@ mod tests {
     fn test_model_load_unload() {
         let mut manager = ModelManager::new();
         let config = ModelConfig::new("test-model", "Test Model", ModelType::Onnx);
-        
+
         manager.register(config).unwrap();
-        
+
         assert!(!manager.is_loaded("test-model"));
-        
+
         // 加载模型
         assert!(manager.load("test-model").is_ok());
         assert!(manager.is_loaded("test-model"));
-        
+
         // 卸载模型
         assert!(manager.unload("test-model").is_ok());
         assert!(!manager.is_loaded("test-model"));
@@ -361,11 +369,11 @@ mod tests {
     #[test]
     fn test_model_info() {
         let mut manager = ModelManager::new();
-        let config = ModelConfig::new("test-model", "Test Model", ModelType::Onnx)
-            .with_version("2.0.0");
-        
+        let config =
+            ModelConfig::new("test-model", "Test Model", ModelType::Onnx).with_version("2.0.0");
+
         manager.register(config).unwrap();
-        
+
         let info = manager.get_model_info("test-model").unwrap();
         assert_eq!(info.id, "test-model");
         assert_eq!(info.name, "Test Model");
@@ -375,10 +383,14 @@ mod tests {
     #[test]
     fn test_list_models() {
         let mut manager = ModelManager::new();
-        
-        manager.register(ModelConfig::new("model-1", "Model 1", ModelType::Onnx)).unwrap();
-        manager.register(ModelConfig::new("model-2", "Model 2", ModelType::Gguf)).unwrap();
-        
+
+        manager
+            .register(ModelConfig::new("model-1", "Model 1", ModelType::Onnx))
+            .unwrap();
+        manager
+            .register(ModelConfig::new("model-2", "Model 2", ModelType::Gguf))
+            .unwrap();
+
         let models = manager.list_models();
         assert_eq!(models.len(), 2);
     }

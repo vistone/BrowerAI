@@ -84,10 +84,10 @@ pub use browerai_ml as ml;
 pub mod prelude {
     // Core
     pub use browerai_core::{BrowserError, Result};
-    
+
     // Core traits (needed for parser methods)
-    pub use browerai_core::traits::Parser;
     pub use browerai_core::traits::Analyzer;
+    pub use browerai_core::traits::Parser;
 
     // DOM
     pub use browerai_dom::{Document, DomElement, DomNode, JsSandbox};
@@ -124,8 +124,6 @@ pub mod prelude {
     // Cache
     pub use browerai_cache::CacheStore;
     pub use browerai_multilayer_cache::MultiLayerCache;
-
-
 
     // Plugins
     pub use browerai_plugins::{PluginLoader, PluginRegistry};

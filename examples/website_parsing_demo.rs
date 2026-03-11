@@ -1,19 +1,17 @@
 //! BrowerAI 网站解析演示
-//! 
+//!
 //! 演示如何使用 BrowerAI 解析真实网站
-//! 
+//!
 //! 用法: ./website_parsing_demo <URL>
 //! 示例: ./website_parsing_demo https://www.rust-lang.org
 
 use anyhow::Result;
-use browerai::prelude::*;
 use browerai::network::HttpClient;
+use browerai::prelude::*;
 use std::env;
 
 fn main() -> Result<()> {
-    env_logger::Builder::from_env(
-        env_logger::Env::default().default_filter_or("info")
-    ).init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     // 获取命令行参数
     let args: Vec<String> = env::args().collect();

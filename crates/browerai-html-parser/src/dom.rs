@@ -71,11 +71,11 @@ impl Document {
     /// 序列化为 HTML 字符串
     pub fn to_html(&self) -> String {
         let mut result = String::new();
-        
+
         if let Some(ref doctype) = self.doctype {
             result.push_str(&format!("<!DOCTYPE {}>\n", doctype));
         }
-        
+
         result.push_str(&self.root.to_html());
         result
     }
@@ -224,24 +224,24 @@ impl Node {
         match &self.node_type {
             NodeType::Element(el) => {
                 let mut result = format!("<{}", el.tag_name);
-                
+
                 // 添加 id
                 if let Some(ref id) = el.id {
                     result.push_str(&format!(" id=\"{}\"", id));
                 }
-                
+
                 // 添加 classes
                 if !el.classes.is_empty() {
                     result.push_str(&format!(" class=\"{}\"", el.classes.join(" ")));
                 }
-                
+
                 // 添加其他属性
                 for (key, value) in &el.attributes {
                     if key != "id" && key != "class" {
                         result.push_str(&format!(" {}=\"{}\"", key, value));
                     }
                 }
-                
+
                 if self.children.is_empty() {
                     // 自闭合标签
                     if is_void_element(&el.tag_name) {
@@ -256,7 +256,7 @@ impl Node {
                     }
                     result.push_str(&format!("</{}>", el.tag_name));
                 }
-                
+
                 result
             }
             NodeType::Text(text) => html_escape(text),
@@ -329,7 +329,7 @@ impl Element {
     pub fn set_attribute(&mut self, key: impl Into<String>, value: impl Into<String>) {
         let key = key.into();
         let value = value.into();
-        
+
         // 特殊处理 id 和 class
         if key == "id" {
             self.id = Some(value);
@@ -388,8 +388,20 @@ impl Element {
 fn is_void_element(tag_name: &str) -> bool {
     matches!(
         tag_name,
-        "area" | "base" | "br" | "col" | "embed" | "hr" | "img" | "input"
-            | "link" | "meta" | "param" | "source" | "track" | "wbr"
+        "area"
+            | "base"
+            | "br"
+            | "col"
+            | "embed"
+            | "hr"
+            | "img"
+            | "input"
+            | "link"
+            | "meta"
+            | "param"
+            | "source"
+            | "track"
+            | "wbr"
     )
 }
 
@@ -411,7 +423,7 @@ mod tests {
         let mut el = Element::new("div");
         el.set_attribute("id", "test");
         el.set_attribute("class", "foo bar");
-        
+
         assert_eq!(el.tag_name, "div");
         assert_eq!(el.id, Some("test".to_string()));
         assert_eq!(el.classes, vec!["foo", "bar"]);
@@ -421,7 +433,7 @@ mod tests {
     fn test_node_html_serialization() {
         let mut node = Node::element("div");
         node.append_child(Node::text("Hello"));
-        
+
         let html = node.to_html();
         assert_eq!(html, "<div>Hello</div>");
     }

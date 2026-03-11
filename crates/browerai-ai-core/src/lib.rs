@@ -23,15 +23,15 @@
 
 use browerai_core::Result;
 
-pub mod models;
 pub mod features;
-pub mod learning;
 pub mod inference;
+pub mod learning;
+pub mod models;
 
-pub use models::{ModelManager, ModelConfig, ModelInfo, ModelType};
-pub use features::{FeatureExtractor, FeatureVector, FeatureType};
-pub use learning::{LearningEngine, TrainingSample, LearningConfig};
+pub use features::{FeatureExtractor, FeatureType, FeatureVector};
 pub use inference::{InferenceEngine, InferenceRequest, InferenceResult};
+pub use learning::{LearningConfig, LearningEngine, TrainingSample};
+pub use models::{ModelConfig, ModelInfo, ModelManager, ModelType};
 
 /// AI核心
 ///
@@ -102,7 +102,11 @@ impl AiCore {
     }
 
     /// 提取特征（便捷方法）
-    pub fn extract_features(&self, input: &str, feature_type: FeatureType) -> Result<FeatureVector> {
+    pub fn extract_features(
+        &self,
+        input: &str,
+        feature_type: FeatureType,
+    ) -> Result<FeatureVector> {
         self.feature_extractor.extract(input, feature_type)
     }
 
@@ -173,7 +177,7 @@ mod tests {
     fn test_ai_core_default() {
         let ai: AiCore = Default::default();
         let status = ai.status();
-        
+
         // 默认状态下可能没有加载模型
         assert_eq!(status.models_loaded, 0);
     }
@@ -182,7 +186,7 @@ mod tests {
     fn test_ai_core_config() {
         let config = AiCoreConfig::default();
         let ai = AiCore::with_config(config);
-        
+
         assert!(ai.is_ok());
     }
 }

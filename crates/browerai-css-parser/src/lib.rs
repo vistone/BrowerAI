@@ -46,14 +46,14 @@ impl CssParser {
     /// 解析 CSS 字符串
     pub fn parse_string(&self, css: impl AsRef<str>) -> Result<Stylesheet> {
         let css = css.as_ref();
-        
+
         // 简化的 CSS 解析实现
         // 实际应该使用 cssparser crate
         let mut stylesheet = Stylesheet::new();
-        
+
         // 简单的解析逻辑（示例）
         self.parse_simple(css, &mut stylesheet)?;
-        
+
         Ok(stylesheet)
     }
 
@@ -61,35 +61,35 @@ impl CssParser {
     fn parse_simple(&self, css: &str, stylesheet: &mut Stylesheet) -> Result<()> {
         // 这里是一个简化的实现
         // 实际应该使用 cssparser 进行完整解析
-        
+
         // 按规则分割（简化版）
         let rules = css.split('}');
-        
+
         for rule_str in rules {
             let rule_str = rule_str.trim();
             if rule_str.is_empty() {
                 continue;
             }
-            
+
             // 查找选择器和声明的分界
             if let Some(idx) = rule_str.find('{') {
                 let selector_str = &rule_str[..idx].trim();
                 let declarations_str = &rule_str[idx + 1..].trim();
-                
+
                 let mut rule = Rule::new();
                 rule.selector = Selector::from_string(selector_str.to_string());
-                
+
                 // 解析声明
                 for decl_str in declarations_str.split(';') {
                     let decl_str = decl_str.trim();
                     if decl_str.is_empty() {
                         continue;
                     }
-                    
+
                     if let Some(colon_idx) = decl_str.find(':') {
                         let property = decl_str[..colon_idx].trim().to_string();
                         let value = decl_str[colon_idx + 1..].trim().to_string();
-                        
+
                         rule.declarations.push(Declaration {
                             property,
                             value: Value::String(value),
@@ -97,20 +97,20 @@ impl CssParser {
                         });
                     }
                 }
-                
+
                 if !rule.declarations.is_empty() {
                     stylesheet.rules.push(rule);
                 }
             }
         }
-        
+
         Ok(())
     }
 
     /// 提取所有颜色
     pub fn extract_colors(&self, stylesheet: &Stylesheet) -> Vec<String> {
         let mut colors = Vec::new();
-        
+
         for rule in &stylesheet.rules {
             for decl in &rule.declarations {
                 if decl.property.contains("color") || decl.property == "background" {
@@ -120,14 +120,14 @@ impl CssParser {
                 }
             }
         }
-        
+
         colors
     }
 
     /// 提取所有字体
     pub fn extract_fonts(&self, stylesheet: &Stylesheet) -> Vec<String> {
         let mut fonts = Vec::new();
-        
+
         for rule in &stylesheet.rules {
             for decl in &rule.declarations {
                 if decl.property == "font-family" {
@@ -137,7 +137,7 @@ impl CssParser {
                 }
             }
         }
-        
+
         fonts
     }
 
@@ -200,7 +200,7 @@ mod tests {
         let parser = CssParser::new();
         let css = "body { color: red; background: blue; }";
         let stylesheet = parser.parse(css).unwrap();
-        
+
         assert!(!stylesheet.rules.is_empty());
     }
 
@@ -213,7 +213,7 @@ mod tests {
         "#;
         let stylesheet = parser.parse(css).unwrap();
         let colors = parser.extract_colors(&stylesheet);
-        
+
         assert!(colors.contains(&"red".to_string()));
         assert!(colors.contains(&"blue".to_string()));
     }
@@ -227,7 +227,7 @@ mod tests {
             p { line-height: 1.5; }
         "#;
         let stylesheet = parser.parse(css).unwrap();
-        
+
         assert_eq!(stylesheet.rules.len(), 3);
     }
 }

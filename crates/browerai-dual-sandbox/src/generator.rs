@@ -2,12 +2,12 @@
 //!
 //! 核心：保持功能等价，但全新UI体验
 
-use crate::component_extractor::ComponentLibrary;
-use crate::js_understander::FunctionIntents;
-use crate::function_generator::{FunctionGenerator, TargetFramework, generate_js_file};
 use crate::common::StyleSystem;
+use crate::component_extractor::ComponentLibrary;
+use crate::function_generator::{generate_js_file, FunctionGenerator, TargetFramework};
+use crate::js_understander::FunctionIntents;
 use crate::style_transform::TransformType;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// 网站生成器
@@ -69,7 +69,11 @@ pub struct WebsiteMetadata {
 }
 
 impl WebsiteGenerator {
-    pub fn new(components: ComponentLibrary, intents: FunctionIntents, styles: StyleSystem) -> Self {
+    pub fn new(
+        components: ComponentLibrary,
+        intents: FunctionIntents,
+        styles: StyleSystem,
+    ) -> Self {
         Self {
             components,
             intents,
@@ -81,16 +85,16 @@ impl WebsiteGenerator {
     pub fn generate(&self, config: GenerationConfig) -> GeneratedWebsite {
         // 1. 构建组件树（基于意图，而非复制）
         let component_tree = self.build_component_tree(&config);
-        
+
         // 2. 生成HTML
         let html = self.generate_html(&component_tree);
-        
+
         // 3. 生成CSS（基于学习到的样式模式）
         let css = self.generate_css(&component_tree);
-        
+
         // 4. 生成JS（基于功能意图重新实现，保持功能等价）
         let js = self.generate_functional_js();
-        
+
         GeneratedWebsite {
             html,
             css,
@@ -115,7 +119,7 @@ impl WebsiteGenerator {
             WebsiteType::Ecommerce => self.build_ecommerce_layout(),
             _ => self.build_generic_layout(),
         };
-        
+
         ComponentTree {
             root: root.clone(),
             components: self.flatten_tree(&root),
@@ -132,9 +136,7 @@ impl WebsiteGenerator {
                 ComponentNode {
                     id: "header".to_string(),
                     component_type: "header".to_string(),
-                    children: vec![
-                        self.build_nav_component(),
-                    ],
+                    children: vec![self.build_nav_component()],
                     props: HashMap::new(),
                     classes: vec!["site-header".to_string()],
                 },
@@ -142,9 +144,7 @@ impl WebsiteGenerator {
                 ComponentNode {
                     id: "hero".to_string(),
                     component_type: "section".to_string(),
-                    children: vec![
-                        self.build_hero_component(),
-                    ],
+                    children: vec![self.build_hero_component()],
                     props: HashMap::new(),
                     classes: vec!["hero-section".to_string()],
                 },
@@ -160,9 +160,7 @@ impl WebsiteGenerator {
                 ComponentNode {
                     id: "cta".to_string(),
                     component_type: "section".to_string(),
-                    children: vec![
-                        self.build_cta_component(),
-                    ],
+                    children: vec![self.build_cta_component()],
                     props: HashMap::new(),
                     classes: vec!["cta-section".to_string()],
                 },
@@ -323,19 +321,17 @@ impl WebsiteGenerator {
         ComponentNode {
             id: "nav".to_string(),
             component_type: "nav".to_string(),
-            children: vec![
-                ComponentNode {
-                    id: "logo".to_string(),
-                    component_type: "a".to_string(),
-                    children: vec![],
-                    props: {
-                        let mut p = HashMap::new();
-                        p.insert("href".to_string(), "/".to_string());
-                        p
-                    },
-                    classes: vec!["logo".to_string()],
+            children: vec![ComponentNode {
+                id: "logo".to_string(),
+                component_type: "a".to_string(),
+                children: vec![],
+                props: {
+                    let mut p = HashMap::new();
+                    p.insert("href".to_string(), "/".to_string());
+                    p
                 },
-            ],
+                classes: vec!["logo".to_string()],
+            }],
             props: HashMap::new(),
             classes: vec!["main-nav".to_string()],
         }
@@ -370,58 +366,64 @@ impl WebsiteGenerator {
         ComponentNode {
             id: "cta-content".to_string(),
             component_type: "div".to_string(),
-            children: vec![
-                ComponentNode {
-                    id: "cta-button".to_string(),
-                    component_type: "button".to_string(),
-                    children: vec![],
-                    props: HashMap::new(),
-                    classes: vec!["btn".to_string(), "btn-large".to_string()],
-                },
-            ],
+            children: vec![ComponentNode {
+                id: "cta-button".to_string(),
+                component_type: "button".to_string(),
+                children: vec![],
+                props: HashMap::new(),
+                classes: vec!["btn".to_string(), "btn-large".to_string()],
+            }],
             props: HashMap::new(),
             classes: vec!["cta-content".to_string()],
         }
     }
 
     fn build_feature_cards(&self) -> Vec<ComponentNode> {
-        (0..3).map(|i| ComponentNode {
-            id: format!("feature-{}", i),
-            component_type: "div".to_string(),
-            children: vec![],
-            props: HashMap::new(),
-            classes: vec!["feature-card".to_string()],
-        }).collect()
+        (0..3)
+            .map(|i| ComponentNode {
+                id: format!("feature-{}", i),
+                component_type: "div".to_string(),
+                children: vec![],
+                props: HashMap::new(),
+                classes: vec!["feature-card".to_string()],
+            })
+            .collect()
     }
 
     fn build_dashboard_widgets(&self) -> Vec<ComponentNode> {
-        (0..4).map(|i| ComponentNode {
-            id: format!("widget-{}", i),
-            component_type: "div".to_string(),
-            children: vec![],
-            props: HashMap::new(),
-            classes: vec!["dashboard-widget".to_string()],
-        }).collect()
+        (0..4)
+            .map(|i| ComponentNode {
+                id: format!("widget-{}", i),
+                component_type: "div".to_string(),
+                children: vec![],
+                props: HashMap::new(),
+                classes: vec!["dashboard-widget".to_string()],
+            })
+            .collect()
     }
 
     fn build_article_list(&self) -> Vec<ComponentNode> {
-        (0..5).map(|i| ComponentNode {
-            id: format!("article-{}", i),
-            component_type: "article".to_string(),
-            children: vec![],
-            props: HashMap::new(),
-            classes: vec!["article-card".to_string()],
-        }).collect()
+        (0..5)
+            .map(|i| ComponentNode {
+                id: format!("article-{}", i),
+                component_type: "article".to_string(),
+                children: vec![],
+                props: HashMap::new(),
+                classes: vec!["article-card".to_string()],
+            })
+            .collect()
     }
 
     fn build_product_cards(&self) -> Vec<ComponentNode> {
-        (0..6).map(|i| ComponentNode {
-            id: format!("product-{}", i),
-            component_type: "div".to_string(),
-            children: vec![],
-            props: HashMap::new(),
-            classes: vec!["product-card".to_string()],
-        }).collect()
+        (0..6)
+            .map(|i| ComponentNode {
+                id: format!("product-{}", i),
+                component_type: "div".to_string(),
+                children: vec![],
+                props: HashMap::new(),
+                classes: vec!["product-card".to_string()],
+            })
+            .collect()
     }
 
     fn flatten_tree(&self, root: &ComponentNode) -> Vec<ComponentNode> {
@@ -443,42 +445,42 @@ impl WebsiteGenerator {
         } else {
             format!(" class=\"{}\"", node.classes.join(" "))
         };
-        
-        let props_attr = node.props.iter()
+
+        let props_attr = node
+            .props
+            .iter()
             .map(|(k, v)| format!(" {}=\"{}\"", k, v))
             .collect::<String>();
-        
-        let children_html = node.children.iter()
+
+        let children_html = node
+            .children
+            .iter()
             .map(|c| self.render_node(c))
             .collect::<String>();
-        
+
         format!(
             "<{}{}{}>{}</{ }>",
-            node.component_type,
-            class_attr,
-            props_attr,
-            children_html,
-            node.component_type
+            node.component_type, class_attr, props_attr, children_html, node.component_type
         )
     }
 
     /// 生成CSS
     fn generate_css(&self, tree: &ComponentTree) -> String {
         let mut css = String::new();
-        
+
         // 生成CSS变量
         css.push_str(":root {\n");
         for (i, color) in self.styles.colors.primary_colors.iter().enumerate() {
             css.push_str(&format!("  --color-primary-{}: {};\n", i, color.hex));
         }
         css.push_str("}\n\n");
-        
+
         // 为每个组件生成样式
         for component in &tree.components {
             let component_css = self.generate_component_css(component);
             css.push_str(&component_css);
         }
-        
+
         css
     }
 
@@ -486,8 +488,7 @@ impl WebsiteGenerator {
         let selector = format!(".{}", node.classes.join("."));
         format!(
             "{} {{\n  /* Component: {} */\n}}\n\n",
-            selector,
-            node.component_type
+            selector, node.component_type
         )
     }
 
@@ -495,13 +496,11 @@ impl WebsiteGenerator {
     /// 生成功能等价的JS代码（使用功能生成器）
     fn generate_functional_js(&self) -> String {
         // 使用功能生成器，基于学习到的意图重新实现
-        let function_generator = FunctionGenerator::new(
-            self.intents.clone(),
-            self.components.clone(),
-        );
-        
+        let function_generator =
+            FunctionGenerator::new(self.intents.clone(), self.components.clone());
+
         let functions = function_generator.generate(TargetFramework::VanillaJs);
-        
+
         generate_js_file(&functions)
     }
 

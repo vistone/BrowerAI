@@ -238,7 +238,7 @@ impl ModelOrchestrator {
     fn analyze_javascript(&mut self, js: &str) -> Result<JavaScriptAnalysisResult> {
         // Simplified analysis without deep_analyzer
         let function_count = js.matches("function").count();
-        
+
         let functions: Vec<FunctionInfo> = (0..function_count)
             .map(|i| FunctionInfo {
                 name: format!("func_{}", i),
@@ -249,7 +249,9 @@ impl ModelOrchestrator {
 
         Ok(JavaScriptAnalysisResult {
             functions,
-            variables: js.matches("var ").count() + js.matches("let ").count() + js.matches("const ").count(),
+            variables: js.matches("var ").count()
+                + js.matches("let ").count()
+                + js.matches("const ").count(),
             complexity_score: 0.5, // Default medium complexity
         })
     }
@@ -301,7 +303,7 @@ impl ModelOrchestrator {
     /// 反混淆代码 (simplified)
     fn deobfuscate_code(&self, js: &str) -> Result<DeobfuscationResult> {
         log::info!("Running enhanced deobfuscator (simplified)");
-        
+
         // Simplified: return original code
         let lines_count = js.lines().count();
         Ok(DeobfuscationResult {

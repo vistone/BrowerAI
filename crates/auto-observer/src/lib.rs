@@ -7,13 +7,13 @@ use std::collections::HashMap;
 
 pub mod explorer;
 pub mod observer;
-pub mod strategy;
 pub mod reporter;
+pub mod strategy;
 
 pub use explorer::AutoExplorer;
 pub use observer::BehaviorObserver;
-pub use strategy::{ExplorationStrategy, PriorityStrategy};
 pub use reporter::ExplorationReporter;
+pub use strategy::{ExplorationStrategy, PriorityStrategy};
 
 /// 观察记录
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -109,9 +109,16 @@ pub struct InteractionRecord {
 pub enum InteractionAction {
     Click,
     Hover,
-    Input { value: String },
-    Scroll { direction: ScrollDirection, amount: u32 },
-    KeyPress { key: String },
+    Input {
+        value: String,
+    },
+    Scroll {
+        direction: ScrollDirection,
+        amount: u32,
+    },
+    KeyPress {
+        key: String,
+    },
     Focus,
     Blur,
 }
@@ -334,19 +341,24 @@ mod tests {
     #[test]
     fn test_interaction_action_variants() {
         let click = InteractionAction::Click;
-        let input = InteractionAction::Input { value: "test".to_string() };
-        let scroll = InteractionAction::Scroll { direction: ScrollDirection::Down, amount: 100 };
-        
+        let input = InteractionAction::Input {
+            value: "test".to_string(),
+        };
+        let scroll = InteractionAction::Scroll {
+            direction: ScrollDirection::Down,
+            amount: 100,
+        };
+
         match click {
             InteractionAction::Click => (),
             _ => panic!("Expected Click variant"),
         }
-        
+
         match input {
             InteractionAction::Input { value } => assert_eq!(value, "test"),
             _ => panic!("Expected Input variant"),
         }
-        
+
         match scroll {
             InteractionAction::Scroll { direction, amount } => {
                 assert!(matches!(direction, ScrollDirection::Down));
@@ -364,7 +376,7 @@ mod tests {
             PatternType::FormSubmission,
             PatternType::Custom("custom".to_string()),
         ];
-        
+
         assert!(matches!(patterns[0], PatternType::ClickToNavigate));
         assert!(matches!(patterns[3], PatternType::Custom(_)));
     }

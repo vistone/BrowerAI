@@ -16,10 +16,10 @@
 
 #![warn(missing_docs)]
 
-use browerai_core::{traits::Parser, BrowserError, CodeType, Result};
-use boa_parser::{Parser as BoaParser, Source};
-use boa_interner::ToInternedString;
 use boa_ast::scope::Scope;
+use boa_interner::ToInternedString;
+use boa_parser::{Parser as BoaParser, Source};
+use browerai_core::{traits::Parser, BrowserError, CodeType, Result};
 
 pub mod ast;
 
@@ -91,36 +91,37 @@ impl JsParser {
     /// 解析 JavaScript 字符串
     pub fn parse_string(&mut self, js: impl AsRef<str>) -> Result<JsAst> {
         let js = js.as_ref();
-        
+
         // 使用 Boa 解析器
         let mut parser = BoaParser::new(Source::from_bytes(js));
         let scope = Scope::new_global();
-        
-        let script = parser.parse_script(&scope, &mut self.interner)
+
+        let script = parser
+            .parse_script(&scope, &mut self.interner)
             .map_err(|e| BrowserError::parse(format!("JS parse error: {:?}", e)))?;
-        
+
         // 转换为内部 AST 表示
         let ast = self.convert_ast(&script);
-        
+
         Ok(ast)
     }
 
     /// 将 Boa AST 转换为内部表示
     fn convert_ast(&self, script: &boa_ast::Script) -> JsAst {
         let mut ast = JsAst::new();
-        
+
         // 遍历语句列表
         for stmt in script.statements().as_ref() {
             self.convert_statement_list_item(stmt, &mut ast);
         }
-        
+
         ast
     }
 
     /// 转换语句列表项
     fn convert_statement_list_item(&self, stmt: &boa_ast::StatementListItem, ast: &mut JsAst) {
         use boa_ast::StatementListItem;
-        
+
         match stmt {
             StatementListItem::Statement(s) => self.convert_statement(s, ast),
             StatementListItem::Declaration(d) => self.convert_declaration(d, ast),
@@ -130,11 +131,14 @@ impl JsParser {
     /// 转换声明
     fn convert_declaration(&self, decl: &boa_ast::Declaration, ast: &mut JsAst) {
         use boa_ast::declaration::Declaration;
-        
+
         match decl {
             Declaration::FunctionDeclaration(func) => {
                 let name = Some(func.name().to_interned_string(&self.interner));
-                let params: Vec<String> = func.parameters().as_ref().iter()
+                let params: Vec<String> = func
+                    .parameters()
+                    .as_ref()
+                    .iter()
                     .map(|p: &boa_ast::function::FormalParameter| {
                         p.to_interned_string(&self.interner)
                     })
@@ -149,7 +153,10 @@ impl JsParser {
             }
             Declaration::GeneratorDeclaration(func) => {
                 let name = Some(func.name().to_interned_string(&self.interner));
-                let params: Vec<String> = func.parameters().as_ref().iter()
+                let params: Vec<String> = func
+                    .parameters()
+                    .as_ref()
+                    .iter()
                     .map(|p: &boa_ast::function::FormalParameter| {
                         p.to_interned_string(&self.interner)
                     })
@@ -164,7 +171,10 @@ impl JsParser {
             }
             Declaration::AsyncFunctionDeclaration(func) => {
                 let name = Some(func.name().to_interned_string(&self.interner));
-                let params: Vec<String> = func.parameters().as_ref().iter()
+                let params: Vec<String> = func
+                    .parameters()
+                    .as_ref()
+                    .iter()
                     .map(|p: &boa_ast::function::FormalParameter| {
                         p.to_interned_string(&self.interner)
                     })
@@ -179,7 +189,10 @@ impl JsParser {
             }
             Declaration::AsyncGeneratorDeclaration(func) => {
                 let name = Some(func.name().to_interned_string(&self.interner));
-                let params: Vec<String> = func.parameters().as_ref().iter()
+                let params: Vec<String> = func
+                    .parameters()
+                    .as_ref()
+                    .iter()
                     .map(|p: &boa_ast::function::FormalParameter| {
                         p.to_interned_string(&self.interner)
                     })
@@ -211,7 +224,7 @@ impl JsParser {
     /// 转换语句
     fn convert_statement(&self, stmt: &boa_ast::Statement, ast: &mut JsAst) {
         use boa_ast::Statement;
-        
+
         match stmt {
             Statement::Var(var_decl) => {
                 // 变量声明 - VarDeclaration 是一个 tuple struct
@@ -263,17 +276,27 @@ impl JsParser {
     pub fn detect_code_type(&self, code: &str) -> CodeType {
         // TypeScript 特征检测
         let ts_patterns = [
-            ": string", ": number", ": boolean", ": void", ": any",
-            "interface ", "type ", "enum ", "namespace ",
-            "as ", "readonly ", "abstract ", "implements ",
+            ": string",
+            ": number",
+            ": boolean",
+            ": void",
+            ": any",
+            "interface ",
+            "type ",
+            "enum ",
+            "namespace ",
+            "as ",
+            "readonly ",
+            "abstract ",
+            "implements ",
         ];
-        
+
         for pattern in &ts_patterns {
             if code.contains(pattern) {
                 return CodeType::TypeScript;
             }
         }
-        
+
         CodeType::JavaScript
     }
 
@@ -349,7 +372,7 @@ mod tests {
         let mut parser = JsParser::new();
         let js = "function hello() { return 'world'; }";
         let ast = parser.parse_string(js).unwrap();
-        
+
         assert!(!ast.function_decls.is_empty());
     }
 
@@ -363,17 +386,17 @@ mod tests {
         "#;
         let ast = parser.parse_string(js).unwrap();
         let functions = parser.extract_functions(&ast);
-        
+
         assert!(!functions.is_empty());
     }
 
     #[test]
     fn test_detect_code_type() {
         let parser = JsParser::new();
-        
+
         let js = "function test() {}";
         assert_eq!(parser.detect_code_type(js), CodeType::JavaScript);
-        
+
         let ts = "function test(): string {}";
         assert_eq!(parser.detect_code_type(ts), CodeType::TypeScript);
     }
@@ -381,10 +404,10 @@ mod tests {
     #[test]
     fn test_is_module() {
         let parser = JsParser::new();
-        
+
         let script = "function test() {}";
         assert!(!parser.is_module(script));
-        
+
         let module = "import { foo } from 'bar';";
         assert!(parser.is_module(module));
     }

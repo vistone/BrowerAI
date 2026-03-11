@@ -47,7 +47,7 @@ impl NetworkMonitor {
     pub fn record_request(&mut self, url: impl Into<String>, method: impl Into<String>) -> u64 {
         self.request_counter += 1;
         let id = self.request_counter;
-        
+
         let request = NetworkRequest {
             id,
             url: url.into(),
@@ -59,14 +59,14 @@ impl NetworkMonitor {
                 .as_millis() as u64,
             body_size: None,
         };
-        
+
         self.requests.push_back(request);
-        
+
         // 限制数量
         while self.requests.len() > self.config.max_requests {
             self.requests.pop_front();
         }
-        
+
         id
     }
 
@@ -84,9 +84,9 @@ impl NetworkMonitor {
             body_size: None,
             cached: false,
         };
-        
+
         self.responses.push_back(response);
-        
+
         // 限制数量
         while self.responses.len() > self.config.max_requests {
             self.responses.pop_front();
@@ -96,8 +96,12 @@ impl NetworkMonitor {
     /// 完成请求（记录响应时间）
     pub fn complete_request(&mut self, request_id: u64, status: u16, duration: Duration) {
         self.record_response(request_id, status);
-        
-        if let Some(response) = self.responses.iter_mut().find(|r| r.request_id == request_id) {
+
+        if let Some(response) = self
+            .responses
+            .iter_mut()
+            .find(|r| r.request_id == request_id)
+        {
             response.duration_ms = Some(duration.as_millis() as u64);
         }
     }
@@ -134,14 +138,16 @@ impl NetworkMonitor {
 
     /// 获取平均响应时间
     pub fn average_response_time(&self) -> Option<Duration> {
-        let durations: Vec<_> = self.responses.iter()
+        let durations: Vec<_> = self
+            .responses
+            .iter()
             .filter_map(|r| r.duration_ms.map(Duration::from_millis))
             .collect();
-        
+
         if durations.is_empty() {
             return None;
         }
-        
+
         let total: Duration = durations.iter().sum();
         Some(total / durations.len() as u32)
     }
@@ -149,19 +155,17 @@ impl NetworkMonitor {
     /// 按状态码统计
     pub fn status_code_stats(&self) -> std::collections::HashMap<u16, usize> {
         let mut stats = std::collections::HashMap::new();
-        
+
         for response in &self.responses {
             *stats.entry(response.status).or_insert(0) += 1;
         }
-        
+
         stats
     }
 
     /// 获取总传输大小
     pub fn total_transfer_size(&self) -> usize {
-        self.responses.iter()
-            .filter_map(|r| r.body_size)
-            .sum()
+        self.responses.iter().filter_map(|r| r.body_size).sum()
     }
 
     /// 清空所有数据
@@ -340,10 +344,10 @@ mod tests {
     fn test_record_request() {
         let mut monitor = NetworkMonitor::new();
         let id = monitor.record_request("https://example.com", "GET");
-        
+
         assert_eq!(id, 1);
         assert_eq!(monitor.request_count(), 1);
-        
+
         let request = monitor.get_request(id).unwrap();
         assert_eq!(request.url, "https://example.com");
         assert_eq!(request.method, "GET");
@@ -354,9 +358,9 @@ mod tests {
         let mut monitor = NetworkMonitor::new();
         let id = monitor.record_request("https://example.com", "GET");
         monitor.record_response(id, 200);
-        
+
         assert_eq!(monitor.response_count(), 1);
-        
+
         let response = monitor.get_response(id).unwrap();
         assert_eq!(response.status, 200);
         assert!(response.is_success());
@@ -366,10 +370,10 @@ mod tests {
     fn test_complete_request() {
         let mut monitor = NetworkMonitor::new();
         let id = monitor.record_request("https://example.com", "GET");
-        
+
         thread::sleep(Duration::from_millis(10));
         monitor.complete_request(id, 200, Duration::from_millis(10));
-        
+
         let response = monitor.get_response(id).unwrap();
         assert_eq!(response.duration_ms, Some(10));
     }
@@ -377,12 +381,12 @@ mod tests {
     #[test]
     fn test_average_response_time() {
         let mut monitor = NetworkMonitor::new();
-        
+
         for i in 0..3 {
             let id = monitor.record_request(format!("https://example.com/{}", i), "GET");
             monitor.complete_request(id, 200, Duration::from_millis(10 * (i + 1) as u64));
         }
-        
+
         let avg = monitor.average_response_time().unwrap();
         assert_eq!(avg, Duration::from_millis(20)); // (10 + 20 + 30) / 3 = 20
     }
@@ -390,16 +394,16 @@ mod tests {
     #[test]
     fn test_status_code_stats() {
         let mut monitor = NetworkMonitor::new();
-        
+
         let id1 = monitor.record_request("https://example.com/1", "GET");
         monitor.record_response(id1, 200);
-        
+
         let id2 = monitor.record_request("https://example.com/2", "GET");
         monitor.record_response(id2, 404);
-        
+
         let id3 = monitor.record_request("https://example.com/3", "GET");
         monitor.record_response(id3, 200);
-        
+
         let stats = monitor.status_code_stats();
         assert_eq!(stats.get(&200), Some(&2));
         assert_eq!(stats.get(&404), Some(&1));
@@ -410,13 +414,13 @@ mod tests {
         let success = NetworkResponse::new(1, 200);
         assert!(success.is_success());
         assert!(!success.is_client_error());
-        
+
         let redirect = NetworkResponse::new(1, 301);
         assert!(redirect.is_redirect());
-        
+
         let client_error = NetworkResponse::new(1, 404);
         assert!(client_error.is_client_error());
-        
+
         let server_error = NetworkResponse::new(1, 500);
         assert!(server_error.is_server_error());
     }
@@ -427,23 +431,23 @@ mod tests {
             max_requests: 5,
             ..Default::default()
         });
-        
+
         for i in 0..10 {
             monitor.record_request(format!("https://example.com/{}", i), "GET");
         }
-        
+
         assert_eq!(monitor.request_count(), 5);
     }
 
     #[test]
     fn test_clear() {
         let mut monitor = NetworkMonitor::new();
-        
+
         let id = monitor.record_request("https://example.com", "GET");
         monitor.record_response(id, 200);
-        
+
         monitor.clear();
-        
+
         assert_eq!(monitor.request_count(), 0);
         assert_eq!(monitor.response_count(), 0);
     }

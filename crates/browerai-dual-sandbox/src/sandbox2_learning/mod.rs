@@ -240,11 +240,16 @@ impl LearningSandbox {
 
         // 1. 理解意图
         let intent = self.understand_intent(rendered).await?;
-        log::info!("   ✓ 意图: {:?} (置信度: {:.0}%)", intent.primary_type, intent.confidence * 100.0);
+        log::info!(
+            "   ✓ 意图: {:?} (置信度: {:.0}%)",
+            intent.primary_type,
+            intent.confidence * 100.0
+        );
 
         // 2. 提取样式
         let styles = self.extract_styles(rendered).await?;
-        log::info!("   ✓ 提取 {} 种颜色, {} 种字体", 
+        log::info!(
+            "   ✓ 提取 {} 种颜色, {} 种字体",
             styles.colors.primary_colors.len(),
             styles.typography.font_families.len()
         );
@@ -259,7 +264,8 @@ impl LearningSandbox {
 
         // 5. 分析资源
         let resources = self.analyze_resources(rendered).await?;
-        log::info!("   ✓ 分析资源: {} 图片, {} 字体", 
+        log::info!(
+            "   ✓ 分析资源: {} 图片, {} 字体",
             resources.images.len(),
             resources.fonts.len()
         );
@@ -276,36 +282,51 @@ impl LearningSandbox {
     /// 理解网站意图
     async fn understand_intent(&self, rendered: &RenderedPage) -> Result<WebsiteIntent> {
         let html = &rendered.html;
-        
+
         // 基于特征检测网站类型
         let mut type_scores: HashMap<WebsiteType, f32> = HashMap::new();
 
         // 博客特征
-        if html.contains("<article") || html.contains("class=\"post\"") || html.contains("class=\"blog\"") {
+        if html.contains("<article")
+            || html.contains("class=\"post\"")
+            || html.contains("class=\"blog\"")
+        {
             let score = type_scores.entry(WebsiteType::Blog).or_insert(0.0);
             *score += 0.5;
         }
 
         // 电商特征
-        if html.contains("class=\"product\"") || html.contains("class=\"cart\"") || html.contains("class=\"price\"") {
+        if html.contains("class=\"product\"")
+            || html.contains("class=\"cart\"")
+            || html.contains("class=\"price\"")
+        {
             let score = type_scores.entry(WebsiteType::Ecommerce).or_insert(0.0);
             *score += 0.8;
         }
 
         // 文档特征
-        if html.contains("class=\"docs\"") || html.contains("class=\"documentation\"") || html.contains("<code") {
+        if html.contains("class=\"docs\"")
+            || html.contains("class=\"documentation\"")
+            || html.contains("<code")
+        {
             let score = type_scores.entry(WebsiteType::Documentation).or_insert(0.0);
             *score += 0.6;
         }
 
         // 仪表盘特征
-        if html.contains("class=\"dashboard\"") || html.contains("class=\"chart\"") || html.contains("class=\"widget\"") {
+        if html.contains("class=\"dashboard\"")
+            || html.contains("class=\"chart\"")
+            || html.contains("class=\"widget\"")
+        {
             let score = type_scores.entry(WebsiteType::Dashboard).or_insert(0.0);
             *score += 0.7;
         }
 
         // 落地页特征
-        if html.contains("class=\"hero\"") || html.contains("class=\"cta\"") || html.contains("class=\"landing\"") {
+        if html.contains("class=\"hero\"")
+            || html.contains("class=\"cta\"")
+            || html.contains("class=\"landing\"")
+        {
             let score = type_scores.entry(WebsiteType::LandingPage).or_insert(0.0);
             *score += 0.6;
         }
@@ -372,35 +393,40 @@ impl LearningSandbox {
     /// 从 CSS 提取颜色（带去重和限制）
     fn extract_colors_from_css(&self, css: &str, colors: &mut ColorScheme) {
         use std::collections::HashSet;
-        
+
         // 提取 hex 颜色
         let hex_re = regex::Regex::new(r"#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})").unwrap();
-        
+
         // 使用HashSet去重
         let mut seen_primary: HashSet<String> = HashSet::new();
         let mut seen_background: HashSet<String> = HashSet::new();
         let mut seen_text: HashSet<String> = HashSet::new();
-        
+
         // 限制每种类型最多提取的颜色数
         const MAX_COLORS_PER_TYPE: usize = 50;
-        
+
         for cap in hex_re.captures_iter(css) {
             let hex = cap[0].to_string().to_lowercase();
             // 统一转换为6位hex
             let hex = if hex.len() == 4 {
                 // #abc -> #aabbcc
-                format!("#{}{}{}{}{}{}", 
-                    &hex[1..2], &hex[1..2],
-                    &hex[2..3], &hex[2..3],
-                    &hex[3..4], &hex[3..4])
+                format!(
+                    "#{}{}{}{}{}{}",
+                    &hex[1..2],
+                    &hex[1..2],
+                    &hex[2..3],
+                    &hex[2..3],
+                    &hex[3..4],
+                    &hex[3..4]
+                )
             } else {
                 hex
             };
-            
+
             // 分析颜色用途
             let context = self.analyze_color_context(css, cap.get(0).unwrap().start());
             let context_str = context.clone();
-            
+
             let color = Color {
                 raw: hex.clone(),
                 hex: hex.clone(),
@@ -412,7 +438,9 @@ impl LearningSandbox {
 
             // 分类颜色（带去重和限制）
             if context_str.contains("background") {
-                if !seen_background.contains(&hex) && colors.background_colors.len() < MAX_COLORS_PER_TYPE {
+                if !seen_background.contains(&hex)
+                    && colors.background_colors.len() < MAX_COLORS_PER_TYPE
+                {
                     seen_background.insert(hex);
                     colors.background_colors.push(color);
                 }
@@ -421,7 +449,9 @@ impl LearningSandbox {
                     seen_text.insert(hex);
                     colors.text_colors.push(color);
                 }
-            } else if !seen_primary.contains(&hex) && colors.primary_colors.len() < MAX_COLORS_PER_TYPE {
+            } else if !seen_primary.contains(&hex)
+                && colors.primary_colors.len() < MAX_COLORS_PER_TYPE
+            {
                 seen_primary.insert(hex);
                 colors.primary_colors.push(color);
             }
@@ -433,7 +463,7 @@ impl LearningSandbox {
         // 获取颜色前后的上下文
         let start = pos.saturating_sub(100);
         let context = &css[start..pos.min(css.len())];
-        
+
         if context.contains("background") {
             "background".to_string()
         } else if context.contains("color") {
@@ -448,7 +478,7 @@ impl LearningSandbox {
     /// hex 转 rgb
     fn hex_to_rgb(&self, hex: &str) -> (u8, u8, u8) {
         let hex = hex.trim_start_matches('#');
-        
+
         if hex.len() == 6 {
             // #RRGGBB
             let r = u8::from_str_radix(&hex[0..2], 16).unwrap_or(0);
@@ -551,7 +581,11 @@ impl LearningSandbox {
             functions.user_functions.push(UserFunction {
                 name: func.name.clone(),
                 description: String::new(),
-                trigger: if func.is_event_handler { "event".to_string() } else { "call".to_string() },
+                trigger: if func.is_event_handler {
+                    "event".to_string()
+                } else {
+                    "call".to_string()
+                },
                 element_selector: func.attached_elements.join(", "),
                 handler: func.body.clone(),
                 importance: 0.5,

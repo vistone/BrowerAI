@@ -26,29 +26,29 @@ impl CssParser {
     /// 解析 CSS 内容
     pub fn parse(&self, css: &str, source_file: &str) -> ParsedCss {
         let mut parsed = ParsedCss::default();
-        
+
         // 使用正则提取规则
         let rule_re = regex::Regex::new(r"([^{}]+)\{([^}]*)\}").unwrap();
-        
+
         for cap in rule_re.captures_iter(css) {
             let selector = cap[1].trim().to_string();
             let declarations_str = &cap[2];
-            
+
             let mut declarations = HashMap::new();
-            
+
             // 解析声明
             for decl in declarations_str.split(';') {
                 if let Some(pos) = decl.find(':') {
                     let property = decl[..pos].trim().to_string();
                     let value = decl[pos + 1..].trim().to_string();
-                    
+
                     // 提取样式信息
                     self.extract_style_info(&property, &value, &mut parsed);
-                    
+
                     declarations.insert(property, value);
                 }
             }
-            
+
             if !selector.is_empty() && !declarations.is_empty() {
                 parsed.rules.push(CssRule {
                     selector,
@@ -59,7 +59,7 @@ impl CssParser {
                 });
             }
         }
-        
+
         parsed
     }
 
@@ -98,29 +98,29 @@ impl CssParser {
     /// 解析颜色
     fn parse_color(&self, value: &str, context: &str) -> Option<Color> {
         let value = value.trim();
-        
+
         // 解析 hex
         if value.starts_with('#') {
             return self.parse_hex_color(value, context);
         }
-        
+
         // 解析 rgb/rgba
         if value.starts_with("rgb") {
             return self.parse_rgb_color(value, context);
         }
-        
+
         // 命名颜色
         if let Some(hex) = self.named_color_to_hex(value) {
             return self.parse_hex_color(&hex, context);
         }
-        
+
         None
     }
 
     /// 解析 hex 颜色
     fn parse_hex_color(&self, hex: &str, context: &str) -> Option<Color> {
         let hex = hex.trim_start_matches('#');
-        
+
         let (r, g, b) = match hex.len() {
             3 => {
                 // #RGB
@@ -138,7 +138,7 @@ impl CssParser {
             }
             _ => return None,
         };
-        
+
         Some(Color {
             raw: format!("#{}", hex),
             hex: format!("#{:02x}{:02x}{:02x}", r, g, b),
@@ -153,12 +153,12 @@ impl CssParser {
     fn parse_rgb_color(&self, value: &str, context: &str) -> Option<Color> {
         // 简化实现 - 提取 rgb 值
         let re = regex::Regex::new(r"rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)").unwrap();
-        
+
         if let Some(cap) = re.captures(value) {
             let r = cap[1].parse::<u8>().ok()?;
             let g = cap[2].parse::<u8>().ok()?;
             let b = cap[3].parse::<u8>().ok()?;
-            
+
             return Some(Color {
                 raw: value.to_string(),
                 hex: format!("#{:02x}{:02x}{:02x}", r, g, b),
@@ -168,7 +168,7 @@ impl CssParser {
                 usage_context: vec![context.to_string()],
             });
         }
-        
+
         None
     }
 
@@ -194,8 +194,11 @@ impl CssParser {
             ("navy", "#000080"),
             ("fuchsia", "#ff00ff"),
             ("purple", "#800080"),
-        ].iter().cloned().collect();
-        
+        ]
+        .iter()
+        .cloned()
+        .collect();
+
         colors.get(name).map(|&s| s.to_string())
     }
 
@@ -216,30 +219,35 @@ impl CssParser {
     fn parse_font_family(&self, value: &str) -> Option<FontFamily> {
         let families: Vec<String> = value
             .split(',')
-            .map(|s| {
-                s.trim()
-                    .trim_matches('"')
-                    .trim_matches('\'')
-                    .to_string()
-            })
+            .map(|s| s.trim().trim_matches('"').trim_matches('\'').to_string())
             .filter(|s| !s.is_empty())
             .collect();
-        
+
         if families.is_empty() {
             return None;
         }
-        
+
         let name = families[0].clone();
         let fallbacks = families[1..].to_vec();
-        
+
         let source = if name.to_lowercase().contains("google") {
             "google-fonts"
-        } else if ["Arial", "Helvetica", "Times", "Courier", "Georgia", "Verdana"].contains(&name.as_str()) {
+        } else if [
+            "Arial",
+            "Helvetica",
+            "Times",
+            "Courier",
+            "Georgia",
+            "Verdana",
+        ]
+        .contains(&name.as_str())
+        {
             "system"
         } else {
             "custom"
-        }.to_string();
-        
+        }
+        .to_string();
+
         Some(FontFamily {
             name,
             fallbacks,
@@ -251,7 +259,7 @@ impl CssParser {
     /// 解析字体大小
     fn parse_font_size(&self, value: &str) -> Option<FontSize> {
         let value = value.trim();
-        
+
         let pixels = if value.ends_with("px") {
             value.trim_end_matches("px").parse::<f32>().ok()?
         } else if value.ends_with("rem") {
@@ -263,7 +271,7 @@ impl CssParser {
         } else {
             return None;
         };
-        
+
         Some(FontSize {
             value: value.to_string(),
             pixels,
@@ -297,9 +305,9 @@ mod tests {
                 font-size: 24px;
             }
         "#;
-        
+
         let parsed = parser.parse(css, "test.css");
-        
+
         assert!(!parsed.rules.is_empty());
         assert!(!parsed.colors.text_colors.is_empty());
         assert!(!parsed.typography.font_families.is_empty());
@@ -308,12 +316,12 @@ mod tests {
     #[test]
     fn test_parse_hex_colors() {
         let parser = CssParser::new();
-        
+
         let color1 = parser.parse_hex_color("#ff0000", "test");
         assert!(color1.is_some());
         let c = color1.unwrap();
         assert_eq!(c.rgb, (255, 0, 0));
-        
+
         let color2 = parser.parse_hex_color("#f00", "test");
         assert!(color2.is_some());
     }
@@ -321,17 +329,26 @@ mod tests {
     #[test]
     fn test_named_colors() {
         let parser = CssParser::new();
-        
-        assert_eq!(parser.named_color_to_hex("black"), Some("#000000".to_string()));
-        assert_eq!(parser.named_color_to_hex("white"), Some("#ffffff".to_string()));
-        assert_eq!(parser.named_color_to_hex("red"), Some("#ff0000".to_string()));
+
+        assert_eq!(
+            parser.named_color_to_hex("black"),
+            Some("#000000".to_string())
+        );
+        assert_eq!(
+            parser.named_color_to_hex("white"),
+            Some("#ffffff".to_string())
+        );
+        assert_eq!(
+            parser.named_color_to_hex("red"),
+            Some("#ff0000".to_string())
+        );
         assert_eq!(parser.named_color_to_hex("unknown"), None);
     }
 
     #[test]
     fn test_parse_font_family() {
         let parser = CssParser::new();
-        
+
         let font = parser.parse_font_family("Arial, sans-serif");
         assert!(font.is_some());
         let f = font.unwrap();
@@ -342,11 +359,11 @@ mod tests {
     #[test]
     fn test_parse_font_size() {
         let parser = CssParser::new();
-        
+
         let size1 = parser.parse_font_size("16px");
         assert!(size1.is_some());
         assert_eq!(size1.unwrap().pixels, 16.0);
-        
+
         let size2 = parser.parse_font_size("1.5rem");
         assert!(size2.is_some());
         assert_eq!(size2.unwrap().pixels, 24.0);

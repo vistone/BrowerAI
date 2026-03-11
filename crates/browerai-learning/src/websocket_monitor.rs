@@ -151,28 +151,32 @@ impl WebSocketMonitor {
 
     /// 获取活跃连接数
     pub fn active_connection_count(&self) -> usize {
-        self.connections.values()
+        self.connections
+            .values()
             .filter(|c| c.closed_at.is_none())
             .count()
     }
 
     /// 获取已关闭的连接数
     pub fn closed_connection_count(&self) -> usize {
-        self.connections.values()
+        self.connections
+            .values()
             .filter(|c| c.closed_at.is_some())
             .count()
     }
 
     /// 获取总消息数
     pub fn total_messages(&self) -> usize {
-        self.connections.values()
+        self.connections
+            .values()
             .map(|c| c.total_messages_sent + c.total_messages_received)
             .sum()
     }
 
     /// 获取总数据量
     pub fn total_bytes(&self) -> usize {
-        self.connections.values()
+        self.connections
+            .values()
             .map(|c| c.total_bytes_sent + c.total_bytes_received)
             .sum()
     }
@@ -198,11 +202,13 @@ impl WebSocketMonitor {
             0.0
         };
 
-        let slowest_connection = connections.iter()
+        let slowest_connection = connections
+            .iter()
             .min_by(|a, b| a.throughput_bps().partial_cmp(&b.throughput_bps()).unwrap())
             .map(|c| c.url.clone());
 
-        let fastest_connection = connections.iter()
+        let fastest_connection = connections
+            .iter()
             .max_by(|a, b| a.throughput_bps().partial_cmp(&b.throughput_bps()).unwrap())
             .map(|c| c.url.clone());
 
@@ -270,11 +276,8 @@ mod tests {
 
     #[test]
     fn test_websocket_message_tracking() {
-        let mut conn = WebSocketConnection::new(
-            "ws-1".to_string(),
-            "ws://localhost:8080".to_string(),
-            None,
-        );
+        let mut conn =
+            WebSocketConnection::new("ws-1".to_string(), "ws://localhost:8080".to_string(), None);
 
         let msg1 = WebSocketMessage {
             id: "msg-1".to_string(),
@@ -306,11 +309,8 @@ mod tests {
 
     #[test]
     fn test_websocket_connection_close() {
-        let mut conn = WebSocketConnection::new(
-            "ws-1".to_string(),
-            "ws://localhost:8080".to_string(),
-            None,
-        );
+        let mut conn =
+            WebSocketConnection::new("ws-1".to_string(), "ws://localhost:8080".to_string(), None);
 
         conn.close(1000, Some("Normal closure".to_string()));
 
@@ -323,11 +323,8 @@ mod tests {
     fn test_websocket_monitor() {
         let mut monitor = WebSocketMonitor::new();
 
-        let mut conn = WebSocketConnection::new(
-            "ws-1".to_string(),
-            "ws://localhost:8080".to_string(),
-            None,
-        );
+        let mut conn =
+            WebSocketConnection::new("ws-1".to_string(), "ws://localhost:8080".to_string(), None);
 
         for i in 0..5 {
             let msg = WebSocketMessage {

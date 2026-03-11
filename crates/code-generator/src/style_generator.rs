@@ -14,7 +14,10 @@ impl StyleGenerator {
         }
     }
 
-    pub async fn generate_styles(&self, analysis: &visual_learner::VisualAnalysis) -> Result<Vec<GeneratedFile>> {
+    pub async fn generate_styles(
+        &self,
+        analysis: &visual_learner::VisualAnalysis,
+    ) -> Result<Vec<GeneratedFile>> {
         let mut styles = Vec::new();
 
         // 生成CSS变量
@@ -66,7 +69,10 @@ impl StyleGenerator {
         // 颜色变量
         if let Some(ref c) = analysis.color_scheme.primary {
             css.push_str(&format!("  --color-primary: {};\n", c.to_hex()));
-            css.push_str(&format!("  --color-primary-rgb: {}, {}, {};\n", c.r, c.g, c.b));
+            css.push_str(&format!(
+                "  --color-primary-rgb: {}, {}, {};\n",
+                c.r, c.g, c.b
+            ));
         }
         if let Some(ref c) = analysis.color_scheme.secondary {
             css.push_str(&format!("  --color-secondary: {};\n", c.to_hex()));
@@ -99,7 +105,10 @@ impl StyleGenerator {
         css.push('\n');
 
         // 间距变量
-        css.push_str(&format!("  --spacing-unit: {}px;\n", analysis.spacing.base_unit));
+        css.push_str(&format!(
+            "  --spacing-unit: {}px;\n",
+            analysis.spacing.base_unit
+        ));
         for (i, &value) in analysis.spacing.scale.iter().enumerate() {
             css.push_str(&format!("  --spacing-{}: {}px;\n", i + 1, value));
         }
@@ -196,7 +205,7 @@ impl StyleGenerator {
 
         for component in &analysis.components {
             let class_name = format!("{:?}", component.component_type).to_lowercase();
-            
+
             css.push_str(&format!(".{} {{\n", class_name));
 
             // 尺寸
@@ -215,7 +224,10 @@ impl StyleGenerator {
 
             // 边框
             if component.visual_style.border_width > 0 {
-                css.push_str(&format!("  border: {}px solid", component.visual_style.border_width));
+                css.push_str(&format!(
+                    "  border: {}px solid",
+                    component.visual_style.border_width
+                ));
                 if let Some(ref color) = component.visual_style.border_color {
                     css.push_str(&format!(" {};\n", color.to_hex()));
                 } else {
@@ -225,7 +237,10 @@ impl StyleGenerator {
 
             // 圆角
             if component.visual_style.border_radius > 0 {
-                css.push_str(&format!("  border-radius: {}px;\n", component.visual_style.border_radius));
+                css.push_str(&format!(
+                    "  border-radius: {}px;\n",
+                    component.visual_style.border_radius
+                ));
             }
 
             // 阴影
@@ -283,7 +298,10 @@ impl StyleGenerator {
                 css.push_str(".layout--grid {\n");
                 css.push_str("  display: grid;\n");
                 if let Some(cols) = analysis.layout.grid_columns {
-                    css.push_str(&format!("  grid-template-columns: repeat({}, 1fr);\n", cols));
+                    css.push_str(&format!(
+                        "  grid-template-columns: repeat({}, 1fr);\n",
+                        cols
+                    ));
                 }
                 css.push_str(&format!("  gap: {}px;\n", analysis.layout.gap));
                 css.push_str("}\n\n");
@@ -302,7 +320,7 @@ impl StyleGenerator {
             let section_class = section.name.to_lowercase();
             css.push_str(&format!(".{} {{\n", section_class));
             css.push_str("  padding: var(--spacing-3);\n");
-            
+
             match section.section_type {
                 visual_learner::SectionType::Header => {
                     css.push_str("  position: sticky;\n");
@@ -314,7 +332,7 @@ impl StyleGenerator {
                 }
                 _ => {}
             }
-            
+
             css.push_str("}\n\n");
         }
 
@@ -355,6 +373,7 @@ impl StyleGenerator {
 .shadow-lg { box-shadow: var(--shadow-lg); }
 
 .transition { transition: all var(--transition-normal); }
-"#.to_string()
+"#
+        .to_string()
     }
 }

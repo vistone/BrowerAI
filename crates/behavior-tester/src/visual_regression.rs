@@ -2,7 +2,7 @@
 
 use crate::*;
 use anyhow::Result;
-use image::{DynamicImage, GenericImageView, GenericImage};
+use image::{DynamicImage, GenericImage, GenericImageView};
 use playwright::Playwright;
 use std::path::PathBuf;
 
@@ -46,8 +46,7 @@ impl VisualRegressionTester {
                 ],
                 logs: vec![format!(
                     "Pixel difference: {} ({:.2}%)",
-                    comparison.pixel_diff_count,
-                    comparison.pixel_diff_percentage
+                    comparison.pixel_diff_count, comparison.pixel_diff_percentage
                 )],
             },
             errors: if comparison.passed {
@@ -69,8 +68,14 @@ impl VisualRegressionTester {
 
     async fn capture_screenshot(&self, url: &str) -> Result<String> {
         let playwright = Playwright::initialize().await?;
-        let browser = playwright.chromium().launcher().headless(true).launch().await?;
-        let context = browser.context_builder()
+        let browser = playwright
+            .chromium()
+            .launcher()
+            .headless(true)
+            .launch()
+            .await?;
+        let context = browser
+            .context_builder()
             .viewport(Some(playwright::api::Viewport {
                 width: 1280,
                 height: 720,
@@ -86,9 +91,8 @@ impl VisualRegressionTester {
         // 等待动画完成
         tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
 
-        let filename = format!("screenshot_{}.png", 
-            url.replace(['/', ':', '.'], "_"));
-        
+        let filename = format!("screenshot_{}.png", url.replace(['/', ':', '.'], "_"));
+
         page.screenshot_builder()
             .path(PathBuf::from(&filename))
             .full_page(true)

@@ -16,7 +16,7 @@ pub async fn resolve_master_addr(
                 continue;
             }
         };
-        let mut conn = match client.get_tokio_connection().await {
+        let mut conn = match client.get_multiplexed_async_connection().await {
             Ok(c) => c,
             Err(e) => {
                 warn!(sentinel = %url, %e, "Failed to connect sentinel");

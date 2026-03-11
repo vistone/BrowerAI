@@ -7,7 +7,7 @@
 //! - 作用域链
 
 use browerai_core::Result;
-use browerai_js_parser::{JsAst, FunctionDecl, VariableDecl};
+use browerai_js_parser::{FunctionDecl, JsAst, VariableDecl};
 use std::collections::HashMap;
 
 /// 作用域分析器
@@ -32,24 +32,24 @@ impl ScopeAnalyzer {
     pub fn analyze(&mut self, ast: &JsAst) -> Result<ScopeTree> {
         self.scope_stack.clear();
         self.next_scope_id = 0;
-        
+
         // 创建全局作用域
         let global_scope = self.create_scope(ScopeKind::Global, None);
         self.scope_stack.push(global_scope);
-        
+
         // 分析函数声明
         for func in &ast.function_decls {
             self.analyze_function(func)?;
         }
-        
+
         // 分析变量声明
         for var in &ast.variable_decls {
             self.analyze_variable(var)?;
         }
-        
+
         // 构建作用域树
         let scope_tree = self.build_scope_tree()?;
-        
+
         Ok(scope_tree)
     }
 
@@ -59,20 +59,20 @@ impl ScopeAnalyzer {
         if let Some(ref name) = func.name {
             self.register_declaration(name, DeclarationKind::Function);
         }
-        
+
         // 创建新的函数作用域
         let parent_id = self.current_scope_id();
         let func_scope = self.create_scope(ScopeKind::Function, Some(parent_id));
         self.scope_stack.push(func_scope);
-        
+
         // 注册参数
         for param in &func.params {
             self.register_declaration(param, DeclarationKind::Parameter);
         }
-        
+
         // 弹出函数作用域
         self.scope_stack.pop();
-        
+
         Ok(())
     }
 
@@ -84,7 +84,7 @@ impl ScopeAnalyzer {
             "const" => DeclarationKind::Const,
             _ => DeclarationKind::Var,
         };
-        
+
         self.register_declaration(&var.name, kind);
         Ok(())
     }
@@ -93,7 +93,7 @@ impl ScopeAnalyzer {
     fn create_scope(&mut self, kind: ScopeKind, parent: Option<usize>) -> Scope {
         let id = self.next_scope_id;
         self.next_scope_id += 1;
-        
+
         Scope {
             id,
             kind,
@@ -105,32 +105,29 @@ impl ScopeAnalyzer {
 
     /// 获取当前作用域ID
     fn current_scope_id(&self) -> usize {
-        self.scope_stack.last()
-            .map(|s| s.id)
-            .unwrap_or(0)
+        self.scope_stack.last().map(|s| s.id).unwrap_or(0)
     }
 
     /// 在作用域中注册声明
     fn register_declaration(&mut self, name: &str, kind: DeclarationKind) {
         if let Some(scope) = self.scope_stack.last_mut() {
-            scope.declarations.insert(name.to_string(), Declaration {
-                name: name.to_string(),
-                kind,
-                scope_id: scope.id,
-            });
+            scope.declarations.insert(
+                name.to_string(),
+                Declaration {
+                    name: name.to_string(),
+                    kind,
+                    scope_id: scope.id,
+                },
+            );
         }
     }
 
     /// 构建作用域树
     fn build_scope_tree(&self) -> Result<ScopeTree> {
-        let scopes: HashMap<usize, Scope> = self.scope_stack.iter()
-            .map(|s| (s.id, s.clone()))
-            .collect();
-        
-        Ok(ScopeTree {
-            scopes,
-            root_id: 0,
-        })
+        let scopes: HashMap<usize, Scope> =
+            self.scope_stack.iter().map(|s| (s.id, s.clone())).collect();
+
+        Ok(ScopeTree { scopes, root_id: 0 })
     }
 }
 
@@ -222,14 +219,16 @@ impl ScopeTree {
 
     /// 查找变量所在作用域
     pub fn lookup_variable(&self, name: &str) -> Option<&Declaration> {
-        self.scopes.values()
+        self.scopes
+            .values()
             .flat_map(|s| s.declarations.get(name))
             .next()
     }
 
     /// 获取作用域深度
     pub fn max_depth(&self) -> usize {
-        self.scopes.values()
+        self.scopes
+            .values()
             .map(|s| self.calculate_depth(s.id))
             .max()
             .unwrap_or(0)
@@ -239,7 +238,7 @@ impl ScopeTree {
     fn calculate_depth(&self, scope_id: usize) -> usize {
         let mut depth = 0;
         let mut current = scope_id;
-        
+
         while let Some(scope) = self.scopes.get(&current) {
             depth += 1;
             match scope.parent {
@@ -247,7 +246,7 @@ impl ScopeTree {
                 None => break,
             }
         }
-        
+
         depth
     }
 
@@ -271,7 +270,7 @@ impl ScopeTree {
     /// 查找闭包变量（在父作用域中定义，在子作用域中引用的变量）
     pub fn find_closure_variables(&self, scope_id: usize) -> Vec<String> {
         let mut closures = Vec::new();
-        
+
         if let Some(scope) = self.scopes.get(&scope_id) {
             // 获取父作用域链
             let mut parent_chain = Vec::new();
@@ -280,7 +279,7 @@ impl ScopeTree {
                 parent_chain.push(parent_id);
                 current = self.scopes.get(&parent_id).and_then(|s| s.parent);
             }
-            
+
             // 检查当前作用域中的变量引用是否在父作用域中定义
             // 简化实现：检查变量名是否在父作用域链中声明
             for parent_id in parent_chain {
@@ -291,7 +290,7 @@ impl ScopeTree {
                 }
             }
         }
-        
+
         closures
     }
 }
@@ -318,9 +317,9 @@ mod tests {
             }],
             ..Default::default()
         };
-        
+
         let scope_tree = analyzer.analyze(&ast).unwrap();
-        
+
         assert!(!scope_tree.is_empty());
         assert!(scope_tree.lookup_variable("test").is_some());
         assert!(scope_tree.lookup_variable("x").is_some());
@@ -330,21 +329,19 @@ mod tests {
     fn test_scope_depth() {
         let mut analyzer = ScopeAnalyzer::new();
         let ast = JsAst {
-            function_decls: vec![
-                FunctionDecl {
-                    name: Some("outer".to_string()),
-                    params: vec![],
-                    is_async: false,
-                    is_generator: false,
-                    body: None,
-                },
-            ],
+            function_decls: vec![FunctionDecl {
+                name: Some("outer".to_string()),
+                params: vec![],
+                is_async: false,
+                is_generator: false,
+                body: None,
+            }],
             variable_decls: vec![],
             ..Default::default()
         };
-        
+
         let scope_tree = analyzer.analyze(&ast).unwrap();
-        
+
         // 全局作用域 + 函数作用域 = 深度2
         assert!(scope_tree.max_depth() >= 1);
     }
@@ -361,10 +358,10 @@ mod tests {
             }],
             ..Default::default()
         };
-        
+
         let scope_tree = analyzer.analyze(&ast).unwrap();
         let globals = scope_tree.global_variables();
-        
+
         assert!(globals.contains(&"globalVar".to_string()));
     }
 }

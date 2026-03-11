@@ -134,7 +134,7 @@ impl SourceInfo {
     pub fn snippet(&self) -> Option<String> {
         let source = self.source.as_ref()?;
         let lines: Vec<&str> = source.lines().collect();
-        
+
         if self.span.start.line == 0 || self.span.start.line > lines.len() {
             return None;
         }
@@ -166,25 +166,25 @@ impl SourceInfo {
     /// 格式化错误消息
     pub fn format_error(&self, message: &str) -> String {
         let mut result = String::new();
-        
+
         if let Some(ref filename) = self.filename {
-            result.push_str(&format!("{}:{}:{}\n", 
-                filename, 
-                self.span.start.line, 
-                self.span.start.column
+            result.push_str(&format!(
+                "{}:{}:{}\n",
+                filename, self.span.start.line, self.span.start.column
             ));
         }
-        
+
         if let Some(snippet) = self.snippet() {
             result.push_str(&format!("  | {}\n", snippet.trim()));
-            result.push_str(&format!("  | {}^ {}\n", 
+            result.push_str(&format!(
+                "  | {}^ {}\n",
                 " ".repeat(self.span.start.column.saturating_sub(1)),
                 message
             ));
         } else {
             result.push_str(message);
         }
-        
+
         result
     }
 }
@@ -247,8 +247,7 @@ mod tests {
     #[test]
     fn test_source_info_snippet() {
         let source = "line 1\nline 2\nline 3".to_string();
-        let info = SourceInfo::new(SourceSpan::from_lines(2, 1, 2, 6))
-            .with_source(source);
+        let info = SourceInfo::new(SourceSpan::from_lines(2, 1, 2, 6)).with_source(source);
 
         assert_eq!(info.snippet(), Some("line 2".to_string()));
     }

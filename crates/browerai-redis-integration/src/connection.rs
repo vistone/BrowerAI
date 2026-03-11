@@ -1,8 +1,8 @@
 use std::time::Duration;
 
 use anyhow::{Context, Result};
-use deadpool_redis::{Config, Pool, Runtime};
 use deadpool_redis::redis::AsyncCommands;
+use deadpool_redis::{Config, Pool, Runtime};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use tracing::{debug, warn};
@@ -172,7 +172,6 @@ impl RedisPool {
         }
 
         let timeout = self.operation_timeout;
-        let keys_ref: Vec<&str> = keys.iter().map(|s| s.as_str()).collect();
 
         let result = tokio::time::timeout(timeout, async {
             let mut conn = self
@@ -180,7 +179,14 @@ impl RedisPool {
                 .get()
                 .await
                 .map_err(|e| anyhow::anyhow!("{}", e))?;
-            let raw: Vec<Option<String>> = conn.get(keys_ref).await?;
+            // Use redis::cmd directly for MGET to avoid trait-bound issues across redis versions
+            let raw: Vec<Option<String>> = {
+                let mut cmd = redis::cmd("MGET");
+                for k in keys {
+                    cmd.arg(k.as_str());
+                }
+                cmd.query_async(&mut *conn).await?
+            };
 
             let mut values = vec![];
             for opt_json in raw {

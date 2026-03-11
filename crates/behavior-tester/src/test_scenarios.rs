@@ -21,15 +21,24 @@ pub struct TestStep {
 /// 测试动作
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TestAction {
-    Click(String),                    // selector
-    Type { selector: String, value: String },
-    Scroll { direction: ScrollDirection, amount: u32 },
-    Wait(u64),                        // milliseconds
-    Screenshot(String),               // name
-    AssertVisible(String),            // selector
-    AssertText { selector: String, expected: String },
+    Click(String), // selector
+    Type {
+        selector: String,
+        value: String,
+    },
+    Scroll {
+        direction: ScrollDirection,
+        amount: u32,
+    },
+    Wait(u64),             // milliseconds
+    Screenshot(String),    // name
+    AssertVisible(String), // selector
+    AssertText {
+        selector: String,
+        expected: String,
+    },
     AssertUrl(String),
-    KeyPress(String),                 // key
+    KeyPress(String), // key
 }
 
 /// 滚动方向

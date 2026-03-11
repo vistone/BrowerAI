@@ -382,16 +382,18 @@ impl GlobalConfig {
     #[cfg(feature = "config-file")]
     pub fn from_file(path: impl AsRef<std::path::Path>) -> crate::error::Result<Self> {
         let content = std::fs::read_to_string(path)?;
-        let config: Self = toml::from_str(&content)
-            .map_err(|e| crate::error::BrowserError::config(format!("Failed to parse config: {}", e)))?;
+        let config: Self = toml::from_str(&content).map_err(|e| {
+            crate::error::BrowserError::config(format!("Failed to parse config: {}", e))
+        })?;
         Ok(config)
     }
 
     /// 保存配置到文件（需要启用 config-file feature）
     #[cfg(feature = "config-file")]
     pub fn save_to_file(&self, path: impl AsRef<std::path::Path>) -> crate::error::Result<()> {
-        let content = toml::to_string_pretty(self)
-            .map_err(|e| crate::error::BrowserError::config(format!("Failed to serialize config: {}", e)))?;
+        let content = toml::to_string_pretty(self).map_err(|e| {
+            crate::error::BrowserError::config(format!("Failed to serialize config: {}", e))
+        })?;
         std::fs::write(path, content)?;
         Ok(())
     }
@@ -412,7 +414,10 @@ mod tests {
     fn test_cache_config_with_redis() {
         let config = CacheConfig::default().with_redis("redis://localhost:6379");
         assert!(config.enable_l2);
-        assert_eq!(config.l2_redis_url, Some("redis://localhost:6379".to_string()));
+        assert_eq!(
+            config.l2_redis_url,
+            Some("redis://localhost:6379".to_string())
+        );
     }
 
     #[test]
@@ -427,10 +432,10 @@ mod tests {
     fn test_global_config_save_load() {
         let config = GlobalConfig::default();
         let temp_path = "/tmp/test_browerai_config.toml";
-        
+
         config.save_to_file(temp_path).unwrap();
         let loaded = GlobalConfig::from_file(temp_path).unwrap();
-        
+
         assert_eq!(config.ai.enabled, loaded.ai.enabled);
     }
 }

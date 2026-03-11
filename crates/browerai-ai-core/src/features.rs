@@ -50,22 +50,24 @@ impl FeatureExtractor {
     /// 提取代码特征
     fn extract_code_features(&self, code: &str) -> Result<FeatureVector> {
         let mut features = HashMap::new();
-        
+
         // 基本统计特征
         features.insert("length".to_string(), code.len() as f32);
         features.insert("line_count".to_string(), code.lines().count() as f32);
-        
+
         // 关键字频率
-        let keywords = ["function", "var", "let", "const", "if", "for", "while", "return"];
+        let keywords = [
+            "function", "var", "let", "const", "if", "for", "while", "return",
+        ];
         for keyword in &keywords {
             let count = code.matches(keyword).count() as f32;
             features.insert(format!("keyword_{}", keyword), count);
         }
-        
+
         // 复杂度指标
         let bracket_depth = self.calculate_max_bracket_depth(code);
         features.insert("max_bracket_depth".to_string(), bracket_depth as f32);
-        
+
         Ok(FeatureVector {
             feature_type: FeatureType::Code,
             features,
@@ -76,23 +78,23 @@ impl FeatureExtractor {
     /// 提取DOM特征
     fn extract_dom_features(&self, html: &str) -> Result<FeatureVector> {
         let mut features = HashMap::new();
-        
+
         // 基本统计
         features.insert("length".to_string(), html.len() as f32);
-        
+
         // 标签统计
         let tag_open_count = html.matches('<').count() as f32;
         let tag_close_count = html.matches('>').count() as f32;
         features.insert("tag_open_count".to_string(), tag_open_count);
         features.insert("tag_close_count".to_string(), tag_close_count);
-        
+
         // 常见标签
         let common_tags = ["div", "span", "p", "a", "img", "script", "style"];
         for tag in &common_tags {
             let count = html.matches(&format!("<{} ", tag)).count() as f32;
             features.insert(format!("tag_{}", tag), count);
         }
-        
+
         Ok(FeatureVector {
             feature_type: FeatureType::Dom,
             features,
@@ -103,24 +105,31 @@ impl FeatureExtractor {
     /// 提取CSS特征
     fn extract_css_features(&self, css: &str) -> Result<FeatureVector> {
         let mut features = HashMap::new();
-        
+
         // 基本统计
         features.insert("length".to_string(), css.len() as f32);
         features.insert("rule_count".to_string(), css.matches('{').count() as f32);
-        
+
         // 选择器复杂度
         let class_selectors = css.matches('.').count() as f32;
         let id_selectors = css.matches('#').count() as f32;
         features.insert("class_selectors".to_string(), class_selectors);
         features.insert("id_selectors".to_string(), id_selectors);
-        
+
         // 属性统计
-        let properties = ["color", "background", "margin", "padding", "display", "position"];
+        let properties = [
+            "color",
+            "background",
+            "margin",
+            "padding",
+            "display",
+            "position",
+        ];
         for prop in &properties {
             let count = css.matches(prop).count() as f32;
             features.insert(format!("prop_{}", prop), count);
         }
-        
+
         Ok(FeatureVector {
             feature_type: FeatureType::Css,
             features,
@@ -132,7 +141,7 @@ impl FeatureExtractor {
     fn extract_render_features(&self, _input: &str) -> Result<FeatureVector> {
         // 简化实现
         let features = HashMap::new();
-        
+
         Ok(FeatureVector {
             feature_type: FeatureType::Render,
             features,
@@ -146,12 +155,12 @@ impl FeatureExtractor {
         let code_features = self.extract_code_features(input)?;
         let dom_features = self.extract_dom_features(input)?;
         let css_features = self.extract_css_features(input)?;
-        
+
         let mut merged = HashMap::new();
         merged.extend(code_features.features);
         merged.extend(dom_features.features);
         merged.extend(css_features.features);
-        
+
         Ok(FeatureVector {
             feature_type: FeatureType::Mixed,
             features: merged,
@@ -163,7 +172,7 @@ impl FeatureExtractor {
     fn calculate_max_bracket_depth(&self, code: &str) -> usize {
         let mut max_depth = 0;
         let mut current_depth: usize = 0;
-        
+
         for ch in code.chars() {
             match ch {
                 '{' | '(' | '[' => {
@@ -176,7 +185,7 @@ impl FeatureExtractor {
                 _ => {}
             }
         }
-        
+
         max_depth
     }
 
@@ -272,9 +281,8 @@ impl FeatureVector {
 
     /// 计算与另一个特征向量的欧氏距离
     pub fn euclidean_distance(&self, other: &FeatureVector) -> f32 {
-        let keys: std::collections::HashSet<_> = self.features.keys()
-            .chain(other.features.keys())
-            .collect();
+        let keys: std::collections::HashSet<_> =
+            self.features.keys().chain(other.features.keys()).collect();
 
         let mut sum_sq_diff = 0.0;
         for key in keys {
@@ -338,9 +346,9 @@ mod tests {
     fn test_extract_code_features() {
         let extractor = FeatureExtractor::new();
         let code = "function test() { return 1 + 2; }";
-        
+
         let features = extractor.extract(code, FeatureType::Code).unwrap();
-        
+
         assert!(!features.is_empty());
         assert!(features.get("length").is_some());
         assert!(features.get("keyword_function").is_some());
@@ -350,9 +358,9 @@ mod tests {
     fn test_extract_dom_features() {
         let extractor = FeatureExtractor::new();
         let html = "<div><span>Test</span></div>";
-        
+
         let features = extractor.extract(html, FeatureType::Dom).unwrap();
-        
+
         assert!(!features.is_empty());
         assert!(features.get("tag_open_count").is_some());
     }
@@ -362,10 +370,10 @@ mod tests {
         let mut vector = FeatureVector::new(FeatureType::Code);
         vector.add("feature1", 1.0);
         vector.add("feature2", 2.0);
-        
+
         assert_eq!(vector.len(), 2);
         assert_eq!(vector.get("feature1"), Some(1.0));
-        
+
         // 测试归一化
         vector.normalize();
         assert!(vector.normalized);
@@ -376,11 +384,11 @@ mod tests {
         let mut v1 = FeatureVector::new(FeatureType::Code);
         v1.add("a", 1.0);
         v1.add("b", 2.0);
-        
+
         let mut v2 = FeatureVector::new(FeatureType::Code);
         v2.add("a", 4.0);
         v2.add("b", 6.0);
-        
+
         let distance = v1.euclidean_distance(&v2);
         assert!(distance > 0.0);
     }
