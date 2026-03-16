@@ -5,7 +5,7 @@ edition = "2021"
 description = "Redis integration for distributed caching in BrowerAI"
 
 [dependencies]
-redis = { version = "0.27", features = ["tokio-comp", "connection-manager", "script"] }
+redis = { version = "1.0", features = ["tokio-comp", "connection-manager", "script"] }
 deadpool-redis = "0.18"
 tokio = { version = "1.35", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
