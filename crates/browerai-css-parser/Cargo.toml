@@ -14,7 +14,7 @@ browerai-ai-core = { path = "../browerai-ai-core", optional = true }
 
 # CSS parsing
 cssparser = "0.33"
-selectors = "0.25"
+selectors = "0.36"
 
 # Color handling
 css-color = "0.2"
